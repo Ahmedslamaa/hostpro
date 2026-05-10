@@ -18,7 +18,12 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
 
   const generateSlug = (name: string) =>
-    name.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    name
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[̀-ͯ]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,61 +45,109 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 mb-4">
-            <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center">
-              <span className="text-slate-900 font-bold text-lg">H</span>
-            </div>
-            <span className="text-white font-bold text-2xl tracking-tight">HOST PRO</span>
-          </div>
-          <p className="text-slate-400 text-sm">Démarrez votre essai gratuit</p>
-        </div>
+    <div className="min-h-screen bg-white flex">
+      {/* Left branding panel */}
+      <div className="hidden lg:flex lg:w-1/2 bg-[#222222] flex-col items-center justify-center p-16 relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-72 h-72 bg-white/5 rounded-full -translate-y-36 -translate-x-36" />
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-white/5 rounded-full translate-y-48 translate-x-48" />
 
-        <div className="bg-white rounded-2xl shadow-xl p-8">
-          <h1 className="text-xl font-semibold text-slate-900 mb-6">Créer votre compte</h1>
+        <div className="relative z-10 max-w-md">
+          <div className="mb-12">
+            <div className="text-white font-black text-4xl tracking-tight mb-2">HOSTPRO</div>
+            <div className="w-12 h-1 bg-[#FF5A5F] rounded-full" />
+          </div>
+
+          <h2 className="text-white text-3xl font-bold leading-tight mb-4">
+            Démarrez votre essai gratuit de{" "}
+            <span className="text-[#FF5A5F]">14 jours</span>
+          </h2>
+          <p className="text-white/60 text-lg mb-10">
+            Rejoignez des centaines de gestionnaires locatifs qui font confiance à HostPro.
+          </p>
+
+          <div className="space-y-6">
+            {[
+              { title: "Aucune carte bancaire requise", desc: "Commencez gratuitement, sans engagement." },
+              { title: "Configuration en 5 minutes", desc: "Importez vos biens et synchronisez vos calendriers instantanément." },
+              { title: "Support dédié", desc: "Notre équipe vous accompagne à chaque étape." },
+            ].map((item, i) => (
+              <div key={i} className="flex items-start gap-4">
+                <div className="w-8 h-8 bg-[#FF5A5F]/20 border border-[#FF5A5F]/30 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <span className="text-[#FF5A5F] text-xs font-bold">0{i + 1}</span>
+                </div>
+                <div>
+                  <div className="text-white font-semibold text-sm">{item.title}</div>
+                  <div className="text-white/50 text-sm mt-0.5">{item.desc}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Right registration form */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 lg:p-12 overflow-y-auto">
+        <div className="w-full max-w-md py-8">
+          {/* Mobile logo */}
+          <div className="lg:hidden mb-10 text-center">
+            <div className="text-[#222222] font-black text-3xl tracking-tight">HOSTPRO</div>
+          </div>
+
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-[#222222]">Créer votre compte</h1>
+            <p className="text-[#717171] mt-2">Commencez votre essai gratuit de 14 jours dès maintenant</p>
+          </div>
 
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 mb-4 text-sm">{error}</div>
+            <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 mb-6 text-sm">
+              {error}
+            </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1.5">Votre nom complet</label>
+              <label className="text-[#222222] text-sm font-semibold mb-2 block">Nom complet</label>
               <input
-                type="text" required
-                className="w-full border border-slate-200 rounded-lg px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900"
+                type="text"
+                required
+                className="border border-[#DDDDDD] rounded-xl px-4 py-3 text-[#222222] placeholder-[#717171] focus:outline-none focus:border-[#222222] focus:ring-2 focus:ring-[#222222]/10 w-full transition-all"
                 placeholder="Jean Dupont"
                 value={form.full_name}
                 onChange={(e) => setForm({ ...form, full_name: e.target.value })}
               />
             </div>
+
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1.5">Email professionnel</label>
+              <label className="text-[#222222] text-sm font-semibold mb-2 block">Email professionnel</label>
               <input
-                type="email" required
-                className="w-full border border-slate-200 rounded-lg px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900"
+                type="email"
+                required
+                className="border border-[#DDDDDD] rounded-xl px-4 py-3 text-[#222222] placeholder-[#717171] focus:outline-none focus:border-[#222222] focus:ring-2 focus:ring-[#222222]/10 w-full transition-all"
                 placeholder="vous@agence.fr"
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
               />
             </div>
+
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1.5">Mot de passe</label>
+              <label className="text-[#222222] text-sm font-semibold mb-2 block">Mot de passe</label>
               <input
-                type="password" required minLength={8}
-                className="w-full border border-slate-200 rounded-lg px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900"
+                type="password"
+                required
+                minLength={8}
+                className="border border-[#DDDDDD] rounded-xl px-4 py-3 text-[#222222] placeholder-[#717171] focus:outline-none focus:border-[#222222] focus:ring-2 focus:ring-[#222222]/10 w-full transition-all"
                 placeholder="8 caractères minimum"
                 value={form.password}
                 onChange={(e) => setForm({ ...form, password: e.target.value })}
               />
             </div>
-            <div className="border-t pt-4">
-              <label className="block text-sm font-medium text-slate-700 mb-1.5">Nom de votre structure</label>
+
+            <div className="pt-2 border-t border-[#DDDDDD]">
+              <label className="text-[#222222] text-sm font-semibold mb-2 block">Nom de votre structure</label>
               <input
-                type="text" required
-                className="w-full border border-slate-200 rounded-lg px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900"
+                type="text"
+                required
+                className="border border-[#DDDDDD] rounded-xl px-4 py-3 text-[#222222] placeholder-[#717171] focus:outline-none focus:border-[#222222] focus:ring-2 focus:ring-[#222222]/10 w-full transition-all"
                 placeholder="Slama Riviera"
                 value={form.tenant_name}
                 onChange={(e) =>
@@ -102,31 +155,50 @@ export default function RegisterPage() {
                 }
               />
             </div>
+
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                Identifiant URL <span className="text-slate-400 font-normal">(automatique)</span>
+              <label className="text-[#222222] text-sm font-semibold mb-2 block">
+                Identifiant URL{" "}
+                <span className="text-[#717171] font-normal">(généré automatiquement)</span>
               </label>
-              <div className="flex items-center border border-slate-200 rounded-lg overflow-hidden">
-                <span className="bg-slate-50 px-3 py-2.5 text-slate-400 text-sm border-r border-slate-200">hostpro.fr/</span>
+              <div className="flex items-center border border-[#DDDDDD] rounded-xl overflow-hidden focus-within:border-[#222222] focus-within:ring-2 focus-within:ring-[#222222]/10 transition-all">
+                <span className="bg-[#F7F7F7] px-4 py-3 text-[#717171] text-sm border-r border-[#DDDDDD] flex-shrink-0">
+                  hostpro.fr/
+                </span>
                 <input
-                  type="text" required
-                  className="flex-1 px-3 py-2.5 text-sm focus:outline-none"
+                  type="text"
+                  required
+                  className="flex-1 px-4 py-3 text-sm text-[#222222] focus:outline-none"
                   value={form.tenant_slug}
                   onChange={(e) => setForm({ ...form, tenant_slug: e.target.value })}
                 />
               </div>
             </div>
+
             <button
-              type="submit" disabled={loading}
-              className="w-full bg-slate-900 text-white rounded-lg px-4 py-2.5 text-sm font-medium hover:bg-slate-800 disabled:opacity-50 transition-colors mt-2"
+              type="submit"
+              disabled={loading}
+              className="w-full bg-[#FF5A5F] hover:bg-[#E00B41] text-white font-semibold px-6 py-3 rounded-xl transition-all disabled:opacity-60 disabled:cursor-not-allowed mt-2"
             >
-              {loading ? "Création..." : "Créer mon compte — Essai gratuit 14 jours"}
+              {loading ? "Création en cours..." : "Essai gratuit 14 jours — Créer mon compte"}
             </button>
+
+            <p className="text-center text-xs text-[#717171]">
+              Aucune carte bancaire requise. Annulez à tout moment.
+            </p>
           </form>
 
-          <p className="text-center text-sm text-slate-500 mt-6">
+          <div className="flex items-center gap-4 my-6">
+            <div className="flex-1 h-px bg-[#DDDDDD]" />
+            <span className="text-[#717171] text-sm">ou</span>
+            <div className="flex-1 h-px bg-[#DDDDDD]" />
+          </div>
+
+          <p className="text-center text-sm text-[#717171]">
             Déjà un compte ?{" "}
-            <a href="/login" className="text-slate-900 font-medium hover:underline">Se connecter</a>
+            <a href="/login" className="text-[#222222] font-semibold hover:underline">
+              Se connecter
+            </a>
           </p>
         </div>
       </div>

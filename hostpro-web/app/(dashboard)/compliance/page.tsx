@@ -2,15 +2,23 @@
 import { useEffect, useState } from "react";
 import { complianceApi, propertiesApi } from "@/lib/api";
 import { ComplianceRecord, Property } from "@/types";
-import { ShieldCheck, ShieldAlert, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { ShieldCheck, ShieldAlert, AlertTriangle, CheckCircle2, Pencil, X, Save } from "lucide-react";
 
-const DPE_COLORS: Record<string, string> = {
-  A: "bg-green-600", B: "bg-green-400", C: "bg-lime-400",
-  D: "bg-yellow-400", E: "bg-orange-400", F: "bg-red-400", G: "bg-red-600",
+const DPE_CONFIG: Record<string, { bg: string; text: string }> = {
+  A: { bg: "bg-green-600", text: "text-white" },
+  B: { bg: "bg-green-500", text: "text-white" },
+  C: { bg: "bg-lime-400", text: "text-white" },
+  D: { bg: "bg-yellow-400", text: "text-white" },
+  E: { bg: "bg-orange-400", text: "text-white" },
+  F: { bg: "bg-red-400", text: "text-white" },
+  G: { bg: "bg-red-600", text: "text-white" },
 };
 
 const REGIME_LABELS: Record<string, string> = {
-  micro_bic: "Micro-BIC", reel: "Réel", lmnp: "LMNP", lmp: "LMP",
+  micro_bic: "Micro-BIC",
+  reel: "Réel",
+  lmnp: "LMNP",
+  lmp: "LMP",
 };
 
 export default function CompliancePage() {
@@ -25,7 +33,7 @@ export default function CompliancePage() {
       setRecords(c.data);
       setProperties(p.data);
       setLoading(false);
-    });
+    }).catch(() => setLoading(false));
   }, []);
 
   const propMap = Object.fromEntries(properties.map((p) => [p.id, p.name]));
@@ -53,138 +61,216 @@ export default function CompliancePage() {
     setEditing(null);
   };
 
+  const inputClass =
+    "border border-[#DDDDDD] rounded-xl px-3.5 py-2.5 text-sm text-[#222222] placeholder-[#717171] focus:outline-none focus:border-[#222222] focus:ring-2 focus:ring-[#222222]/10 w-full transition-all";
+
   return (
-    <div className="p-8">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Conformité réglementaire</h1>
-          <p className="text-slate-500 text-sm mt-0.5">Suivi loi Le Meur, DPE & obligations fiscales</p>
-        </div>
-        <div className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium ${alertCount > 0 ? "bg-red-50 text-red-700 border border-red-200" : "bg-green-50 text-green-700 border border-green-200"}`}>
-          {alertCount > 0 ? <ShieldAlert size={16} /> : <ShieldCheck size={16} />}
-          {alertCount > 0 ? `${alertCount} alerte${alertCount > 1 ? "s" : ""}` : "Tout est conforme"}
-        </div>
+    <div>
+      {/* Status banner */}
+      <div className={`flex items-center gap-3 px-5 py-3.5 rounded-2xl text-sm font-medium mb-6 ${
+        alertCount > 0
+          ? "bg-red-50 border border-red-200 text-red-700"
+          : "bg-green-50 border border-green-200 text-green-700"
+      }`}>
+        {alertCount > 0 ? <ShieldAlert size={18} /> : <ShieldCheck size={18} />}
+        {alertCount > 0
+          ? `${alertCount} alerte${alertCount > 1 ? "s" : ""} de conformité détectée${alertCount > 1 ? "s" : ""} — Action requise`
+          : "Toutes vos propriétés sont en conformité"}
       </div>
 
       {loading ? (
-        <div className="space-y-4">{[...Array(3)].map((_, i) => <div key={i} className="h-40 bg-white rounded-xl border border-slate-200 animate-pulse" />)}</div>
+        <div className="space-y-4">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="h-48 bg-white rounded-2xl border border-[#DDDDDD] animate-pulse shadow-sm" />
+          ))}
+        </div>
+      ) : records.length === 0 ? (
+        <div className="bg-white rounded-2xl border border-[#DDDDDD] flex flex-col items-center justify-center py-24 shadow-sm">
+          <ShieldCheck size={40} className="text-[#DDDDDD] mb-4" />
+          <h3 className="font-semibold text-[#222222] mb-2">Aucune donnée de conformité</h3>
+          <p className="text-[#717171] text-sm">Ajoutez des propriétés pour suivre leur conformité</p>
+        </div>
       ) : (
         <div className="space-y-4">
-          {records.map((r) => (
-            <div key={r.property_id} className={`bg-white rounded-xl border p-6 ${r.is_compliant ? "border-slate-200" : "border-amber-200 bg-amber-50/30"}`}>
-              <div className="flex items-start justify-between mb-5">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-semibold text-slate-900 text-lg">{propMap[r.property_id] || "Bien"}</h3>
-                    {r.is_compliant ? (
-                      <CheckCircle2 size={16} className="text-green-500" />
-                    ) : (
-                      <AlertTriangle size={16} className="text-amber-500" />
+          {records.map((r) => {
+            const pct = Math.min(100, (r.nuitees_year / r.nuitees_limit) * 100);
+            const barColor =
+              r.nuitees_year >= r.nuitees_limit
+                ? "bg-red-500"
+                : r.nuitees_year >= r.nuitees_alert_at
+                ? "bg-amber-500"
+                : "bg-green-500";
+
+            return (
+              <div
+                key={r.property_id}
+                className={`bg-white rounded-2xl border p-6 shadow-sm ${
+                  r.is_compliant ? "border-[#DDDDDD]" : "border-amber-200"
+                }`}
+              >
+                {/* Header */}
+                <div className="flex items-start justify-between mb-5">
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="font-bold text-[#222222] text-lg">{propMap[r.property_id] || "Propriété"}</h3>
+                      {r.is_compliant ? (
+                        <CheckCircle2 size={18} className="text-green-500" />
+                      ) : (
+                        <AlertTriangle size={18} className="text-amber-500" />
+                      )}
+                    </div>
+                    {r.alerts && r.alerts.length > 0 && (
+                      <div className="space-y-0.5">
+                        {r.alerts.map((a, i) => (
+                          <p key={i} className="text-xs text-amber-700 flex items-center gap-1">
+                            <AlertTriangle size={10} /> {a}
+                          </p>
+                        ))}
+                      </div>
                     )}
                   </div>
-                  {r.alerts && r.alerts.length > 0 && (
-                    <div className="mt-1 space-y-0.5">
-                      {r.alerts.map((a, i) => (
-                        <p key={i} className="text-xs text-amber-700">⚠ {a}</p>
-                      ))}
+                  {editing === r.property_id ? (
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setEditing(null)}
+                        className="flex items-center gap-1.5 border border-[#DDDDDD] text-[#717171] font-medium px-3 py-1.5 rounded-xl hover:bg-[#F7F7F7] transition-all text-sm"
+                      >
+                        <X size={14} /> Annuler
+                      </button>
+                      <button
+                        onClick={saveEdit}
+                        className="flex items-center gap-1.5 bg-[#FF5A5F] hover:bg-[#E00B41] text-white font-semibold px-3 py-1.5 rounded-xl transition-all text-sm"
+                      >
+                        <Save size={14} /> Enregistrer
+                      </button>
                     </div>
+                  ) : (
+                    <button
+                      onClick={() => startEdit(r)}
+                      className="flex items-center gap-1.5 border border-[#DDDDDD] text-[#222222] font-medium px-3 py-1.5 rounded-xl hover:bg-[#F7F7F7] transition-all text-sm"
+                    >
+                      <Pencil size={14} /> Gérer
+                    </button>
                   )}
                 </div>
-                <button onClick={() => editing === r.property_id ? saveEdit() : startEdit(r)}
-                  className="text-sm text-slate-600 border border-slate-200 px-3 py-1.5 rounded-lg hover:border-slate-400 transition-colors">
-                  {editing === r.property_id ? "Enregistrer" : "Modifier"}
-                </button>
-              </div>
 
-              {editing === r.property_id ? (
-                <div className="grid grid-cols-3 gap-4">
-                  {[
-                    { key: "registration_number", label: "N° enregistrement", type: "text", placeholder: "XXXXXXXXXXXXXXX" },
-                    { key: "registration_city", label: "Commune d'enregistrement", type: "text", placeholder: "Nice" },
-                    { key: "registration_expiry", label: "Expiration enregistrement", type: "date" },
-                    { key: "dpe_class", label: "Classe DPE", type: "text", placeholder: "A, B, C..." },
-                    { key: "dpe_expiry", label: "Expiration DPE", type: "date" },
-                    { key: "siret", label: "SIRET", type: "text", placeholder: "12345678901234" },
-                  ].map(({ key, label, type, placeholder }) => (
-                    <div key={key}>
-                      <label className="block text-xs font-medium text-slate-600 mb-1">{label}</label>
-                      <input type={type} placeholder={placeholder} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900"
-                        value={editForm[key] || ""} onChange={(e) => setEditForm({ ...editForm, [key]: e.target.value })} />
-                    </div>
-                  ))}
-                  <div>
-                    <label className="block text-xs font-medium text-slate-600 mb-1">Régime fiscal</label>
-                    <select className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900"
-                      value={editForm.fiscal_regime} onChange={(e) => setEditForm({ ...editForm, fiscal_regime: e.target.value })}>
-                      <option value="">—</option>
-                      {Object.entries(REGIME_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-                    </select>
-                  </div>
-                </div>
-              ) : (
-                <div className="grid grid-cols-4 gap-6">
-                  {/* Nuitées counter */}
-                  <div className="col-span-1">
-                    <div className="text-xs font-medium text-slate-500 mb-2">NUITÉES {r.current_year || new Date().getFullYear()}</div>
-                    <div className="relative">
-                      <div className="flex items-end gap-1 mb-1">
-                        <span className="text-3xl font-bold text-slate-900">{r.nuitees_year}</span>
-                        <span className="text-slate-400 text-sm mb-0.5">/ {r.nuitees_limit}</span>
-                      </div>
-                      <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                        <div
-                          className={`h-2 rounded-full transition-all ${
-                            r.nuitees_year >= r.nuitees_limit ? "bg-red-500" :
-                            r.nuitees_year >= r.nuitees_alert_at ? "bg-amber-500" : "bg-green-500"
-                          }`}
-                          style={{ width: `${Math.min(100, (r.nuitees_year / r.nuitees_limit) * 100)}%` }}
+                {editing === r.property_id ? (
+                  <div className="grid grid-cols-3 gap-4">
+                    {[
+                      { key: "registration_number", label: "N° enregistrement", type: "text", placeholder: "XXXXXXXXXXXXXXX" },
+                      { key: "registration_city", label: "Commune", type: "text", placeholder: "Nice" },
+                      { key: "registration_expiry", label: "Expiration enregistrement", type: "date" },
+                      { key: "dpe_class", label: "Classe DPE", type: "text", placeholder: "A, B, C..." },
+                      { key: "dpe_expiry", label: "Expiration DPE", type: "date" },
+                      { key: "siret", label: "SIRET", type: "text", placeholder: "12345678901234" },
+                    ].map(({ key, label, type, placeholder }) => (
+                      <div key={key}>
+                        <label className="text-[#222222] text-sm font-semibold mb-2 block">{label}</label>
+                        <input
+                          type={type}
+                          placeholder={placeholder}
+                          className={inputClass}
+                          value={editForm[key] || ""}
+                          onChange={(e) => setEditForm({ ...editForm, [key]: e.target.value })}
                         />
                       </div>
-                      <div className="text-xs text-slate-400 mt-1">{r.nuitees_limit - r.nuitees_year} restantes</div>
+                    ))}
+                    <div>
+                      <label className="text-[#222222] text-sm font-semibold mb-2 block">Régime fiscal</label>
+                      <select
+                        className={inputClass}
+                        value={editForm.fiscal_regime}
+                        onChange={(e) => setEditForm({ ...editForm, fiscal_regime: e.target.value })}
+                      >
+                        <option value="">—</option>
+                        {Object.entries(REGIME_LABELS).map(([v, l]) => (
+                          <option key={v} value={v}>{l}</option>
+                        ))}
+                      </select>
                     </div>
                   </div>
-
-                  {/* Registration */}
-                  <div>
-                    <div className="text-xs font-medium text-slate-500 mb-2">ENREGISTREMENT</div>
-                    {r.registration_number ? (
-                      <>
-                        <div className="font-mono text-sm font-medium text-slate-900">{r.registration_number}</div>
-                        <div className="text-xs text-slate-500 mt-0.5">{r.registration_city}</div>
-                        {r.registration_expiry && <div className="text-xs text-slate-400">Exp. {r.registration_expiry}</div>}
-                      </>
-                    ) : (
-                      <div className="text-sm text-amber-600 font-medium">Non renseigné</div>
-                    )}
-                  </div>
-
-                  {/* DPE */}
-                  <div>
-                    <div className="text-xs font-medium text-slate-500 mb-2">DPE</div>
-                    {r.dpe_class ? (
-                      <div className="flex items-center gap-2">
-                        <span className={`w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-sm ${DPE_COLORS[r.dpe_class] || "bg-slate-400"}`}>
-                          {r.dpe_class}
-                        </span>
-                        {r.dpe_expiry && <div className="text-xs text-slate-500">Exp. {r.dpe_expiry}</div>}
+                ) : (
+                  <div className="grid grid-cols-4 gap-6">
+                    {/* Nuitées progress */}
+                    <div>
+                      <div className="text-xs font-semibold text-[#717171] uppercase tracking-wide mb-3">
+                        Nuitées {r.current_year || new Date().getFullYear()}
                       </div>
-                    ) : <div className="text-sm text-slate-400">Non renseigné</div>}
-                  </div>
+                      <div className="flex items-end gap-1 mb-2">
+                        <span className="text-3xl font-bold text-[#222222]">{r.nuitees_year}</span>
+                        <span className="text-[#717171] text-sm mb-0.5">/ {r.nuitees_limit}</span>
+                      </div>
+                      <div className="h-2.5 bg-[#F7F7F7] rounded-full overflow-hidden mb-1.5">
+                        <div
+                          className={`h-2.5 rounded-full transition-all ${barColor}`}
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                      <div className="text-xs text-[#717171]">{r.nuitees_limit - r.nuitees_year} nuitées restantes</div>
+                    </div>
 
-                  {/* Fiscal */}
-                  <div>
-                    <div className="text-xs font-medium text-slate-500 mb-2">RÉGIME FISCAL</div>
-                    {r.fiscal_regime ? (
-                      <>
-                        <div className="text-sm font-medium text-slate-900">{REGIME_LABELS[r.fiscal_regime] || r.fiscal_regime}</div>
-                        {r.siret && <div className="font-mono text-xs text-slate-500 mt-0.5">SIRET: {r.siret}</div>}
-                      </>
-                    ) : <div className="text-sm text-slate-400">Non renseigné</div>}
+                    {/* Registration */}
+                    <div>
+                      <div className="text-xs font-semibold text-[#717171] uppercase tracking-wide mb-3">
+                        Enregistrement
+                      </div>
+                      {r.registration_number ? (
+                        <>
+                          <div className="font-mono text-sm font-semibold text-[#222222]">{r.registration_number}</div>
+                          <div className="text-xs text-[#717171] mt-0.5">{r.registration_city}</div>
+                          {r.registration_expiry && (
+                            <div className="text-xs text-[#717171] mt-0.5">Exp. {r.registration_expiry}</div>
+                          )}
+                        </>
+                      ) : (
+                        <div className="flex items-center gap-1.5 text-amber-600 text-sm font-medium">
+                          <AlertTriangle size={14} /> Non renseigné
+                        </div>
+                      )}
+                    </div>
+
+                    {/* DPE */}
+                    <div>
+                      <div className="text-xs font-semibold text-[#717171] uppercase tracking-wide mb-3">DPE</div>
+                      {r.dpe_class ? (
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-sm ${
+                              DPE_CONFIG[r.dpe_class]?.bg || "bg-[#DDDDDD]"
+                            } ${DPE_CONFIG[r.dpe_class]?.text || "text-white"}`}
+                          >
+                            {r.dpe_class}
+                          </span>
+                          {r.dpe_expiry && <div className="text-xs text-[#717171]">Exp. {r.dpe_expiry}</div>}
+                        </div>
+                      ) : (
+                        <div className="text-sm text-[#717171]">Non renseigné</div>
+                      )}
+                    </div>
+
+                    {/* Fiscal */}
+                    <div>
+                      <div className="text-xs font-semibold text-[#717171] uppercase tracking-wide mb-3">
+                        Régime fiscal
+                      </div>
+                      {r.fiscal_regime ? (
+                        <>
+                          <div className="text-sm font-semibold text-[#222222]">
+                            {REGIME_LABELS[r.fiscal_regime] || r.fiscal_regime}
+                          </div>
+                          {r.siret && (
+                            <div className="font-mono text-xs text-[#717171] mt-0.5">SIRET: {r.siret}</div>
+                          )}
+                        </>
+                      ) : (
+                        <div className="text-sm text-[#717171]">Non renseigné</div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              )}
-            </div>
-          ))}
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

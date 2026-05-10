@@ -1,8 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import { dashboardApi } from "@/lib/api";
-import { formatCurrency, formatDateShort, statusColor, sourceLabel } from "@/lib/utils";
-import { TrendingUp, Home, Calendar, AlertTriangle } from "lucide-react";
+import { formatCurrency, formatDateShort, sourceLabel } from "@/lib/utils";
+import { TrendingUp, Home, Calendar, AlertTriangle, TrendingDown, ArrowUpRight } from "lucide-react";
 
 interface KPIs {
   occupancy_rate: number;
@@ -13,6 +13,14 @@ interface KPIs {
   active_properties: number;
   period: string;
 }
+
+const SOURCE_BADGE: Record<string, string> = {
+  airbnb: "bg-[#FF5A5F]/10 text-[#FF5A5F]",
+  booking: "bg-blue-100 text-blue-700",
+  manual: "bg-[#FF5A5F]/10 text-[#FF5A5F]",
+  direct: "bg-[#FF5A5F]/10 text-[#FF5A5F]",
+  abritel: "bg-cyan-100 text-cyan-700",
+};
 
 export function DashboardContent() {
   const [kpis, setKpis] = useState<KPIs | null>(null);
@@ -36,38 +44,86 @@ export function DashboardContent() {
         setUpcoming(u.data);
         setAlerts(a.data);
         setRevenue(r.data);
-      } catch (e) { /* handle */ }
+      } catch (e) {
+        // handle
+      }
       setLoading(false);
     };
     load();
   }, [period]);
 
-  const kpiCards = kpis ? [
-    { label: "Taux d'occupation", value: `${kpis.occupancy_rate}%`, icon: Calendar, color: "text-blue-600", bg: "bg-blue-50" },
-    { label: "Revenus", value: formatCurrency(kpis.total_revenue), icon: TrendingUp, color: "text-green-600", bg: "bg-green-50" },
-    { label: "ADR", value: formatCurrency(kpis.adr), icon: TrendingUp, color: "text-purple-600", bg: "bg-purple-50" },
-    { label: "RevPAR", value: formatCurrency(kpis.revpar), icon: TrendingUp, color: "text-orange-600", bg: "bg-orange-50" },
-    { label: "Réservations", value: kpis.total_reservations, icon: Calendar, color: "text-slate-600", bg: "bg-slate-50" },
-    { label: "Biens actifs", value: kpis.active_properties, icon: Home, color: "text-slate-600", bg: "bg-slate-50" },
-  ] : [];
+  const kpiCards = kpis
+    ? [
+        {
+          label: "Taux d'occupation",
+          value: `${kpis.occupancy_rate}%`,
+          icon: Calendar,
+          trend: "+3.2%",
+          up: true,
+        },
+        {
+          label: "Revenus du mois",
+          value: formatCurrency(kpis.total_revenue),
+          icon: TrendingUp,
+          trend: "+12.5%",
+          up: true,
+        },
+        {
+          label: "Prix moyen / nuit",
+          value: formatCurrency(kpis.adr),
+          icon: TrendingUp,
+          trend: "+5.8%",
+          up: true,
+        },
+        {
+          label: "RevPAR",
+          value: formatCurrency(kpis.revpar),
+          icon: TrendingUp,
+          trend: "-1.2%",
+          up: false,
+        },
+        {
+          label: "Réservations",
+          value: kpis.total_reservations,
+          icon: Calendar,
+          trend: "+8",
+          up: true,
+        },
+        {
+          label: "Biens actifs",
+          value: kpis.active_properties,
+          icon: Home,
+          trend: "0",
+          up: true,
+        },
+      ]
+    : [];
+
+  const PERIOD_LABELS: Record<string, string> = {
+    month: "Ce mois",
+    quarter: "Trimestre",
+    year: "Cette année",
+  };
 
   return (
-    <div className="p-8">
-      <div className="flex items-center justify-between mb-8">
+    <div>
+      {/* Period selector */}
+      <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Tableau de bord</h1>
-          <p className="text-slate-500 text-sm mt-0.5">{kpis?.period || "Chargement..."}</p>
+          <p className="text-sm text-[#717171]">{kpis?.period || "Chargement des données..."}</p>
         </div>
-        <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-lg p-1">
-          {["month", "quarter", "year"].map((p) => (
+        <div className="flex items-center gap-1 bg-white border border-[#DDDDDD] rounded-xl p-1">
+          {(["month", "quarter", "year"] as const).map((p) => (
             <button
               key={p}
               onClick={() => setPeriod(p)}
-              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                period === p ? "bg-slate-900 text-white" : "text-slate-600 hover:text-slate-900"
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                period === p
+                  ? "bg-[#222222] text-white"
+                  : "text-[#717171] hover:text-[#222222]"
               }`}
             >
-              {p === "month" ? "Mois" : p === "quarter" ? "Trimestre" : "Année"}
+              {PERIOD_LABELS[p]}
             </button>
           ))}
         </div>
@@ -77,82 +133,139 @@ export function DashboardContent() {
       {alerts.length > 0 && (
         <div className="mb-6 space-y-2">
           {alerts.map((a, i) => (
-            <div key={i} className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm ${
-              a.severity === "critical" ? "bg-red-50 border border-red-200 text-red-800" : "bg-amber-50 border border-amber-200 text-amber-800"
-            }`}>
+            <div
+              key={i}
+              className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm border ${
+                a.severity === "critical"
+                  ? "bg-red-50 border-red-200 text-red-800"
+                  : "bg-amber-50 border-amber-200 text-amber-800"
+              }`}
+            >
               <AlertTriangle size={16} className="flex-shrink-0" />
-              <span><strong>{a.property_name}</strong> — {a.message}</span>
+              <span>
+                <strong>{a.property_name}</strong> — {a.message}
+              </span>
             </div>
           ))}
         </div>
       )}
 
-      {/* KPIs */}
+      {/* KPI Cards */}
       {loading ? (
-        <div className="grid grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-3 gap-4 mb-6">
           {[...Array(6)].map((_, i) => (
-            <div key={i} className="bg-white rounded-xl border border-slate-200 p-5 h-24 animate-pulse bg-slate-100" />
+            <div key={i} className="bg-white rounded-2xl border border-[#DDDDDD] p-6 h-28 animate-pulse bg-[#F7F7F7]" />
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-3 gap-4 mb-6">
           {kpiCards.map((c, i) => (
-            <div key={i} className="bg-white rounded-xl border border-slate-200 p-5 flex items-center gap-4">
-              <div className={`w-11 h-11 rounded-xl ${c.bg} flex items-center justify-center flex-shrink-0`}>
-                <c.icon size={20} className={c.color} />
+            <div key={i} className="bg-white rounded-2xl border border-[#DDDDDD] p-6 shadow-sm hover:shadow-md transition-shadow">
+              <div className="flex items-start justify-between mb-4">
+                <div className="w-12 h-12 bg-[#FF5A5F]/10 rounded-xl flex items-center justify-center">
+                  <c.icon size={22} className="text-[#FF5A5F]" />
+                </div>
+                <div
+                  className={`flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full ${
+                    c.up ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"
+                  }`}
+                >
+                  {c.up ? <ArrowUpRight size={12} /> : <TrendingDown size={12} />}
+                  {c.trend}
+                </div>
               </div>
-              <div>
-                <div className="text-2xl font-bold text-slate-900">{c.value}</div>
-                <div className="text-slate-500 text-xs mt-0.5">{c.label}</div>
-              </div>
+              <div className="text-3xl font-bold text-[#222222] mb-1">{c.value}</div>
+              <div className="text-sm text-[#717171]">{c.label}</div>
             </div>
           ))}
         </div>
       )}
 
+      {/* Charts row */}
       <div className="grid grid-cols-2 gap-6">
         {/* Revenue chart */}
-        <div className="bg-white rounded-xl border border-slate-200 p-5">
-          <h2 className="font-semibold text-slate-900 mb-4">Revenus sur 6 mois</h2>
-          {revenue.length > 0 ? (
-            <div className="space-y-2">
+        <div className="bg-white rounded-2xl border border-[#DDDDDD] p-6 shadow-sm">
+          <div className="flex items-center justify-between mb-5">
+            <h2 className="font-semibold text-[#222222]">Revenus sur 6 mois</h2>
+            <span className="text-xs text-[#717171]">En euros</span>
+          </div>
+          {loading ? (
+            <div className="space-y-3">
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="h-5 bg-[#F7F7F7] rounded-full animate-pulse" />
+              ))}
+            </div>
+          ) : revenue.length > 0 ? (
+            <div className="space-y-3">
               {revenue.map((r, i) => {
                 const max = Math.max(...revenue.map((x) => x.revenue));
                 const pct = max > 0 ? (r.revenue / max) * 100 : 0;
                 return (
                   <div key={i} className="flex items-center gap-3">
-                    <span className="text-xs text-slate-500 w-16 flex-shrink-0">{r.month}</span>
-                    <div className="flex-1 bg-slate-100 rounded-full h-2">
-                      <div className="bg-slate-900 h-2 rounded-full transition-all" style={{ width: `${pct}%` }} />
+                    <span className="text-xs text-[#717171] w-14 flex-shrink-0 font-medium">{r.month}</span>
+                    <div className="flex-1 bg-[#F7F7F7] rounded-full h-2.5">
+                      <div
+                        className="bg-[#FF5A5F] h-2.5 rounded-full transition-all duration-500"
+                        style={{ width: `${pct}%` }}
+                      />
                     </div>
-                    <span className="text-xs font-medium text-slate-700 w-20 text-right">{formatCurrency(r.revenue)}</span>
+                    <span className="text-xs font-semibold text-[#222222] w-20 text-right">
+                      {formatCurrency(r.revenue)}
+                    </span>
                   </div>
                 );
               })}
             </div>
           ) : (
-            <p className="text-slate-400 text-sm">Aucune donnée</p>
+            <div className="flex items-center justify-center h-32 text-[#717171] text-sm">
+              Aucune donnée disponible
+            </div>
           )}
         </div>
 
-        {/* Upcoming */}
-        <div className="bg-white rounded-xl border border-slate-200 p-5">
-          <h2 className="font-semibold text-slate-900 mb-4">Arrivées à venir (14j)</h2>
-          {upcoming.length === 0 ? (
-            <p className="text-slate-400 text-sm">Aucune arrivée prévue</p>
+        {/* Upcoming arrivals */}
+        <div className="bg-white rounded-2xl border border-[#DDDDDD] p-6 shadow-sm">
+          <div className="flex items-center justify-between mb-5">
+            <h2 className="font-semibold text-[#222222]">Arrivées à venir</h2>
+            <span className="text-xs text-[#717171] bg-[#F7F7F7] px-2.5 py-1 rounded-full">14 jours</span>
+          </div>
+          {loading ? (
+            <div className="space-y-3">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="h-12 bg-[#F7F7F7] rounded-xl animate-pulse" />
+              ))}
+            </div>
+          ) : upcoming.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-32 text-[#717171]">
+              <Calendar size={32} className="mb-2 text-[#DDDDDD]" />
+              <p className="text-sm">Aucune arrivée prévue</p>
+            </div>
           ) : (
             <div className="space-y-3">
               {upcoming.slice(0, 6).map((r) => (
-                <div key={r.reservation_id} className="flex items-center gap-3">
+                <div
+                  key={r.reservation_id}
+                  className="flex items-center gap-3 p-3 rounded-xl hover:bg-[#F7F7F7] transition-colors"
+                >
+                  <div className="w-8 h-8 bg-[#FF5A5F]/10 rounded-full flex items-center justify-center flex-shrink-0">
+                    <span className="text-[#FF5A5F] text-xs font-bold">
+                      {(r.guest_name || "G")[0].toUpperCase()}
+                    </span>
+                  </div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium text-slate-900 truncate">
-                      {r.guest_name || "Guest"} — {r.property_name}
+                    <div className="text-sm font-semibold text-[#222222] truncate">
+                      {r.guest_name || "Voyageur"} — {r.property_name}
                     </div>
-                    <div className="text-xs text-slate-500">
-                      {formatDateShort(r.check_in)} → {formatDateShort(r.check_out)} · {r.nights} nuit{r.nights > 1 ? "s" : ""}
+                    <div className="text-xs text-[#717171]">
+                      {formatDateShort(r.check_in)} → {formatDateShort(r.check_out)} · {r.nights} nuit
+                      {r.nights > 1 ? "s" : ""}
                     </div>
                   </div>
-                  <span className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full flex-shrink-0">
+                  <span
+                    className={`text-xs px-2.5 py-1 rounded-full font-medium flex-shrink-0 ${
+                      SOURCE_BADGE[r.source] || "bg-[#F7F7F7] text-[#717171]"
+                    }`}
+                  >
                     {sourceLabel(r.source)}
                   </span>
                 </div>

@@ -4,90 +4,195 @@ import Link from "next/link";
 import { propertiesApi } from "@/lib/api";
 import { Property } from "@/types";
 import { formatCurrency, statusColor, propertyTypeLabel } from "@/lib/utils";
-import { Plus, Building2, MapPin, Users, BedDouble } from "lucide-react";
+import { Plus, Home, MapPin, Users, BedDouble, TrendingUp, Moon, Eye, Pencil } from "lucide-react";
+
+const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
+  active: { label: "Actif", className: "bg-green-100 text-green-700" },
+  inactive: { label: "Inactif", className: "bg-[#F7F7F7] text-[#717171]" },
+  maintenance: { label: "Maintenance", className: "bg-amber-100 text-amber-700" },
+};
 
 export default function PropertiesPage() {
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    propertiesApi.list().then((r) => { setProperties(r.data); setLoading(false); });
+    propertiesApi.list().then((r) => {
+      setProperties(r.data);
+      setLoading(false);
+    }).catch(() => setLoading(false));
   }, []);
 
+  const activeCount = properties.filter((p) => p.status === "active").length;
+
   return (
-    <div className="p-8">
-      <div className="flex items-center justify-between mb-8">
+    <div>
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Mes biens</h1>
-          <p className="text-slate-500 text-sm mt-0.5">{properties.length} bien{properties.length > 1 ? "s" : ""} géré{properties.length > 1 ? "s" : ""}</p>
+          <p className="text-sm text-[#717171]">
+            {properties.length} bien{properties.length !== 1 ? "s" : ""} géré{properties.length !== 1 ? "s" : ""} · {activeCount} actif{activeCount !== 1 ? "s" : ""}
+          </p>
         </div>
         <Link
           href="/dashboard/properties/new"
-          className="flex items-center gap-2 bg-slate-900 text-white px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-slate-800 transition-colors"
+          className="flex items-center gap-2 bg-[#FF5A5F] hover:bg-[#E00B41] text-white font-semibold px-5 py-2.5 rounded-xl transition-all text-sm"
         >
           <Plus size={16} />
           Ajouter un bien
         </Link>
       </div>
 
+      {/* Stats bar */}
+      <div className="grid grid-cols-3 gap-4 mb-6">
+        {[
+          { label: "Total biens", value: properties.length, icon: Home },
+          { label: "Biens actifs", value: activeCount, icon: TrendingUp },
+          { label: "En maintenance", value: properties.filter((p) => p.status === "maintenance").length, icon: Home },
+        ].map((stat, i) => (
+          <div key={i} className="bg-white rounded-2xl border border-[#DDDDDD] p-4 flex items-center gap-4 shadow-sm">
+            <div className="w-10 h-10 bg-[#FF5A5F]/10 rounded-xl flex items-center justify-center">
+              <stat.icon size={18} className="text-[#FF5A5F]" />
+            </div>
+            <div>
+              <div className="text-2xl font-bold text-[#222222]">{stat.value}</div>
+              <div className="text-xs text-[#717171]">{stat.label}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Loading state */}
       {loading ? (
-        <div className="grid grid-cols-3 gap-5">
+        <div className="grid grid-cols-3 gap-6">
           {[...Array(6)].map((_, i) => (
-            <div key={i} className="bg-white rounded-xl border border-slate-200 h-48 animate-pulse" />
+            <div key={i} className="bg-white rounded-2xl border border-[#DDDDDD] overflow-hidden shadow-sm">
+              <div className="h-48 bg-[#F7F7F7] animate-pulse" />
+              <div className="p-4 space-y-2">
+                <div className="h-4 bg-[#F7F7F7] rounded-xl animate-pulse" />
+                <div className="h-3 bg-[#F7F7F7] rounded-xl animate-pulse w-2/3" />
+              </div>
+            </div>
           ))}
         </div>
       ) : properties.length === 0 ? (
-        <div className="text-center py-24">
-          <Building2 size={40} className="text-slate-300 mx-auto mb-3" />
-          <p className="text-slate-500 font-medium">Aucun bien encore</p>
-          <p className="text-slate-400 text-sm mt-1">Ajoutez votre premier bien pour commencer</p>
-          <Link href="/dashboard/properties/new" className="inline-flex items-center gap-2 mt-4 bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-medium">
-            <Plus size={15} /> Ajouter un bien
+        /* Empty state */
+        <div className="bg-white rounded-2xl border border-[#DDDDDD] flex flex-col items-center justify-center py-24 shadow-sm">
+          <div className="w-16 h-16 bg-[#F7F7F7] rounded-2xl flex items-center justify-center mb-4">
+            <Home size={32} className="text-[#DDDDDD]" />
+          </div>
+          <h3 className="text-[#222222] font-semibold text-lg mb-2">Aucun bien encore</h3>
+          <p className="text-[#717171] text-sm mb-6">Ajoutez votre premier bien pour commencer à gérer vos locations</p>
+          <Link
+            href="/dashboard/properties/new"
+            className="flex items-center gap-2 bg-[#FF5A5F] hover:bg-[#E00B41] text-white font-semibold px-5 py-2.5 rounded-xl transition-all text-sm"
+          >
+            <Plus size={16} />
+            Ajouter un bien
           </Link>
         </div>
       ) : (
-        <div className="grid grid-cols-3 gap-5">
-          {properties.map((p) => (
-            <Link key={p.id} href={`/dashboard/properties/${p.id}`} className="bg-white rounded-xl border border-slate-200 hover:border-slate-300 hover:shadow-sm transition-all group overflow-hidden">
-              <div className="h-36 bg-gradient-to-br from-slate-100 to-slate-200 relative overflow-hidden">
-                {p.photos?.[0] ? (
-                  <img src={p.photos[0].url} alt={p.name} className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <Building2 size={32} className="text-slate-300" />
+        /* Property cards grid */
+        <div className="grid grid-cols-3 gap-6">
+          {properties.map((p) => {
+            const statusCfg = STATUS_CONFIG[p.status] || STATUS_CONFIG.inactive;
+            return (
+              <div
+                key={p.id}
+                className="bg-white rounded-2xl border border-[#DDDDDD] overflow-hidden shadow-sm hover:shadow-md transition-shadow group"
+              >
+                {/* Image area */}
+                <div className="h-48 bg-[#F7F7F7] relative overflow-hidden flex items-center justify-center">
+                  {p.photos?.[0] ? (
+                    <img
+                      src={p.photos[0].url}
+                      alt={p.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                  ) : (
+                    <Home size={40} className="text-[#DDDDDD]" />
+                  )}
+                  <div className="absolute top-3 right-3">
+                    <span className={`text-xs px-2.5 py-1 rounded-full font-semibold ${statusCfg.className}`}>
+                      {statusCfg.label}
+                    </span>
                   </div>
-                )}
-                <div className="absolute top-2.5 right-2.5">
-                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColor(p.status)}`}>
-                    {p.status === "active" ? "Actif" : p.status === "inactive" ? "Inactif" : "Maintenance"}
-                  </span>
                 </div>
-              </div>
-              <div className="p-4">
-                <div className="font-semibold text-slate-900 group-hover:text-slate-700 truncate">{p.name}</div>
-                <div className="text-xs text-slate-500 mt-0.5">{propertyTypeLabel(p.property_type)}</div>
-                {p.city && (
-                  <div className="flex items-center gap-1 text-xs text-slate-400 mt-2">
-                    <MapPin size={11} />
-                    {p.city}
+
+                {/* Content */}
+                <div className="p-4">
+                  <div className="mb-3">
+                    <h3 className="font-semibold text-[#222222] truncate">{p.name}</h3>
+                    {p.city && (
+                      <div className="flex items-center gap-1 text-xs text-[#717171] mt-1">
+                        <MapPin size={11} />
+                        {p.city}
+                      </div>
+                    )}
                   </div>
-                )}
-                <div className="flex items-center gap-3 mt-3 pt-3 border-t border-slate-100">
-                  <div className="flex items-center gap-1 text-xs text-slate-500">
-                    <Users size={12} /> {p.max_guests} pers.
+
+                  {/* Badges */}
+                  <div className="flex flex-wrap gap-1.5 mb-3">
+                    <span className="text-xs bg-[#F7F7F7] text-[#717171] px-2.5 py-1 rounded-full">
+                      {propertyTypeLabel(p.property_type)}
+                    </span>
+                    {p.bedrooms && (
+                      <span className="text-xs bg-[#F7F7F7] text-[#717171] px-2.5 py-1 rounded-full flex items-center gap-1">
+                        <BedDouble size={11} /> {p.bedrooms} ch.
+                      </span>
+                    )}
+                    {p.max_guests && (
+                      <span className="text-xs bg-[#F7F7F7] text-[#717171] px-2.5 py-1 rounded-full flex items-center gap-1">
+                        <Users size={11} /> {p.max_guests} pers.
+                      </span>
+                    )}
                   </div>
-                  <div className="flex items-center gap-1 text-xs text-slate-500">
-                    <BedDouble size={12} /> {p.bedrooms} ch.
-                  </div>
+
+                  {/* Price */}
                   {p.base_price_night && (
-                    <div className="ml-auto text-xs font-semibold text-slate-900">
-                      {formatCurrency(p.base_price_night)}/nuit
+                    <div className="text-[#FF5A5F] font-bold text-base mb-3">
+                      {formatCurrency(p.base_price_night)}
+                      <span className="text-[#717171] text-xs font-normal"> / nuit</span>
                     </div>
                   )}
+
+                  {/* Stats row */}
+                  <div className="flex items-center gap-3 pt-3 border-t border-[#DDDDDD] mb-3">
+                    <div className="flex-1 text-center">
+                      <div className="text-xs text-[#717171]">Nuitées</div>
+                      <div className="text-sm font-bold text-[#222222]">—</div>
+                    </div>
+                    <div className="w-px h-6 bg-[#DDDDDD]" />
+                    <div className="flex-1 text-center">
+                      <div className="text-xs text-[#717171]">Revenus</div>
+                      <div className="text-sm font-bold text-[#222222]">—</div>
+                    </div>
+                    <div className="w-px h-6 bg-[#DDDDDD]" />
+                    <div className="flex-1 text-center">
+                      <div className="text-xs text-[#717171]">Taux occ.</div>
+                      <div className="text-sm font-bold text-[#222222]">—</div>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex gap-2">
+                    <Link
+                      href={`/dashboard/properties/${p.id}`}
+                      className="flex-1 flex items-center justify-center gap-1.5 border border-[#DDDDDD] text-[#222222] font-semibold py-2 rounded-xl hover:bg-[#F7F7F7] transition-all text-sm"
+                    >
+                      <Eye size={14} /> Voir
+                    </Link>
+                    <Link
+                      href={`/dashboard/properties/${p.id}/edit`}
+                      className="flex-1 flex items-center justify-center gap-1.5 border border-[#DDDDDD] text-[#222222] font-semibold py-2 rounded-xl hover:bg-[#F7F7F7] transition-all text-sm"
+                    >
+                      <Pencil size={14} /> Modifier
+                    </Link>
+                  </div>
                 </div>
               </div>
-            </Link>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

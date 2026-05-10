@@ -2,11 +2,16 @@
 import { useEffect, useState } from "react";
 import { calendarApi, propertiesApi } from "@/lib/api";
 import { CalendarEvent, Property } from "@/types";
-import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, X } from "lucide-react";
 
-const SOURCE_COLORS: Record<string, string> = {
-  manual: "#1e293b", airbnb: "#ff5a5f", booking: "#003580", abritel: "#00adef",
-  ical: "#6366f1", reservation: "#1e293b", block: "#94a3b8",
+const SOURCE_CONFIG: Record<string, { color: string; bg: string; label: string }> = {
+  manual: { color: "#222222", bg: "bg-[#222222]/10", label: "Direct/Manuel" },
+  airbnb: { color: "#FF5A5F", bg: "bg-[#FF5A5F]/20", label: "Airbnb" },
+  booking: { color: "#003580", bg: "bg-blue-100", label: "Booking" },
+  abritel: { color: "#00adef", bg: "bg-cyan-100", label: "Abritel" },
+  ical: { color: "#6366f1", bg: "bg-indigo-100", label: "iCal" },
+  reservation: { color: "#FF5A5F", bg: "bg-[#FF5A5F]/20", label: "Réservation" },
+  block: { color: "#717171", bg: "bg-[#717171]/10", label: "Blocage" },
 };
 
 function getDaysInMonth(year: number, month: number) {
@@ -17,13 +22,24 @@ function getFirstDayOfMonth(year: number, month: number) {
   return (new Date(year, month, 1).getDay() + 6) % 7; // Mon=0
 }
 
+const MONTHS_FR = [
+  "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
+  "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre",
+];
+const DAYS_FR = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
+
 export default function CalendarPage() {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [properties, setProperties] = useState<Property[]>([]);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [loading, setLoading] = useState(true);
   const [showBlock, setShowBlock] = useState(false);
-  const [blockForm, setBlockForm] = useState({ property_id: "", start_date: "", end_date: "", title: "Blocage" });
+  const [blockForm, setBlockForm] = useState({
+    property_id: "",
+    start_date: "",
+    end_date: "",
+    title: "Blocage",
+  });
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -59,108 +75,210 @@ export default function CalendarPage() {
     loadEvents();
   };
 
-  const MONTHS_FR = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
-  const DAYS_FR = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
+  const goToday = () => setCurrentDate(new Date());
+
+  const inputClass =
+    "border border-[#DDDDDD] rounded-xl px-3 py-2.5 text-sm text-[#222222] placeholder-[#717171] focus:outline-none focus:border-[#222222] focus:ring-2 focus:ring-[#222222]/10 transition-all";
 
   return (
-    <div className="p-8">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Calendrier</h1>
-          <p className="text-slate-500 text-sm mt-0.5">Vue multi-biens</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-lg p-1">
-            <button onClick={() => setCurrentDate(new Date(year, month - 1))} className="p-1.5 hover:bg-slate-100 rounded">
+    <div>
+      {/* Controls */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-2">
+          {/* Month nav */}
+          <div className="flex items-center gap-1 bg-white border border-[#DDDDDD] rounded-xl p-1">
+            <button
+              onClick={() => setCurrentDate(new Date(year, month - 1))}
+              className="p-2 hover:bg-[#F7F7F7] rounded-lg transition-colors text-[#717171] hover:text-[#222222]"
+            >
               <ChevronLeft size={16} />
             </button>
-            <span className="px-3 text-sm font-medium text-slate-900 w-36 text-center">
+            <span className="px-4 text-sm font-semibold text-[#222222] w-40 text-center">
               {MONTHS_FR[month]} {year}
             </span>
-            <button onClick={() => setCurrentDate(new Date(year, month + 1))} className="p-1.5 hover:bg-slate-100 rounded">
+            <button
+              onClick={() => setCurrentDate(new Date(year, month + 1))}
+              className="p-2 hover:bg-[#F7F7F7] rounded-lg transition-colors text-[#717171] hover:text-[#222222]"
+            >
               <ChevronRight size={16} />
             </button>
           </div>
-          <button onClick={() => setShowBlock(true)} className="flex items-center gap-2 bg-slate-900 text-white px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-slate-800">
-            <Plus size={16} /> Bloquer
+          <button
+            onClick={goToday}
+            className="border border-[#DDDDDD] text-[#222222] font-semibold px-4 py-2.5 rounded-xl hover:bg-[#F7F7F7] transition-all text-sm"
+          >
+            Aujourd'hui
+          </button>
+        </div>
+
+        <div className="flex items-center gap-3">
+          {/* Legend */}
+          <div className="hidden xl:flex items-center gap-3">
+            {Object.entries(SOURCE_CONFIG)
+              .filter(([k]) => ["airbnb", "booking", "block", "manual"].includes(k))
+              .map(([k, cfg]) => (
+                <div key={k} className="flex items-center gap-1.5 text-xs text-[#717171]">
+                  <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: cfg.color }} />
+                  {cfg.label}
+                </div>
+              ))}
+          </div>
+
+          <button
+            onClick={() => setShowBlock(true)}
+            className="flex items-center gap-2 bg-[#FF5A5F] hover:bg-[#E00B41] text-white font-semibold px-5 py-2.5 rounded-xl transition-all text-sm"
+          >
+            <Plus size={16} /> Bloquer des dates
           </button>
         </div>
       </div>
 
-      {/* Legend */}
-      <div className="flex items-center gap-4 mb-4 flex-wrap">
-        {Object.entries(SOURCE_COLORS).filter(([k]) => ["airbnb", "booking", "abritel", "manual", "block"].includes(k)).map(([k, c]) => (
-          <div key={k} className="flex items-center gap-1.5 text-xs text-slate-600">
-            <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: c }} />
-            {k === "manual" ? "Direct/Manuel" : k === "block" ? "Blocage" : k.charAt(0).toUpperCase() + k.slice(1)}
-          </div>
-        ))}
-      </div>
-
+      {/* Block form */}
       {showBlock && (
-        <form onSubmit={handleBlock} className="bg-white rounded-xl border border-slate-200 p-5 mb-4 flex items-end gap-4 flex-wrap">
-          <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1">Bien</label>
-            <select required className="border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900"
-              value={blockForm.property_id} onChange={(e) => setBlockForm({ ...blockForm, property_id: e.target.value })}>
-              <option value="">Sélectionner</option>
-              {properties.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-            </select>
+        <div className="bg-white rounded-2xl border border-[#DDDDDD] p-6 mb-6 shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold text-[#222222]">Bloquer des dates</h3>
+            <button onClick={() => setShowBlock(false)} className="text-[#717171] hover:text-[#222222] transition-colors">
+              <X size={18} />
+            </button>
           </div>
-          <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1">Du</label>
-            <input type="date" required className="border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900"
-              value={blockForm.start_date} onChange={(e) => setBlockForm({ ...blockForm, start_date: e.target.value })} />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1">Au</label>
-            <input type="date" required className="border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900"
-              value={blockForm.end_date} onChange={(e) => setBlockForm({ ...blockForm, end_date: e.target.value })} />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1">Motif</label>
-            <input className="border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900"
-              value={blockForm.title} onChange={(e) => setBlockForm({ ...blockForm, title: e.target.value })} />
-          </div>
-          <div className="flex gap-2">
-            <button type="button" onClick={() => setShowBlock(false)} className="border border-slate-200 rounded-lg px-3 py-2 text-sm">Annuler</button>
-            <button type="submit" className="bg-slate-900 text-white rounded-lg px-3 py-2 text-sm">Bloquer</button>
-          </div>
-        </form>
+          <form onSubmit={handleBlock} className="grid grid-cols-5 gap-4 items-end">
+            <div>
+              <label className="text-[#222222] text-sm font-semibold mb-2 block">Propriété</label>
+              <select
+                required
+                className={inputClass + " w-full"}
+                value={blockForm.property_id}
+                onChange={(e) => setBlockForm({ ...blockForm, property_id: e.target.value })}
+              >
+                <option value="">Sélectionner</option>
+                {properties.map((p) => (
+                  <option key={p.id} value={p.id}>{p.name}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="text-[#222222] text-sm font-semibold mb-2 block">Du</label>
+              <input
+                type="date"
+                required
+                className={inputClass + " w-full"}
+                value={blockForm.start_date}
+                onChange={(e) => setBlockForm({ ...blockForm, start_date: e.target.value })}
+              />
+            </div>
+            <div>
+              <label className="text-[#222222] text-sm font-semibold mb-2 block">Au</label>
+              <input
+                type="date"
+                required
+                className={inputClass + " w-full"}
+                value={blockForm.end_date}
+                onChange={(e) => setBlockForm({ ...blockForm, end_date: e.target.value })}
+              />
+            </div>
+            <div>
+              <label className="text-[#222222] text-sm font-semibold mb-2 block">Motif</label>
+              <input
+                className={inputClass + " w-full"}
+                value={blockForm.title}
+                onChange={(e) => setBlockForm({ ...blockForm, title: e.target.value })}
+              />
+            </div>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setShowBlock(false)}
+                className="flex-1 border border-[#DDDDDD] text-[#222222] font-semibold py-2.5 rounded-xl hover:bg-[#F7F7F7] transition-all text-sm"
+              >
+                Annuler
+              </button>
+              <button
+                type="submit"
+                className="flex-1 bg-[#FF5A5F] hover:bg-[#E00B41] text-white font-semibold py-2.5 rounded-xl transition-all text-sm"
+              >
+                Bloquer
+              </button>
+            </div>
+          </form>
+        </div>
       )}
 
-      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-        <div className="grid grid-cols-7 border-b border-slate-200">
+      {/* Calendar grid */}
+      <div className="bg-white rounded-2xl border border-[#DDDDDD] shadow-sm overflow-hidden">
+        {/* Day headers */}
+        <div className="grid grid-cols-7 border-b border-[#DDDDDD] bg-[#F7F7F7]">
           {DAYS_FR.map((d) => (
-            <div key={d} className="text-center text-xs font-medium text-slate-500 py-3">{d}</div>
+            <div key={d} className="text-center text-xs font-semibold text-[#717171] uppercase tracking-wide py-3">
+              {d}
+            </div>
           ))}
         </div>
-        <div className="grid grid-cols-7">
-          {cells.map((day, i) => {
-            const today = new Date();
-            const isToday = day && today.getDate() === day && today.getMonth() === month && today.getFullYear() === year;
-            const dayEvents = day ? getEventsForDay(day) : [];
-            return (
-              <div key={i} className={`min-h-[100px] border-b border-r border-slate-100 p-1.5 ${!day ? "bg-slate-50" : ""}`}>
-                {day && (
-                  <>
-                    <div className={`text-xs font-medium w-6 h-6 flex items-center justify-center rounded-full mb-1 ${isToday ? "bg-slate-900 text-white" : "text-slate-700"}`}>
-                      {day}
-                    </div>
-                    <div className="space-y-0.5">
-                      {dayEvents.slice(0, 3).map((e) => (
-                        <div key={e.id} className="text-xs px-1.5 py-0.5 rounded truncate text-white" style={{ backgroundColor: SOURCE_COLORS[e.source] || "#1e293b" }}>
-                          {e.title || propMap[e.property_id]?.substring(0, 12) || e.event_type}
-                        </div>
-                      ))}
-                      {dayEvents.length > 3 && <div className="text-xs text-slate-400 px-1">+{dayEvents.length - 3}</div>}
-                    </div>
-                  </>
-                )}
-              </div>
-            );
-          })}
-        </div>
+
+        {/* Day cells */}
+        {loading ? (
+          <div className="grid grid-cols-7">
+            {Array(35).fill(null).map((_, i) => (
+              <div key={i} className="min-h-[110px] border-b border-r border-[#DDDDDD] p-2 animate-pulse bg-[#F7F7F7]/40" />
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-7">
+            {cells.map((day, i) => {
+              const today = new Date();
+              const isToday =
+                day &&
+                today.getDate() === day &&
+                today.getMonth() === month &&
+                today.getFullYear() === year;
+              const dayEvents = day ? getEventsForDay(day) : [];
+
+              return (
+                <div
+                  key={i}
+                  className={`min-h-[110px] border-b border-r border-[#DDDDDD] p-2 ${
+                    !day ? "bg-[#F7F7F7]/40" : ""
+                  }`}
+                >
+                  {day && (
+                    <>
+                      <div
+                        className={`text-xs font-semibold w-7 h-7 flex items-center justify-center rounded-full mb-1.5 ${
+                          isToday
+                            ? "bg-[#FF5A5F] text-white"
+                            : "text-[#222222] hover:bg-[#F7F7F7]"
+                        }`}
+                      >
+                        {day}
+                      </div>
+                      <div className="space-y-1">
+                        {dayEvents.slice(0, 3).map((e) => {
+                          const cfg = SOURCE_CONFIG[e.source] || SOURCE_CONFIG.manual;
+                          return (
+                            <div
+                              key={e.id}
+                              className={`text-xs px-1.5 py-0.5 rounded truncate font-medium border-l-2`}
+                              style={{
+                                backgroundColor: `${cfg.color}20`,
+                                color: cfg.color,
+                                borderLeftColor: cfg.color,
+                              }}
+                            >
+                              {e.title || propMap[e.property_id]?.substring(0, 12) || e.event_type}
+                            </div>
+                          );
+                        })}
+                        {dayEvents.length > 3 && (
+                          <div className="text-xs text-[#717171] px-1 font-medium">+{dayEvents.length - 3}</div>
+                        )}
+                      </div>
+                    </>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );

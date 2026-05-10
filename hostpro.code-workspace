@@ -1,0 +1,97 @@
+{
+  "folders": [
+    {
+      "name": "🏠 HOST PRO — Racine",
+      "path": "."
+    },
+    {
+      "name": "🐍 Backend — API (FastAPI)",
+      "path": "hostpro-api"
+    },
+    {
+      "name": "⚛️  Frontend — Web (Next.js)",
+      "path": "hostpro-web"
+    }
+  ],
+  "settings": {
+    "editor.fontSize": 14,
+    "editor.tabSize": 2,
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "[python]": {
+      "editor.defaultFormatter": "ms-python.black-formatter",
+      "editor.tabSize": 4
+    },
+    "files.exclude": {
+      "**/__pycache__": true,
+      "**/.next": true,
+      "**/node_modules": true,
+      "**/venv": true,
+      "**/*.pyc": true
+    },
+    "explorer.fileNesting.enabled": true,
+    "explorer.fileNesting.patterns": {
+      "*.tsx": "${capture}.test.tsx,${capture}.stories.tsx",
+      "*.py": "${capture}.test.py",
+      "package.json": "package-lock.json, yarn.lock, .npmrc, .nvmrc",
+      "requirements.txt": "requirements-dev.txt"
+    },
+    "workbench.colorCustomizations": {
+      "titleBar.activeBackground": "#0B1826",
+      "titleBar.activeForeground": "#14B8C8"
+    }
+  },
+  "extensions": {
+    "recommendations": [
+      "ms-python.python",
+      "ms-python.black-formatter",
+      "esbenp.prettier-vscode",
+      "bradlc.vscode-tailwindcss",
+      "dsznajder.es7-react-js-snippets",
+      "ms-vscode.vscode-typescript-next",
+      "humao.rest-client",
+      "mtxr.sqltools",
+      "eamodio.gitlens"
+    ]
+  },
+  "launch": {
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "🐍 Lancer le backend FastAPI",
+        "type": "python",
+        "request": "launch",
+        "module": "uvicorn",
+        "args": ["app.main:app", "--reload", "--port", "8000"],
+        "cwd": "${workspaceFolder:🐍 Backend — API (FastAPI)}",
+        "env": {
+          "PYTHONPATH": "${workspaceFolder:🐍 Backend — API (FastAPI)}"
+        }
+      }
+    ]
+  },
+  "tasks": {
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "▶ Démarrer Backend",
+        "type": "shell",
+        "command": "cd hostpro-api && python -m uvicorn app.main:app --reload --port 8000",
+        "group": "build",
+        "presentation": { "panel": "dedicated", "group": "hostpro" }
+      },
+      {
+        "label": "▶ Démarrer Frontend",
+        "type": "shell",
+        "command": "cd hostpro-web && npm run dev",
+        "group": "build",
+        "presentation": { "panel": "dedicated", "group": "hostpro" }
+      },
+      {
+        "label": "🚀 Démarrer TOUT",
+        "dependsOn": ["▶ Démarrer Backend", "▶ Démarrer Frontend"],
+        "group": { "kind": "build", "isDefault": true }
+      }
+    ]
+  }
+}

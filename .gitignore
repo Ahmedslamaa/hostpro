@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.env
+venv/
+.venv/
+*.db
+uploads/
+
+# Node
+node_modules/
+.next/
+.vercel/
+out/
+*.log
+
+# Système
+.DS_Store
+Thumbs.db
+
+# Secrets
+*.env.local
+azure-deploy-info.txt
+.env.production

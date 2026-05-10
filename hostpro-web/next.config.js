@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'standalone',
+  // 'standalone' is for Docker/self-hosted only — Vercel handles its own output
+  ...(process.env.DOCKER_BUILD === '1' && { output: 'standalone' }),
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "*.blob.core.windows.net" },

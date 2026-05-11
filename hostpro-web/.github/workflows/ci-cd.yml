@@ -103,41 +103,13 @@ jobs:
         with:
           name: webapp-build
 
-      - name: Azure Login
-        uses: azure/login@v2
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-
+      # Publish profile — ne nécessite pas de Service Principal (compatible Azure for Students)
       - name: Deploy to Azure App Service
         uses: azure/webapps-deploy@v3
         with:
           app-name: ${{ env.AZURE_WEBAPP_NAME }}
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
           package: deploy.zip
-
-      - name: Configure App Settings
-        uses: azure/CLI@v2
-        with:
-          inlineScript: |
-            az webapp config appsettings set \
-              --name ${{ env.AZURE_WEBAPP_NAME }} \
-              --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
-              --settings \
-                NODE_ENV=production \
-                NEXT_PUBLIC_APP_URL="${{ secrets.NEXT_PUBLIC_APP_URL }}" \
-                JWT_SECRET="${{ secrets.JWT_SECRET }}" \
-                JWT_REFRESH_SECRET="${{ secrets.JWT_REFRESH_SECRET }}" \
-                ANTHROPIC_API_KEY="${{ secrets.ANTHROPIC_API_KEY }}" \
-                RESEND_API_KEY="${{ secrets.RESEND_API_KEY }}" \
-                EMAIL_FROM="${{ secrets.EMAIL_FROM }}" \
-                STRIPE_SECRET_KEY="${{ secrets.STRIPE_SECRET_KEY }}" \
-                STRIPE_WEBHOOK_SECRET="${{ secrets.STRIPE_WEBHOOK_SECRET }}" \
-                STRIPE_PRICE_STARTER="${{ secrets.STRIPE_PRICE_STARTER }}" \
-                STRIPE_PRICE_PRO="${{ secrets.STRIPE_PRICE_PRO }}" \
-                STRIPE_PRICE_ENTERPRISE="${{ secrets.STRIPE_PRICE_ENTERPRISE }}" \
-                VAPID_PUBLIC_KEY="${{ secrets.VAPID_PUBLIC_KEY }}" \
-                VAPID_PRIVATE_KEY="${{ secrets.VAPID_PRIVATE_KEY }}" \
-                VAPID_EMAIL="${{ secrets.VAPID_EMAIL }}" \
-              --output none
 
   # ── Job 4: Migrate DB ────────────────────────────────────────────────────────
   migrate:
@@ -160,5 +132,10 @@ jobs:
 
       - name: Run Prisma migrations
         run: npx prisma migrate deploy
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      - name: Seed demo data (first deploy only)
+        run: npx tsx prisma/seed.ts || true
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}

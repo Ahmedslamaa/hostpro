@@ -1,15 +1,15 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, func
 from typing import List, Optional
 from uuid import UUID
 from datetime import datetime, timezone
 from pydantic import BaseModel
 
 from app.core.database import get_db
-from app.core.dependencies import get_current_user, get_current_tenant, check_permission
+from app.core.dependencies import get_current_user, get_current_tenant, check_permission, get_subscription, check_limit
 from app.models.user import User, UserTenantMembership
-from app.models.tenant import Tenant
+from app.models.tenant import Tenant, Subscription
 from app.core.security import hash_password
 import uuid
 
@@ -72,9 +72,21 @@ async def invite_member(
     data: InviteCreate,
     current_user: User = Depends(get_current_user),
     tenant: Tenant = Depends(get_current_tenant),
+    sub: Subscription | None = Depends(get_subscription),
     db: AsyncSession = Depends(get_db),
 ):
     check_permission(current_user, "team:write")
+
+    # ── Vérification limite membres du plan ─────────────────────────────────
+    current_count = await db.scalar(
+        select(func.count()).where(
+            UserTenantMembership.tenant_id == tenant.id,
+            UserTenantMembership.is_active == True,
+        )
+    )
+    await check_limit(tenant, sub, "team_members_limit", current_count,
+        error_msg="Limite de membres d'équipe atteinte pour votre plan. "
+                  "Passez à un plan supérieur pour inviter davantage de collaborateurs.")
 
     # Check if user already exists
     existing = await db.scalar(select(User).where(User.email == data.email))

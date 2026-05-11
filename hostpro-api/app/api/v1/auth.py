@@ -9,7 +9,8 @@ from app.core.security import hash_password, verify_password, create_access_toke
 from app.core.dependencies import get_current_user
 from app.models.user import User, UserTenantMembership
 from app.models.tenant import Tenant, Subscription
-from app.schemas.auth import RegisterRequest, LoginRequest, TokenResponse, UserOut, MeResponse, TenantMini, RefreshRequest
+from app.schemas.auth import RegisterRequest, LoginRequest, TokenResponse, UserOut, MeResponse, TenantMini, RefreshRequest, SubscriptionInfo
+from app.core.plans import get_plan_features
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -139,8 +140,29 @@ async def me(current_user: User = Depends(get_current_user), db: AsyncSession = 
     tenants = []
     for m in memberships.all():
         tenant = await db.scalar(select(Tenant).where(Tenant.id == m.tenant_id))
-        if tenant:
-            tenants.append(TenantMini(id=tenant.id, name=tenant.name, slug=tenant.slug, role=m.role))
+        if not tenant:
+            continue
+
+        # Charger la souscription et construire SubscriptionInfo
+        sub = await db.scalar(select(Subscription).where(Subscription.tenant_id == tenant.id))
+        plan = sub.plan if sub else tenant.plan
+        features = get_plan_features(plan)
+
+        sub_info = SubscriptionInfo(
+            plan=plan,
+            status=sub.status if sub else "trialing",
+            trial_end=sub.trial_end if sub else None,
+            current_period_end=sub.current_period_end if sub else None,
+            features=dict(features),
+            properties_limit=features["properties_limit"],
+            team_members_limit=features["team_members_limit"],
+            ical_feeds_limit=features["ical_feeds_limit"],
+        )
+
+        tenants.append(TenantMini(
+            id=tenant.id, name=tenant.name, slug=tenant.slug,
+            role=m.role, subscription=sub_info,
+        ))
 
     resp = MeResponse.model_validate(current_user)
     resp.tenants = tenants

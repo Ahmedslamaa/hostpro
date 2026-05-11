@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>HOST PRO — Aperçu Application Mobile</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    padding: 20px;
+  }
+  .page-title {
+    color: white;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    opacity: 0.7;
+  }
+  .page-subtitle {
+    color: white;
+    font-size: 26px;
+    font-weight: 800;
+    margin-bottom: 32px;
+    text-align: center;
+  }
+  .page-subtitle span { color: #FF5A5F; }
+  .nav-pills {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .nav-pill {
+    padding: 8px 18px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all .2s;
+    background: rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.7);
+  }
+  .nav-pill.active, .nav-pill:hover {
+    background: #FF5A5F;
+    color: white;
+    box-shadow: 0 4px 15px rgba(255,90,95,0.4);
+  }
+
+  /* Phone frame */
+  .phone-wrapper {
+    position: relative;
+    width: 375px;
+  }
+  .phone-frame {
+    background: #1a1a1a;
+    border-radius: 48px;
+    padding: 12px;
+    box-shadow:
+      0 0 0 2px #333,
+      0 30px 80px rgba(0,0,0,0.7),
+      inset 0 0 0 2px #444;
+    position: relative;
+  }
+  .phone-notch {
+    position: absolute;
+    top: 18px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 120px;
+    height: 28px;
+    background: #1a1a1a;
+    border-radius: 14px;
+    z-index: 20;
+  }
+  .phone-screen {
+    background: #F7F7F7;
+    border-radius: 38px;
+    overflow: hidden;
+    height: 750px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+  .status-bar {
+    background: white;
+    height: 44px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    padding: 0 28px 6px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #222;
+    flex-shrink: 0;
+  }
+  .status-icons { display: flex; gap: 5px; align-items: center; }
+  .screen-content {
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* ===== SCREENS ===== */
+  .screen { display: none; height: 100%; flex-direction: column; }
+  .screen.visible { display: flex; }
+
+  /* LOGIN */
+  .login-screen {
+    background: white;
+    padding: 0;
+    align-items: stretch;
+  }
+  .login-hero {
+    background: linear-gradient(135deg, #FF5A5F 0%, #c0392b 100%);
+    padding: 48px 32px 40px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+  .login-logo {
+    font-size: 28px;
+    font-weight: 900;
+    color: white;
+    margin-bottom: 4px;
+    letter-spacing: -1px;
+  }
+  .login-logo span {
+    background: rgba(255,255,255,0.25);
+    border-radius: 8px;
+    padding: 2px 10px;
+    margin-left: 4px;
+  }
+  .login-tagline { color: rgba(255,255,255,0.85); font-size: 13px; }
+  .login-body { padding: 32px 28px; flex: 1; }
+  .login-body h2 { font-size: 22px; font-weight: 800; color: #222; margin-bottom: 6px; }
+  .login-body p { color: #717171; font-size: 13px; margin-bottom: 24px; }
+  .field-label { font-size: 12px; font-weight: 700; color: #717171; margin-bottom: 6px; text-transform: uppercase; letter-spacing: .5px; }
+  .field-input {
+    width: 100%;
+    background: #F7F7F7;
+    border: 1.5px solid #DDDDDD;
+    border-radius: 12px;
+    padding: 13px 16px;
+    font-size: 14px;
+    color: #222;
+    margin-bottom: 16px;
+  }
+  .field-input.focused { border-color: #FF5A5F; background: white; }
+  .btn-primary {
+    width: 100%;
+    background: #FF5A5F;
+    color: white;
+    border: none;
+    border-radius: 14px;
+    padding: 15px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-bottom: 12px;
+    box-shadow: 0 4px 15px rgba(255,90,95,0.35);
+  }
+  .btn-demo {
+    width: 100%;
+    background: #F7F7F7;
+    color: #717171;
+    border: 1.5px solid #DDDDDD;
+    border-radius: 14px;
+    padding: 14px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .forgot-link { text-align: center; color: #FF5A5F; font-size: 12px; font-weight: 600; margin-top: 16px; }
+
+  /* DASHBOARD */
+  .dash-screen { background: #F7F7F7; }
+  .dash-header {
+    background: white;
+    padding: 52px 20px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #EEEEEE;
+    flex-shrink: 0;
+  }
+  .dash-greeting { }
+  .dash-greeting-sub { font-size: 11px; color: #717171; font-weight: 500; }
+  .dash-greeting-name { font-size: 17px; font-weight: 800; color: #222; }
+  .dash-bell {
+    width: 38px; height: 38px;
+    background: #FFF5F5;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+  }
+  .dash-bell-dot {
+    position: absolute; top: 6px; right: 6px;
+    width: 8px; height: 8px;
+    background: #FF5A5F; border-radius: 50%;
+    border: 1.5px solid white;
+  }
+  .dash-scroll { flex: 1; overflow-y: auto; padding: 16px 16px 0; }
+  .dash-section-title {
+    font-size: 13px; font-weight: 700; color: #717171;
+    text-transform: uppercase; letter-spacing: .5px;
+    margin-bottom: 10px; margin-top: 4px;
+  }
+  /* KPI row */
+  .kpi-row { display: flex; gap: 10px; margin-bottom: 16px; }
+  .kpi-card {
+    flex: 1;
+    background: white;
+    border-radius: 16px;
+    padding: 14px 12px;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+  }
+  .kpi-label { font-size: 10px; color: #717171; font-weight: 600; text-transform: uppercase; letter-spacing: .4px; margin-bottom: 6px; }
+  .kpi-value { font-size: 20px; font-weight: 900; color: #222; line-height: 1; }
+  .kpi-trend { font-size: 10px; font-weight: 700; color: #22c55e; margin-top: 4px; }
+  .kpi-trend.down { color: #ef4444; }
+  /* Alert card */
+  .alert-card {
+    background: white;
+    border-radius: 14px;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.05);
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    border-left: 3px solid #FF5A5F;
+  }
+  .alert-card.warning { border-left-color: #f59e0b; }
+  .alert-dot { width: 8px; height: 8px; background: #FF5A5F; border-radius: 50%; margin-top: 4px; flex-shrink: 0; }
+  .alert-dot.warning { background: #f59e0b; }
+  .alert-prop { font-size: 12px; font-weight: 700; color: #222; }
+  .alert-msg { font-size: 11px; color: #717171; margin-top: 2px; line-height: 1.4; }
+  /* Arrival card */
+  .arrival-card {
+    background: white;
+    border-radius: 14px;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.05);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .arrival-avatar {
+    width: 36px; height: 36px;
+    background: linear-gradient(135deg, #FF5A5F, #c0392b);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-weight: 800; font-size: 13px;
+    flex-shrink: 0;
+  }
+  .arrival-name { font-size: 13px; font-weight: 700; color: #222; }
+  .arrival-prop { font-size: 11px; color: #717171; }
+  .arrival-date { margin-left: auto; font-size: 11px; font-weight: 600; color: #FF5A5F; background: #FFF5F5; padding: 4px 10px; border-radius: 8px; }
+
+  /* RESERVATIONS */
+  .res-header {
+    background: white;
+    padding: 52px 20px 14px;
+    border-bottom: 1px solid #EEE;
+    flex-shrink: 0;
+  }
+  .res-title { font-size: 22px; font-weight: 900; color: #222; margin-bottom: 12px; }
+  .filter-tabs { display: flex; gap: 6px; }
+  .filter-tab {
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+  }
+  .filter-tab.active { background: #222; color: white; }
+  .filter-tab:not(.active) { background: #F7F7F7; color: #717171; }
+  .res-list { flex: 1; overflow-y: auto; padding: 12px 16px; }
+  .res-card {
+    background: white;
+    border-radius: 16px;
+    padding: 14px;
+    margin-bottom: 10px;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+  }
+  .res-card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+  .res-guest { font-size: 14px; font-weight: 800; color: #222; }
+  .res-num { font-size: 11px; color: #717171; }
+  .badge {
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .badge.confirmed { background: #dcfce7; color: #16a34a; }
+  .badge.pending { background: #fef9c3; color: #854d0e; }
+  .badge.cancelled { background: #fee2e2; color: #dc2626; }
+  .badge.checkin { background: #dbeafe; color: #1d4ed8; }
+  .res-card-row { display: flex; gap: 12px; font-size: 12px; color: #717171; margin-bottom: 6px; }
+  .res-card-row span { display: flex; align-items: center; gap: 4px; }
+  .res-prop { font-size: 12px; font-weight: 600; color: #FF5A5F; }
+  .res-amount { font-size: 15px; font-weight: 800; color: #222; margin-top: 6px; }
+  .source-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 700;
+    margin-left: 6px;
+  }
+  .source-badge.airbnb { background: #FFE4E6; color: #FF5A5F; }
+  .source-badge.booking { background: #EFF6FF; color: #2563EB; }
+  .source-badge.direct { background: #F0FDF4; color: #16A34A; }
+
+  /* PROPERTIES */
+  .props-header {
+    background: white;
+    padding: 52px 20px 14px;
+    border-bottom: 1px solid #EEE;
+    flex-shrink: 0;
+  }
+  .props-title { font-size: 22px; font-weight: 900; color: #222; margin-bottom: 4px; }
+  .props-sub { font-size: 13px; color: #717171; }
+  .props-list { flex: 1; overflow-y: auto; padding: 12px 16px; }
+  .prop-card {
+    background: white;
+    border-radius: 16px;
+    margin-bottom: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 8px rgba(0,0,0,0.08);
+  }
+  .prop-img {
+    height: 130px;
+    background: linear-gradient(135deg, #e2e8f0, #cbd5e1);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 36px;
+    position: relative;
+  }
+  .prop-img-1 { background: linear-gradient(135deg, #fde68a, #f59e0b); }
+  .prop-img-2 { background: linear-gradient(135deg, #bfdbfe, #3b82f6); }
+  .prop-img-3 { background: linear-gradient(135deg, #d1fae5, #10b981); }
+  .prop-occ {
+    position: absolute; bottom: 8px; right: 8px;
+    background: rgba(0,0,0,0.6);
+    color: white;
+    font-size: 11px; font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 8px;
+  }
+  .prop-status {
+    position: absolute; top: 8px; left: 8px;
+    background: #22c55e;
+    color: white;
+    font-size: 10px; font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 8px;
+  }
+  .prop-body { padding: 12px 14px; }
+  .prop-name { font-size: 15px; font-weight: 800; color: #222; margin-bottom: 3px; }
+  .prop-addr { font-size: 11px; color: #717171; margin-bottom: 8px; }
+  .prop-stats { display: flex; gap: 12px; }
+  .prop-stat { font-size: 11px; color: #717171; }
+  .prop-stat strong { color: #222; font-weight: 700; }
+
+  /* TASKS */
+  .tasks-header {
+    background: white;
+    padding: 52px 20px 14px;
+    border-bottom: 1px solid #EEE;
+    flex-shrink: 0;
+  }
+  .tasks-title { font-size: 22px; font-weight: 900; color: #222; margin-bottom: 12px; }
+  .task-filter-row { display: flex; gap: 6px; }
+  .tasks-list { flex: 1; overflow-y: auto; padding: 12px 16px; }
+  .task-card {
+    background: white;
+    border-radius: 14px;
+    padding: 14px;
+    margin-bottom: 8px;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.05);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .task-check {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    border: 2px solid #DDDDDD;
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .task-check.done { background: #22c55e; border-color: #22c55e; }
+  .task-check.done::after { content: '✓'; color: white; font-size: 11px; font-weight: 700; }
+  .task-info { flex: 1; }
+  .task-name { font-size: 13px; font-weight: 700; color: #222; margin-bottom: 3px; }
+  .task-name.done { text-decoration: line-through; color: #717171; }
+  .task-meta { font-size: 11px; color: #717171; }
+  .priority-dot {
+    width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+  }
+  .priority-dot.high { background: #ef4444; }
+  .priority-dot.medium { background: #f59e0b; }
+  .priority-dot.low { background: #22c55e; }
+
+  /* PROFILE */
+  .profile-screen { background: #F7F7F7; }
+  .profile-hero {
+    background: linear-gradient(135deg, #FF5A5F, #c0392b);
+    padding: 52px 24px 32px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+  .profile-avatar {
+    width: 72px; height: 72px;
+    background: rgba(255,255,255,0.25);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px; font-weight: 800; color: white;
+    margin: 0 auto 12px;
+    border: 3px solid rgba(255,255,255,0.4);
+  }
+  .profile-name { font-size: 18px; font-weight: 800; color: white; }
+  .profile-email { font-size: 13px; color: rgba(255,255,255,0.8); margin-top: 3px; }
+  .profile-plan {
+    display: inline-block;
+    background: rgba(255,255,255,0.2);
+    color: white;
+    font-size: 11px; font-weight: 700;
+    padding: 4px 14px;
+    border-radius: 999px;
+    margin-top: 10px;
+    border: 1.5px solid rgba(255,255,255,0.3);
+  }
+  .profile-body { flex: 1; overflow-y: auto; padding: 16px; }
+  .profile-section {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 12px;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.05);
+  }
+  .profile-row {
+    display: flex;
+    align-items: center;
+    padding: 14px 16px;
+    border-bottom: 1px solid #F7F7F7;
+    gap: 12px;
+  }
+  .profile-row:last-child { border-bottom: none; }
+  .profile-row-icon {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px;
+    flex-shrink: 0;
+  }
+  .icon-blue { background: #EFF6FF; }
+  .icon-orange { background: #FFF7ED; }
+  .icon-purple { background: #FAF5FF; }
+  .icon-green { background: #F0FDF4; }
+  .profile-row-text { flex: 1; }
+  .profile-row-label { font-size: 13px; font-weight: 600; color: #222; }
+  .profile-row-sub { font-size: 11px; color: #717171; margin-top: 1px; }
+  .profile-chevron { color: #DDDDDD; font-size: 14px; }
+  .btn-logout {
+    width: 100%;
+    background: #FFF5F5;
+    border: 1.5px solid #FFCDD2;
+    color: #FF5A5F;
+    border-radius: 14px;
+    padding: 14px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 4px;
+  }
+
+  /* BOTTOM NAV */
+  .bottom-nav {
+    background: white;
+    border-top: 1px solid #EEEEEE;
+    display: flex;
+    padding: 8px 0 16px;
+    flex-shrink: 0;
+  }
+  .nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    cursor: pointer;
+    padding: 4px 0;
+  }
+  .nav-icon { font-size: 20px; line-height: 1; }
+  .nav-label { font-size: 10px; font-weight: 600; color: #717171; }
+  .nav-item.active .nav-label { color: #FF5A5F; }
+  .nav-item.active .nav-icon { filter: none; }
+
+  /* Scrollbar hidden */
+  .dash-scroll::-webkit-scrollbar,
+  .res-list::-webkit-scrollbar,
+  .props-list::-webkit-scrollbar,
+  .tasks-list::-webkit-scrollbar,
+  .profile-body::-webkit-scrollbar { display: none; }
+</style>
+</head>
+<body>
+
+<p class="page-title">Aperçu interactif</p>
+<h1 class="page-subtitle">HOST <span>PRO</span> — Application Mobile</h1>
+
+<div class="nav-pills">
+  <button class="nav-pill active" onclick="showScreen('login')">🔐 Connexion</button>
+  <button class="nav-pill" onclick="showScreen('dashboard')">📊 Dashboard</button>
+  <button class="nav-pill" onclick="showScreen('reservations')">📅 Réservations</button>
+  <button class="nav-pill" onclick="showScreen('properties')">🏠 Biens</button>
+  <button class="nav-pill" onclick="showScreen('tasks')">✅ Tâches</button>
+  <button class="nav-pill" onclick="showScreen('profile')">👤 Profil</button>
+</div>
+
+<div class="phone-wrapper">
+  <div class="phone-frame">
+    <div class="phone-notch"></div>
+    <div class="phone-screen">
+
+      <!-- Status bar -->
+      <div class="status-bar" id="statusBar">
+        <span>9:41</span>
+        <div class="status-icons">
+          <span>●●●●</span>
+          <span>WiFi</span>
+          <span>🔋</span>
+        </div>
+      </div>
+
+      <!-- SCREENS -->
+      <div class="screen-content">
+
+        <!-- LOGIN -->
+        <div class="screen login-screen visible" id="screen-login">
+          <div class="login-hero">
+            <div class="login-logo">HOST <span>PRO</span></div>
+            <div class="login-tagline">Gestion locative intelligente</div>
+          </div>
+          <div class="login-body">
+            <h2>Bienvenue 👋</h2>
+            <p>Connectez-vous à votre espace de gestion</p>
+            <div class="field-label">Adresse email</div>
+            <div class="field-input focused">ahmed@hostpro.fr</div>
+            <div class="field-label">Mot de passe</div>
+            <div class="field-input">••••••••••</div>
+            <button class="btn-primary">Se connecter</button>
+            <button class="btn-demo" onclick="showScreen('dashboard')">🎯 Essayer en démo</button>
+            <div class="forgot-link">Mot de passe oublié ?</div>
+          </div>
+        </div>
+
+        <!-- DASHBOARD -->
+        <div class="screen dash-screen" id="screen-dashboard">
+          <div class="dash-header">
+            <div class="dash-greeting">
+              <div class="dash-greeting-sub">Bonjour 👋</div>
+              <div class="dash-greeting-name">Ahmed — Démo</div>
+            </div>
+            <div class="dash-bell">
+              🔔
+              <div class="dash-bell-dot"></div>
+            </div>
+          </div>
+          <div class="dash-scroll">
+            <div class="dash-section-title">Ce mois · Mai 2026</div>
+            <div class="kpi-row">
+              <div class="kpi-card">
+                <div class="kpi-label">Occupation</div>
+                <div class="kpi-value">78%</div>
+                <div class="kpi-trend">↑ +3.2%</div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">Revenus</div>
+                <div class="kpi-value">19 480€</div>
+                <div class="kpi-trend">↑ +12.5%</div>
+              </div>
+            </div>
+            <div class="kpi-row">
+              <div class="kpi-card">
+                <div class="kpi-label">Prix / nuit</div>
+                <div class="kpi-value">196€</div>
+                <div class="kpi-trend">↑ +5.8%</div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">RevPAR</div>
+                <div class="kpi-value">153€</div>
+                <div class="kpi-trend down">↓ -1.2%</div>
+              </div>
+            </div>
+
+            <div class="dash-section-title">Alertes conformité</div>
+            <div class="alert-card">
+              <div class="alert-dot"></div>
+              <div>
+                <div class="alert-prop">Studio Monaco</div>
+                <div class="alert-msg">Numéro d'enregistrement manquant — requis loi Le Meur</div>
+              </div>
+            </div>
+            <div class="alert-card warning">
+              <div class="alert-dot warning"></div>
+              <div>
+                <div class="alert-prop">Mas Provençal</div>
+                <div class="alert-msg">DPE classe E — mise à niveau recommandée avant 2028</div>
+              </div>
+            </div>
+
+            <div class="dash-section-title">Arrivées aujourd'hui</div>
+            <div class="arrival-card">
+              <div class="arrival-avatar">MD</div>
+              <div>
+                <div class="arrival-name">Marie Dupont</div>
+                <div class="arrival-prop">Villa Azur · 5 nuits</div>
+              </div>
+              <div class="arrival-date">Auj. 15h</div>
+            </div>
+            <div class="arrival-card">
+              <div class="arrival-avatar">SB</div>
+              <div>
+                <div class="arrival-name">Sophie & Luc Bernard</div>
+                <div class="arrival-prop">Studio Monaco · 5 nuits</div>
+              </div>
+              <div class="arrival-date">Auj. 17h</div>
+            </div>
+            <div style="height:16px"></div>
+          </div>
+          <div class="bottom-nav" id="bnav-dashboard">
+            <div class="nav-item active" onclick="showScreen('dashboard')"><div class="nav-icon">📊</div><div class="nav-label">Dashboard</div></div>
+            <div class="nav-item" onclick="showScreen('properties')"><div class="nav-icon">🏠</div><div class="nav-label">Biens</div></div>
+            <div class="nav-item" onclick="showScreen('reservations')"><div class="nav-icon">📅</div><div class="nav-label">Séjours</div></div>
+            <div class="nav-item" onclick="showScreen('tasks')"><div class="nav-icon">✅</div><div class="nav-label">Tâches</div></div>
+            <div class="nav-item" onclick="showScreen('profile')"><div class="nav-icon">👤</div><div class="nav-label">Profil</div></div>
+          </div>
+        </div>
+
+        <!-- RESERVATIONS -->
+        <div class="screen" id="screen-reservations">
+          <div class="res-header">
+            <div class="res-title">Réservations</div>
+            <div class="filter-tabs">
+              <button class="filter-tab active">Toutes</button>
+              <button class="filter-tab">En cours</button>
+              <button class="filter-tab">À venir</button>
+              <button class="filter-tab">Terminées</button>
+            </div>
+          </div>
+          <div class="res-list">
+            <div class="res-card">
+              <div class="res-card-top">
+                <div><div class="res-guest">Marie Dupont</div><div class="res-num">HP-2026-001</div></div>
+                <span class="badge confirmed">Confirmée</span>
+              </div>
+              <div class="res-prop">Villa Azur <span class="source-badge airbnb">Airbnb</span></div>
+              <div class="res-card-row">
+                <span>📅 14 – 19 mai 2026</span>
+                <span>🌙 5 nuits</span>
+              </div>
+              <div class="res-amount">925,00 €</div>
+            </div>
+            <div class="res-card">
+              <div class="res-card-top">
+                <div><div class="res-guest">Jean-Paul Martin</div><div class="res-num">HP-2026-002</div></div>
+                <span class="badge checkin">Check-in</span>
+              </div>
+              <div class="res-prop">Apt. Bellevue <span class="source-badge booking">Booking</span></div>
+              <div class="res-card-row">
+                <span>📅 16 – 23 mai 2026</span>
+                <span>🌙 7 nuits</span>
+              </div>
+              <div class="res-amount">840,00 €</div>
+            </div>
+            <div class="res-card">
+              <div class="res-card-top">
+                <div><div class="res-guest">Sophie & Luc Bernard</div><div class="res-num">HP-2026-003</div></div>
+                <span class="badge confirmed">Confirmée</span>
+              </div>
+              <div class="res-prop">Studio Monaco <span class="source-badge direct">Direct</span></div>
+              <div class="res-card-row">
+                <span>📅 20 – 25 mai 2026</span>
+                <span>🌙 5 nuits</span>
+              </div>
+              <div class="res-amount">1 250,00 €</div>
+            </div>
+            <div class="res-card">
+              <div class="res-card-top">
+                <div><div class="res-guest">Claire Fontaine</div><div class="res-num">HP-2026-004</div></div>
+                <span class="badge pending">En attente</span>
+              </div>
+              <div class="res-prop">Mas Provençal <span class="source-badge airbnb">Airbnb</span></div>
+              <div class="res-card-row">
+                <span>📅 28 mai – 4 juin</span>
+                <span>🌙 7 nuits</span>
+              </div>
+              <div class="res-amount">2 100,00 €</div>
+            </div>
+          </div>
+          <div class="bottom-nav">
+            <div class="nav-item" onclick="showScreen('dashboard')"><div class="nav-icon">📊</div><div class="nav-label">Dashboard</div></div>
+            <div class="nav-item" onclick="showScreen('properties')"><div class="nav-icon">🏠</div><div class="nav-label">Biens</div></div>
+            <div class="nav-item active" onclick="showScreen('reservations')"><div class="nav-icon">📅</div><div class="nav-label">Séjours</div></div>
+            <div class="nav-item" onclick="showScreen('tasks')"><div class="nav-icon">✅</div><div class="nav-label">Tâches</div></div>
+            <div class="nav-item" onclick="showScreen('profile')"><div class="nav-icon">👤</div><div class="nav-label">Profil</div></div>
+          </div>
+        </div>
+
+        <!-- PROPERTIES -->
+        <div class="screen" id="screen-properties">
+          <div class="props-header">
+            <div class="props-title">Mes Biens</div>
+            <div class="props-sub">5 biens · 4 actifs</div>
+          </div>
+          <div class="props-list">
+            <div class="prop-card">
+              <div class="prop-img prop-img-1">
+                🏖️
+                <div class="prop-status">Actif</div>
+                <div class="prop-occ">87% occ.</div>
+              </div>
+              <div class="prop-body">
+                <div class="prop-name">Villa Azur</div>
+                <div class="prop-addr">📍 12 Promenade des Anglais, Nice</div>
+                <div class="prop-stats">
+                  <div class="prop-stat">🛏 <strong>4</strong> ch.</div>
+                  <div class="prop-stat">👥 <strong>8</strong> pers.</div>
+                  <div class="prop-stat">💰 <strong>185€</strong>/nuit</div>
+                </div>
+              </div>
+            </div>
+            <div class="prop-card">
+              <div class="prop-img prop-img-2">
+                🌊
+                <div class="prop-status">Actif</div>
+                <div class="prop-occ">82% occ.</div>
+              </div>
+              <div class="prop-body">
+                <div class="prop-name">Apt. Bellevue</div>
+                <div class="prop-addr">📍 7 Rue d'Antibes, Cannes</div>
+                <div class="prop-stats">
+                  <div class="prop-stat">🛏 <strong>2</strong> ch.</div>
+                  <div class="prop-stat">👥 <strong>4</strong> pers.</div>
+                  <div class="prop-stat">💰 <strong>120€</strong>/nuit</div>
+                </div>
+              </div>
+            </div>
+            <div class="prop-card">
+              <div class="prop-img prop-img-3">
+                🌿
+                <div class="prop-status" style="background:#f59e0b">Maintenance</div>
+                <div class="prop-occ">74% occ.</div>
+              </div>
+              <div class="prop-body">
+                <div class="prop-name">Studio Monaco</div>
+                <div class="prop-addr">📍 3 Avenue Princess Grace, Monaco</div>
+                <div class="prop-stats">
+                  <div class="prop-stat">🛏 <strong>1</strong> ch.</div>
+                  <div class="prop-stat">👥 <strong>2</strong> pers.</div>
+                  <div class="prop-stat">💰 <strong>250€</strong>/nuit</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="bottom-nav">
+            <div class="nav-item" onclick="showScreen('dashboard')"><div class="nav-icon">📊</div><div class="nav-label">Dashboard</div></div>
+            <div class="nav-item active" onclick="showScreen('properties')"><div class="nav-icon">🏠</div><div class="nav-label">Biens</div></div>
+            <div class="nav-item" onclick="showScreen('reservations')"><div class="nav-icon">📅</div><div class="nav-label">Séjours</div></div>
+            <div class="nav-item" onclick="showScreen('tasks')"><div class="nav-icon">✅</div><div class="nav-label">Tâches</div></div>
+            <div class="nav-item" onclick="showScreen('profile')"><div class="nav-icon">👤</div><div class="nav-label">Profil</div></div>
+          </div>
+        </div>
+
+        <!-- TASKS -->
+        <div class="screen" id="screen-tasks">
+          <div class="tasks-header">
+            <div class="tasks-title">Tâches</div>
+            <div class="task-filter-row">
+              <button class="filter-tab active">Toutes</button>
+              <button class="filter-tab">En cours</button>
+              <button class="filter-tab">Terminées</button>
+            </div>
+          </div>
+          <div class="tasks-list">
+            <div class="tasks-section-label" style="font-size:11px;font-weight:700;color:#717171;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">À faire</div>
+            <div class="task-card">
+              <div class="task-check"></div>
+              <div class="task-info">
+                <div class="task-name">Remplacement ampoules salle de bain</div>
+                <div class="task-meta">Villa Azur · Ménage</div>
+              </div>
+              <div class="priority-dot high"></div>
+            </div>
+            <div class="task-card">
+              <div class="task-check"></div>
+              <div class="task-info">
+                <div class="task-name">Vérification chaudière avant hiver</div>
+                <div class="task-meta">Mas Provençal · Maintenance</div>
+              </div>
+              <div class="priority-dot high"></div>
+            </div>
+            <div class="task-card">
+              <div class="task-check"></div>
+              <div class="task-info">
+                <div class="task-name">Renouvellement contrat ménage</div>
+                <div class="task-meta">Apt. Bellevue · Administratif</div>
+              </div>
+              <div class="priority-dot medium"></div>
+            </div>
+            <div style="font-size:11px;font-weight:700;color:#717171;text-transform:uppercase;letter-spacing:.5px;margin:12px 0 8px;">Terminées</div>
+            <div class="task-card">
+              <div class="task-check done"></div>
+              <div class="task-info">
+                <div class="task-name done">Ménage avant arrivée Dupont</div>
+                <div class="task-meta">Villa Azur · Ménage</div>
+              </div>
+              <div class="priority-dot low"></div>
+            </div>
+            <div class="task-card">
+              <div class="task-check done"></div>
+              <div class="task-info">
+                <div class="task-name done">Mise à jour guide de la maison</div>
+                <div class="task-meta">Studio Monaco · Administratif</div>
+              </div>
+              <div class="priority-dot low"></div>
+            </div>
+          </div>
+          <div class="bottom-nav">
+            <div class="nav-item" onclick="showScreen('dashboard')"><div class="nav-icon">📊</div><div class="nav-label">Dashboard</div></div>
+            <div class="nav-item" onclick="showScreen('properties')"><div class="nav-icon">🏠</div><div class="nav-label">Biens</div></div>
+            <div class="nav-item" onclick="showScreen('reservations')"><div class="nav-icon">📅</div><div class="nav-label">Séjours</div></div>
+            <div class="nav-item active" onclick="showScreen('tasks')"><div class="nav-icon">✅</div><div class="nav-label">Tâches</div></div>
+            <div class="nav-item" onclick="showScreen('profile')"><div class="nav-icon">👤</div><div class="nav-label">Profil</div></div>
+          </div>
+        </div>
+
+        <!-- PROFILE -->
+        <div class="screen profile-screen" id="screen-profile">
+          <div class="profile-hero">
+            <div class="profile-avatar">A</div>
+            <div class="profile-name">Ahmed — Démo</div>
+            <div class="profile-email">demo@hostpro.fr</div>
+            <div class="profile-plan">✨ Plan ENTERPRISE</div>
+          </div>
+          <div class="profile-body">
+            <div class="profile-section">
+              <div class="profile-row">
+                <div class="profile-row-icon icon-blue">👤</div>
+                <div class="profile-row-text">
+                  <div class="profile-row-label">Mon profil</div>
+                  <div class="profile-row-sub">Informations personnelles</div>
+                </div>
+                <div class="profile-chevron">›</div>
+              </div>
+              <div class="profile-row">
+                <div class="profile-row-icon icon-orange">🔔</div>
+                <div class="profile-row-text">
+                  <div class="profile-row-label">Notifications</div>
+                  <div class="profile-row-sub">Push, email, SMS</div>
+                </div>
+                <div class="profile-chevron">›</div>
+              </div>
+              <div class="profile-row">
+                <div class="profile-row-icon icon-purple">💳</div>
+                <div class="profile-row-text">
+                  <div class="profile-row-label">Abonnement</div>
+                  <div class="profile-row-sub">Enterprise · Renouvellement janv. 2027</div>
+                </div>
+                <div class="profile-chevron">›</div>
+              </div>
+            </div>
+            <div class="profile-section">
+              <div class="profile-row">
+                <div class="profile-row-icon icon-green">🔒</div>
+                <div class="profile-row-text">
+                  <div class="profile-row-label">Sécurité</div>
+                  <div class="profile-row-sub">Mot de passe · Biométrie</div>
+                </div>
+                <div class="profile-chevron">›</div>
+              </div>
+              <div class="profile-row">
+                <div class="profile-row-icon icon-blue">🛡️</div>
+                <div class="profile-row-text">
+                  <div class="profile-row-label">Confidentialité</div>
+                  <div class="profile-row-sub">RGPD · Vos données</div>
+                </div>
+                <div class="profile-chevron">›</div>
+              </div>
+            </div>
+            <button class="btn-logout" onclick="showScreen('login')">🚪 Se déconnecter</button>
+          </div>
+          <div class="bottom-nav">
+            <div class="nav-item" onclick="showScreen('dashboard')"><div class="nav-icon">📊</div><div class="nav-label">Dashboard</div></div>
+            <div class="nav-item" onclick="showScreen('properties')"><div class="nav-icon">🏠</div><div class="nav-label">Biens</div></div>
+            <div class="nav-item" onclick="showScreen('reservations')"><div class="nav-icon">📅</div><div class="nav-label">Séjours</div></div>
+            <div class="nav-item" onclick="showScreen('tasks')"><div class="nav-icon">✅</div><div class="nav-label">Tâches</div></div>
+            <div class="nav-item active" onclick="showScreen('profile')"><div class="nav-icon">👤</div><div class="nav-label">Profil</div></div>
+          </div>
+        </div>
+
+      </div><!-- /screen-content -->
+    </div><!-- /phone-screen -->
+  </div><!-- /phone-frame -->
+</div><!-- /phone-wrapper -->
+
+<script>
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('visible'));
+  document.getElementById('screen-' + name).classList.add('visible');
+  document.querySelectorAll('.nav-pill').forEach(p => p.classList.remove('active'));
+  const map = { login:0, dashboard:1, reservations:2, properties:3, tasks:4, profile:5 };
+  document.querySelectorAll('.nav-pill')[map[name]].classList.add('active');
+  document.getElementById('statusBar').style.display = name === 'login' ? 'none' : 'flex';
+  location.hash = name;
+}
+// Auto-navigate to hash on load
+window.addEventListener('DOMContentLoaded', () => {
+  const hash = location.hash.replace('#','');
+  const valid = ['login','dashboard','reservations','properties','tasks','profile'];
+  if (valid.includes(hash)) showScreen(hash);
+});
+</script>
+</body>
+</html>

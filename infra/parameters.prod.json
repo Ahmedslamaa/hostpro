@@ -1,0 +1,25 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "env":        { "value": "prod" },
+    "location":   { "value": "francecentral" },
+    "prefix":     { "value": "hostpro" },
+    "dbAdminUser": { "value": "hostproadmin" },
+    "appUrl":     { "value": "https://app.hostpro.fr" },
+    "vapidEmail": { "value": "mailto:contact@hostpro.fr" },
+
+    "dbAdminPassword":    { "value": "REPLACE_DB_PASSWORD" },
+    "jwtSecret":          { "value": "REPLACE_JWT_SECRET_64_CHARS_MIN" },
+    "jwtRefreshSecret":   { "value": "REPLACE_JWT_REFRESH_SECRET_64_CHARS_MIN" },
+    "anthropicApiKey":    { "value": "REPLACE_ANTHROPIC_API_KEY" },
+    "resendApiKey":       { "value": "REPLACE_RESEND_API_KEY" },
+    "stripeSecretKey":    { "value": "REPLACE_STRIPE_SECRET_KEY" },
+    "stripeWebhookSecret":{ "value": "REPLACE_STRIPE_WEBHOOK_SECRET_whsec_xxx" },
+    "stripePriceStarter": { "value": "REPLACE_price_xxx" },
+    "stripePricePro":     { "value": "REPLACE_price_xxx" },
+    "stripePriceEnterprise":{ "value": "REPLACE_price_xxx" },
+    "vapidPublicKey":     { "value": "REPLACE_VAPID_PUBLIC_KEY" },
+    "vapidPrivateKey":    { "value": "REPLACE_VAPID_PRIVATE_KEY" }
+  }
+}

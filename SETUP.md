@@ -2,139 +2,173 @@
 
 ## Prérequis
 - Python 3.11+
-- Node.js 18+
-- Docker Desktop (pour Redis local)
-- Un compte Supabase (base de données cloud gratuite)
+- Node.js 20+
+- Docker Desktop
+- Azure CLI (`az`) — [installer](https://aka.ms/install-azure-cli)
 
 ---
 
-## 1. Base de données cloud (Supabase — GRATUIT)
+## Développement local
 
-1. Créez un compte sur https://supabase.com
-2. Créez un nouveau projet : "hostpro"
-3. Dans **Settings > Database**, copiez :
-   - **Connection string (URI)** → pour `DATABASE_URL_SYNC`
-   - Remplacez `postgresql://` par `postgresql+asyncpg://` → pour `DATABASE_URL`
-
-Exemple :
-```
-DATABASE_URL=postgresql+asyncpg://postgres.xxxx:password@aws-0-eu-west-3.pooler.supabase.com:5432/postgres
-DATABASE_URL_SYNC=postgresql://postgres.xxxx:password@aws-0-eu-west-3.pooler.supabase.com:5432/postgres
-```
-
----
-
-## 2. Backend (FastAPI)
+### 1. Lancer la stack complète avec Docker
 
 ```bash
 cd hostpro-api
 
-# Copier et remplir les variables d'environnement
-cp .env.example .env
-# Editez .env avec vos clés Supabase, Redis, etc.
+# Démarrer PostgreSQL + Redis
+docker compose up -d postgres redis
 
-# Créer l'environnement virtuel
+# Puis lancer l'API en mode dev (hot-reload)
+docker compose up api
+```
+
+Ou tout en un coup :
+```bash
+docker compose up
+```
+
+| Service  | URL                              |
+|----------|----------------------------------|
+| API      | http://localhost:8000            |
+| Swagger  | http://localhost:8000/docs       |
+| Frontend | http://localhost:3000            |
+
+---
+
+### 2. Backend sans Docker (dev rapide)
+
+```bash
+cd hostpro-api
+
+# Environnement virtuel
 python -m venv venv
 venv\Scripts\activate          # Windows
 # source venv/bin/activate     # Mac/Linux
 
-# Installer les dépendances
+# Dépendances
 pip install -r requirements.txt
 
-# Lancer Redis (Docker)
-docker run -d -p 6379:6379 --name redis redis:7-alpine
+# Variables d'environnement (SQLite local par défaut)
+cp .env.example .env
 
-# Appliquer les migrations (crée toutes les tables)
-alembic upgrade head
-
-# Lancer l'API
+# Lancer l'API (SQLite — pas besoin de PostgreSQL)
 uvicorn app.main:app --reload --port 8000
 ```
 
-API disponible sur : http://localhost:8000
-Documentation Swagger : http://localhost:8000/docs
-
 ---
 
-## 3. Frontend (Next.js)
+### 3. Frontend
 
 ```bash
 cd hostpro-web
-
-# Installer les dépendances
 npm install
-
-# L'URL de l'API est déjà configurée dans .env.local
-# NEXT_PUBLIC_API_URL=http://localhost:8000
-
-# Lancer le frontend
 npm run dev
 ```
 
-Application disponible sur : http://localhost:3000
+L'URL de l'API est configurée dans `.env.local` :
+```
+NEXT_PUBLIC_API_URL=http://localhost:8000
+```
 
 ---
 
-## 4. Premier démarrage
+### 4. Premier démarrage
 
 1. Ouvrez http://localhost:3000
-2. Cliquez sur "Créer un compte"
+2. Cliquez sur **"Créer un compte"**
 3. Remplissez :
-   - Votre nom
-   - Email professionnel
-   - Mot de passe
+   - Votre nom, email professionnel, mot de passe
    - Nom de votre structure (ex: "Slama Riviera")
 4. Vous êtes connecté — essai gratuit 14 jours
 
 ---
 
-## 5. Variables d'environnement importantes
+## Variables d'environnement
 
-### hostpro-api/.env
+### Développement (`hostpro-api/.env`)
 
 ```env
-# OBLIGATOIRE
-DATABASE_URL=postgresql+asyncpg://...
-DATABASE_URL_SYNC=postgresql://...
-SECRET_KEY=votre-cle-secrete-32-chars-minimum
+# Base de données (SQLite local par défaut)
+DATABASE_URL=sqlite+aiosqlite:///./hostpro.db
+
+# JWT
+SECRET_KEY=hostpro-dev-secret-key-2025-change-me
+
+# Redis (optionnel en dev)
 REDIS_URL=redis://localhost:6379/0
-
-# OPTIONNEL pour la V1
-RESEND_API_KEY=re_...          # Pour les emails
-STRIPE_SECRET_KEY=sk_test_... # Pour la facturation
-S3_ACCESS_KEY=...              # Pour les photos
 ```
+
+### Production Azure (`hostpro-api/.env.azure.example`)
+
+Voir `.env.azure.example` — toutes les variables Azure commentées.
 
 ---
 
-## 6. Architecture déployée
+## Déploiement Azure
 
-```
-Vercel (Frontend Next.js)
-    ↕ REST API
-Railway / Render (Backend FastAPI)
-    ↕ PostgreSQL
-Supabase (Base de données cloud)
-    ↕ Cache/Queue
-Upstash Redis (Redis cloud gratuit)
+### Option 1 — Script automatique (recommandé)
+
+```powershell
+# Windows PowerShell
+.\deploy-azure.ps1
 ```
 
-### Déploiement Vercel (Frontend)
+Le script crée automatiquement :
+- Resource Group Azure
+- Azure Database for PostgreSQL
+- Azure Cache for Redis
+- Azure Blob Storage (photos)
+- Azure Container Registry (ACR)
+- Azure Container Apps (API + Frontend)
+
+### Option 2 — Infrastructure as Code (Bicep)
+
 ```bash
-cd hostpro-web
-npx vercel --prod
-# Ajoutez la variable : NEXT_PUBLIC_API_URL=https://votre-api.railway.app
+# Créer le Resource Group
+az group create --name hostpro-prod --location francecentral
+
+# Déployer toute l'infra
+az deployment group create \
+  --resource-group hostpro-prod \
+  --template-file infra/main.bicep \
+  --parameters env=prod dbAdminPassword=VotreMotDePasse jwtSecretKey=VotreCleJWT
 ```
 
-### Déploiement Railway (Backend)
-1. Créez un projet sur https://railway.app
-2. Connectez votre dépôt GitHub
-3. Ajoutez toutes les variables d'environnement
-4. Railway détecte automatiquement le Dockerfile
+### Option 3 — CI/CD GitHub Actions
+
+Chaque `push` sur `main` déclenche le pipeline `.github/workflows/deploy-azure.yml` :
+1. Build des images Docker
+2. Push vers Azure Container Registry
+3. Mise à jour des Container Apps
 
 ---
 
-## 7. Modules disponibles en V1
+## Architecture Azure
+
+```
+                    ┌─────────────────────────────────────────┐
+                    │         Azure Container Apps             │
+                    │                                         │
+  Internet ────────►│  hostpro-web (Next.js :3000)            │
+                    │        │                                │
+                    │        ▼                                │
+                    │  hostpro-api (FastAPI :8000)            │
+                    └──────┬──────────────────┬──────────────┘
+                           │                  │
+              ┌────────────▼───┐   ┌──────────▼────────────┐
+              │ Azure Database │   │  Azure Cache for Redis │
+              │  for PostgreSQL│   │                        │
+              └────────────────┘   └────────────────────────┘
+                           │
+              ┌────────────▼────────────┐
+              │   Azure Blob Storage    │
+              │  (photos propriétés)    │
+              └─────────────────────────┘
+```
+
+---
+
+## Modules disponibles
 
 | Module | Statut |
 |--------|--------|
@@ -142,20 +176,20 @@ npx vercel --prod
 | Gestion des biens | ✅ |
 | Calendrier + iCal sync | ✅ |
 | Réservations (CRUD complet) | ✅ |
+| Channel Manager | ✅ |
 | Tâches opérationnelles | ✅ |
 | Messagerie centralisée | ✅ |
 | Templates messages | ✅ |
 | Conformité loi Le Meur | ✅ |
 | Compteur nuitées | ✅ |
-| Suivi DPE | ✅ |
 | Dashboard KPIs | ✅ |
-| Alertes conformité | ✅ |
+| Upload photos (Azure Blob) | ✅ |
 | Stripe Billing | 🔄 V1.5 |
 | API Airbnb native | 🔄 V1.5 |
-| IA francophone | 🔄 V2 |
+| Assistant IA | 🔄 V2 |
 
 ---
 
-## 8. Support
+## Support
 
 Pour toute question technique : architecture@hostpro.fr

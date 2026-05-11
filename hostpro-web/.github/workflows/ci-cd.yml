@@ -1,0 +1,164 @@
+name: CI/CD — HostPro Web
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+env:
+  NODE_VERSION: "20"
+  AZURE_WEBAPP_NAME: hostpro-prod-app
+  AZURE_RESOURCE_GROUP: hostpro-prod
+
+jobs:
+  # ── Job 1: Qualité + Tests ───────────────────────────────────────────────────
+  quality:
+    name: Quality & Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npx tsc --noEmit
+
+      - name: Lint
+        run: npm run lint
+        continue-on-error: true
+
+      - name: Run tests
+        run: npm test
+        env:
+          DATABASE_URL: "file:./prisma/test.db"
+          JWT_SECRET: "ci-test-secret-min-32-chars-xxxxxxxxxxx"
+          JWT_REFRESH_SECRET: "ci-refresh-secret-min-32-chars-xx"
+
+  # ── Job 2: Build ─────────────────────────────────────────────────────────────
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: quality
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+        env:
+          DATABASE_URL: "postgresql://placeholder:placeholder@localhost:5432/placeholder"
+
+      - name: Build Next.js
+        run: npm run build
+        env:
+          NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }}
+          DATABASE_URL: "postgresql://placeholder:placeholder@localhost:5432/placeholder"
+
+      - name: Package standalone output
+        run: |
+          cp -r public .next/standalone/public
+          cp -r .next/static .next/standalone/.next/static
+          cd .next/standalone
+          zip -r ../../deploy.zip .
+          echo "Archive size: $(du -sh ../../deploy.zip | cut -f1)"
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: webapp-build
+          path: deploy.zip
+          retention-days: 3
+
+  # ── Job 3: Deploy to Azure App Service ──────────────────────────────────────
+  deploy:
+    name: Deploy to Azure
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    environment:
+      name: production
+      url: ${{ secrets.NEXT_PUBLIC_APP_URL }}
+
+    steps:
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: webapp-build
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Deploy to Azure App Service
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
+          package: deploy.zip
+
+      - name: Configure App Settings
+        uses: azure/CLI@v2
+        with:
+          inlineScript: |
+            az webapp config appsettings set \
+              --name ${{ env.AZURE_WEBAPP_NAME }} \
+              --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+              --settings \
+                NODE_ENV=production \
+                NEXT_PUBLIC_APP_URL="${{ secrets.NEXT_PUBLIC_APP_URL }}" \
+                JWT_SECRET="${{ secrets.JWT_SECRET }}" \
+                JWT_REFRESH_SECRET="${{ secrets.JWT_REFRESH_SECRET }}" \
+                ANTHROPIC_API_KEY="${{ secrets.ANTHROPIC_API_KEY }}" \
+                RESEND_API_KEY="${{ secrets.RESEND_API_KEY }}" \
+                EMAIL_FROM="${{ secrets.EMAIL_FROM }}" \
+                STRIPE_SECRET_KEY="${{ secrets.STRIPE_SECRET_KEY }}" \
+                STRIPE_WEBHOOK_SECRET="${{ secrets.STRIPE_WEBHOOK_SECRET }}" \
+                STRIPE_PRICE_STARTER="${{ secrets.STRIPE_PRICE_STARTER }}" \
+                STRIPE_PRICE_PRO="${{ secrets.STRIPE_PRICE_PRO }}" \
+                STRIPE_PRICE_ENTERPRISE="${{ secrets.STRIPE_PRICE_ENTERPRISE }}" \
+                VAPID_PUBLIC_KEY="${{ secrets.VAPID_PUBLIC_KEY }}" \
+                VAPID_PRIVATE_KEY="${{ secrets.VAPID_PRIVATE_KEY }}" \
+                VAPID_EMAIL="${{ secrets.VAPID_EMAIL }}" \
+              --output none
+
+  # ── Job 4: Migrate DB ────────────────────────────────────────────────────────
+  migrate:
+    name: Database Migration
+    runs-on: ubuntu-latest
+    needs: deploy
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Prisma migrations
+        run: npx prisma migrate deploy
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}

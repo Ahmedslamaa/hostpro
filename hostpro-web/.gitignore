@@ -1,1 +1,38 @@
+# ── Secrets (JAMAIS committer) ───────────────────────────────────────────────
+.env
+.env.local
+.env.*.local
+.env.production
+*.pem
+azure-deploy-info.txt
+
+# ── Next.js ──────────────────────────────────────────────────────────────────
+.next/
+out/
+build/
+
+# ── Node ─────────────────────────────────────────────────────────────────────
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ── Prisma ───────────────────────────────────────────────────────────────────
+prisma/*.db
+prisma/*.db-journal
+prisma/test.db
+
+# ── Uploads (fichiers utilisateurs — stocker dans Azure Blob en prod) ────────
+public/uploads/
+
+# ── IDE ──────────────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ── Build artifacts ──────────────────────────────────────────────────────────
+deploy.zip
 .vercel

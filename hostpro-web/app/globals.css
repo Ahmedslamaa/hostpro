@@ -38,3 +38,133 @@ body {
 }
 
 * { box-sizing: border-box; }
+
+/* ════════════════════════════════════════
+   LANDING PAGE — ANIMATIONS
+   ════════════════════════════════════════ */
+
+/* ── Keyframes ── */
+@keyframes heroTitle {
+  from { opacity: 0; transform: translateY(40px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes heroSub {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes heroCta {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes hpFloat {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-10px); }
+}
+@keyframes hpPulseGlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255,90,95,0); }
+  50%       { box-shadow: 0 8px 40px 4px rgba(255,90,95,0.35); }
+}
+@keyframes hpShimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position:  200% center; }
+}
+
+/* ── Hero (on-load, no observer needed) ── */
+.hero-title {
+  opacity: 0;
+  animation: heroTitle 0.8s cubic-bezier(0.16,1,0.3,1) 0.1s forwards;
+}
+.hero-sub {
+  opacity: 0;
+  animation: heroSub 0.8s cubic-bezier(0.16,1,0.3,1) 0.35s forwards;
+}
+.hero-cta {
+  opacity: 0;
+  animation: heroCta 0.7s cubic-bezier(0.16,1,0.3,1) 0.55s forwards;
+}
+.hero-note {
+  opacity: 0;
+  animation: heroCta 0.6s ease 0.75s forwards;
+}
+.hero-partners {
+  opacity: 0;
+  animation: fadeInUp 0.8s ease 1s forwards;
+}
+
+/* ── Scroll reveal — uses animation (not transition) ── */
+/* animation is self-contained: defines its own from/to, no prior painted state needed */
+@keyframes hpRevealUp {
+  from { opacity: 0; transform: translateY(28px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes hpRevealScale {
+  from { opacity: 0; transform: scale(0.94) translateY(20px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.hp-reveal       { opacity: 0; }
+.hp-reveal-scale { opacity: 0; }
+
+.hp-reveal.hp-vis {
+  animation: hpRevealUp 0.65s cubic-bezier(0.16,1,0.3,1) both;
+}
+.hp-reveal-scale.hp-vis {
+  animation: hpRevealScale 0.7s cubic-bezier(0.16,1,0.3,1) both;
+}
+
+/* ── Stagger delays (animation-delay) ── */
+.s0 { animation-delay: 0s; }
+.s1 { animation-delay: 0.08s; }
+.s2 { animation-delay: 0.16s; }
+.s3 { animation-delay: 0.24s; }
+.s4 { animation-delay: 0.32s; }
+.s5 { animation-delay: 0.40s; }
+
+/* ── Float (dashboard mockup) ── */
+.hp-float { animation: hpFloat 5s ease-in-out infinite; }
+
+/* ── CTA button pulse glow ── */
+.hp-pulse-btn { animation: hpPulseGlow 2.8s ease-in-out infinite; }
+
+/* ── Shimmer text (hero subtitle) ── */
+.hp-shimmer {
+  background: linear-gradient(90deg, #FF5A5F 0%, #ff9a9c 40%, #FF5A5F 60%, #FF5A5F 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: hpShimmer 3s linear infinite;
+}
+
+/* ── Card hover lift ── */
+.hp-card {
+  transition: transform 0.3s cubic-bezier(0.16,1,0.3,1),
+              box-shadow 0.3s cubic-bezier(0.16,1,0.3,1),
+              border-color 0.3s ease;
+}
+.hp-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.09);
+  border-color: rgba(255,90,95,0.25);
+}
+
+/* ── Nav link underline slide ── */
+.hp-navlink { position: relative; }
+.hp-navlink::after {
+  content: '';
+  position: absolute;
+  bottom: -2px; left: 0;
+  width: 0; height: 2px;
+  background: #FF5A5F;
+  border-radius: 2px;
+  transition: width 0.25s ease;
+}
+.hp-navlink:hover::after { width: 100%; }
+
+/* ── Button press micro-animation ── */
+.hp-btn-press { transition: transform 0.15s ease, box-shadow 0.15s ease; }
+.hp-btn-press:active { transform: scale(0.97); }

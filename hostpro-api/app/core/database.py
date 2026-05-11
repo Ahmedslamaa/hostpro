@@ -1,21 +1,23 @@
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.pool import StaticPool, NullPool
-import os
+from app.core.config import settings
 
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./hostpro.db")
-
-# PostgreSQL sur Azure — remplacer le préfixe si nécessaire
-if DATABASE_URL.startswith("postgresql://"):
-    DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://", 1)
-elif DATABASE_URL.startswith("postgres://"):
-    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+asyncpg://", 1)
-
+DATABASE_URL = settings.database_url_async
 IS_SQLITE = "sqlite" in DATABASE_URL
+
+# Azure PostgreSQL nécessite SSL — asyncpg accepte ssl="require" dans connect_args
+_pg_connect_args = {}
+if not IS_SQLITE and settings.is_production:
+    _pg_connect_args = {"ssl": "require"}
 
 engine = create_async_engine(
     DATABASE_URL,
-    **({"connect_args": {"check_same_thread": False}, "poolclass": StaticPool} if IS_SQLITE else {"poolclass": NullPool}),
+    **(
+        {"connect_args": {"check_same_thread": False}, "poolclass": StaticPool}
+        if IS_SQLITE
+        else {"poolclass": NullPool, "connect_args": _pg_connect_args}
+    ),
     echo=False,
 )
 

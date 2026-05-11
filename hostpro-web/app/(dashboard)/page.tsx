@@ -1,5 +1,5 @@
 // Server component wrapper — avoids "use client" at page level
-// which causes Vercel route-group manifest bug in Next.js 14
+// (Next.js 14 route-group requirement)
 import { DashboardContent } from "./dashboard-content";
 
 export default function DashboardPage() {

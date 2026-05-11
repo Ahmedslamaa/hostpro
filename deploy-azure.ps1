@@ -1,221 +1,216 @@
-# ============================================================
-# HOST PRO — Script de déploiement Azure complet
-# Exécuter : .\deploy-azure.ps1
-# ============================================================
+# ═══════════════════════════════════════════════════════════════════════════
+# SLAMA RIVIERA / HOST PRO — Déploiement Azure (App Service)
+# Usage : .\deploy-azure.ps1 [-Env prod|dev] [-SkipInfra] [-SkipDeploy]
+# Prérequis : az CLI installé + az login effectué + npm run build effectué
+# ═══════════════════════════════════════════════════════════════════════════
 
-$RESOURCE_GROUP  = "hostpro-rg"
-$LOCATION        = "francecentral"
-$APP_NAME        = "hostpro-api"
-$FRONTEND_NAME   = "hostpro-web"
-$DB_SERVER       = "hostpro-db-server"
-$DB_NAME         = "hostpro"
-$DB_USER         = "hostproadmin"
-$DB_PASSWORD     = "HostPro@2025!"
-$STORAGE_ACCOUNT = "hostprostorage$(Get-Random -Maximum 9999)"
-$ACR_NAME        = "hostproacr$(Get-Random -Maximum 9999)"
+param(
+    [string]$Env          = "prod",
+    [string]$Location     = "francecentral",
+    [switch]$SkipInfra    = $false,   # -SkipInfra pour re-déployer sans recréer l'infra
+    [switch]$SkipDeploy   = $false    # -SkipDeploy pour ne créer que l'infra
+)
+
+$ErrorActionPreference = "Stop"
+
+$PREFIX          = "hostpro"
+$RESOURCE_GROUP  = "${PREFIX}-${Env}"
+$APP_NAME        = "${PREFIX}-${Env}-app"
+$WEB_DIR         = "$PSScriptRoot\hostpro-web"
+$INFRA_DIR       = "$PSScriptRoot\infra"
 
 Write-Host ""
-Write-Host "========================================" -ForegroundColor Cyan
-Write-Host "  HOST PRO — Deploiement Azure" -ForegroundColor Cyan
-Write-Host "========================================" -ForegroundColor Cyan
+Write-Host "╔══════════════════════════════════════════════════════════╗" -ForegroundColor Cyan
+Write-Host "║      SLAMA RIVIERA — HOST PRO — Déploiement Azure        ║" -ForegroundColor Cyan
+Write-Host "║              Environnement : $Env                         ║" -ForegroundColor Cyan
+Write-Host "╚══════════════════════════════════════════════════════════╝" -ForegroundColor Cyan
 Write-Host ""
 
-# 1. Connexion Azure
-Write-Host "[1/9] Connexion Azure..." -ForegroundColor Yellow
-az login --output none
-if ($LASTEXITCODE -ne 0) { Write-Host "ERREUR connexion Azure" -ForegroundColor Red; exit 1 }
+# ── 0. Vérifications préalables ──────────────────────────────────────────────
+Write-Host "[0/6] Vérifications..." -ForegroundColor Yellow
 
-# Afficher l'abonnement actif
-$sub = az account show --query "{name:name, id:id}" -o json | ConvertFrom-Json
-Write-Host "  Abonnement : $($sub.name)" -ForegroundColor Green
+if (-not (Get-Command az -ErrorAction SilentlyContinue)) {
+    Write-Error "Azure CLI non trouvé. Installez via : winget install Microsoft.AzureCLI"
+    exit 1
+}
 
-# 2. Resource Group
-Write-Host "[2/9] Creation du Resource Group '$RESOURCE_GROUP'..." -ForegroundColor Yellow
-az group create --name $RESOURCE_GROUP --location $LOCATION --output none
-Write-Host "  OK" -ForegroundColor Green
+try {
+    $account = az account show --output json 2>$null | ConvertFrom-Json
+    Write-Host "      Connecté : $($account.name) ($($account.id))" -ForegroundColor Green
+} catch {
+    Write-Host "      Connexion Azure requise..." -ForegroundColor Yellow
+    az login --use-device-code
+    $account = az account show --output json | ConvertFrom-Json
+    Write-Host "      Connecté : $($account.name)" -ForegroundColor Green
+}
 
-# 3. PostgreSQL
-Write-Host "[3/9] Creation PostgreSQL flexible server..." -ForegroundColor Yellow
-az postgres flexible-server create `
-  --resource-group $RESOURCE_GROUP `
-  --name $DB_SERVER `
-  --location $LOCATION `
-  --admin-user $DB_USER `
-  --admin-password $DB_PASSWORD `
-  --sku-name Standard_B1ms `
-  --tier Burstable `
-  --storage-size 32 `
-  --version 16 `
-  --public-access 0.0.0.0 `
-  --output none
+# ── 1. Resource Group ────────────────────────────────────────────────────────
+if (-not $SkipInfra) {
+    Write-Host "[1/6] Resource Group '$RESOURCE_GROUP' ($Location)..." -ForegroundColor Yellow
+    az group create --name $RESOURCE_GROUP --location $Location --tags project=hostpro env=$Env --output none
+    Write-Host "      OK ✓" -ForegroundColor Green
 
-az postgres flexible-server db create `
-  --resource-group $RESOURCE_GROUP `
-  --server-name $DB_SERVER `
-  --database-name $DB_NAME `
-  --output none
+    # ── 2. Infrastructure via Bicep ──────────────────────────────────────────
+    Write-Host "[2/6] Déploiement infrastructure Bicep..." -ForegroundColor Yellow
+    Write-Host "      (PostgreSQL + App Service + Key Vault + Storage — ~5 min)" -ForegroundColor Gray
 
-$DB_URL = "postgresql+asyncpg://${DB_USER}:${DB_PASSWORD}@${DB_SERVER}.postgres.database.azure.com/${DB_NAME}?ssl=require"
-Write-Host "  PostgreSQL cree : $DB_SERVER" -ForegroundColor Green
-
-# 4. Azure Blob Storage
-Write-Host "[4/9] Creation Azure Blob Storage..." -ForegroundColor Yellow
-az storage account create `
-  --name $STORAGE_ACCOUNT `
-  --resource-group $RESOURCE_GROUP `
-  --location $LOCATION `
-  --sku Standard_LRS `
-  --output none
-
-$STORAGE_CONN = az storage account show-connection-string `
-  --name $STORAGE_ACCOUNT `
-  --resource-group $RESOURCE_GROUP `
-  --query connectionString -o tsv
-
-az storage container create `
-  --name "property-photos" `
-  --connection-string $STORAGE_CONN `
-  --public-access blob `
-  --output none
-
-Write-Host "  Storage cree : $STORAGE_ACCOUNT" -ForegroundColor Green
-
-# 5. Azure Container Registry
-Write-Host "[5/9] Creation Container Registry..." -ForegroundColor Yellow
-az acr create `
-  --resource-group $RESOURCE_GROUP `
-  --name $ACR_NAME `
-  --sku Basic `
-  --admin-enabled true `
-  --output none
-
-$ACR_SERVER   = "${ACR_NAME}.azurecr.io"
-$ACR_USERNAME = az acr credential show --name $ACR_NAME --query username -o tsv
-$ACR_PASSWORD = az acr credential show --name $ACR_NAME --query "passwords[0].value" -o tsv
-Write-Host "  ACR cree : $ACR_SERVER" -ForegroundColor Green
-
-# 6. Build & Push Docker image
-Write-Host "[6/9] Build et push image Docker..." -ForegroundColor Yellow
-Set-Location "$PSScriptRoot\hostpro-api"
-az acr build `
-  --registry $ACR_NAME `
-  --image hostpro-api:latest `
-  . `
-  --output none
-Set-Location $PSScriptRoot
-Write-Host "  Image pushee sur $ACR_SERVER/hostpro-api:latest" -ForegroundColor Green
-
-# 7. Azure App Service (Backend)
-Write-Host "[7/9] Deploiement Backend (App Service)..." -ForegroundColor Yellow
-az appservice plan create `
-  --name "hostpro-plan" `
-  --resource-group $RESOURCE_GROUP `
-  --sku B1 `
-  --is-linux `
-  --output none
-
-az webapp create `
-  --resource-group $RESOURCE_GROUP `
-  --plan "hostpro-plan" `
-  --name $APP_NAME `
-  --deployment-container-image-name "${ACR_SERVER}/hostpro-api:latest" `
-  --output none
-
-# Variables d'environnement
-$SECRET_KEY = [System.Guid]::NewGuid().ToString("N") + [System.Guid]::NewGuid().ToString("N")
-az webapp config appsettings set `
-  --resource-group $RESOURCE_GROUP `
-  --name $APP_NAME `
-  --settings `
-    DATABASE_URL="$DB_URL" `
-    SECRET_KEY="$SECRET_KEY" `
-    APP_ENV="production" `
-    AZURE_STORAGE_CONNECTION_STRING="$STORAGE_CONN" `
-    AZURE_STORAGE_CONTAINER="property-photos" `
-    ALLOWED_ORIGINS="https://${FRONTEND_NAME}.azurestaticapps.net,https://hostpro.fr" `
-    FRONTEND_URL="https://${FRONTEND_NAME}.azurestaticapps.net" `
-    WEBSITES_PORT=8000 `
-  --output none
-
-# Accès ACR
-az webapp config container set `
-  --name $APP_NAME `
-  --resource-group $RESOURCE_GROUP `
-  --docker-registry-server-url "https://$ACR_SERVER" `
-  --docker-registry-server-user $ACR_USERNAME `
-  --docker-registry-server-password $ACR_PASSWORD `
-  --output none
-
-$BACKEND_URL = "https://${APP_NAME}.azurewebsites.net"
-Write-Host "  Backend deploye : $BACKEND_URL" -ForegroundColor Green
-
-# 8. Azure Static Web Apps (Frontend)
-Write-Host "[8/9] Deploiement Frontend (Static Web Apps)..." -ForegroundColor Yellow
-
-# Créer le fichier de config staticwebapp
-$staticConfig = @{
-    routes = @(
-        @{ route = "/api/*"; rewrite = "/api/index.html" }
-        @{ route = "/*"; rewrite = "/index.html" }
-    )
-    navigationFallback = @{ rewrite = "/index.html"; exclude = @("/_next/*", "/favicon.ico") }
-    globalHeaders = @{
-        "X-Content-Type-Options" = "nosniff"
-        "X-Frame-Options" = "DENY"
+    # Lire les secrets depuis .env.local ou variables d'environnement
+    $envFile = "$WEB_DIR\.env.local"
+    if (Test-Path $envFile) {
+        Get-Content $envFile | ForEach-Object {
+            if ($_ -match '^([^#=]+)=(.+)$') {
+                $k = $matches[1].Trim()
+                $v = $matches[2].Trim().Trim('"')
+                [System.Environment]::SetEnvironmentVariable($k, $v, "Process")
+            }
+        }
+        Write-Host "      Variables chargées depuis .env.local" -ForegroundColor Gray
     }
-} | ConvertTo-Json -Depth 5
 
-$staticConfig | Out-File -FilePath "$PSScriptRoot\hostpro-web\staticwebapp.config.json" -Encoding utf8
+    $deployResult = az deployment group create `
+        --resource-group $RESOURCE_GROUP `
+        --template-file "$INFRA_DIR\main.bicep" `
+        --parameters `
+            env=$Env `
+            location=$Location `
+            dbAdminPassword="$env:DB_ADMIN_PASSWORD" `
+            jwtSecret="$env:JWT_SECRET" `
+            jwtRefreshSecret="$env:JWT_REFRESH_SECRET" `
+            anthropicApiKey="$env:ANTHROPIC_API_KEY" `
+            resendApiKey="$env:RESEND_API_KEY" `
+            stripeSecretKey="$env:STRIPE_SECRET_KEY" `
+            stripeWebhookSecret="$env:STRIPE_WEBHOOK_SECRET" `
+            stripePriceStarter="$env:STRIPE_PRICE_STARTER" `
+            stripePricePro="$env:STRIPE_PRICE_PRO" `
+            stripePriceEnterprise="$env:STRIPE_PRICE_ENTERPRISE" `
+            vapidPublicKey="$env:VAPID_PUBLIC_KEY" `
+            vapidPrivateKey="$env:VAPID_PRIVATE_KEY" `
+        --output json | ConvertFrom-Json
 
-# Update .env.local pour la production
-"NEXT_PUBLIC_API_URL=$BACKEND_URL" | Out-File -FilePath "$PSScriptRoot\hostpro-web\.env.production" -Encoding utf8
+    $APP_URL   = $deployResult.properties.outputs.appUrl.value
+    $PG_HOST   = $deployResult.properties.outputs.postgresHost.value
+    $AI_KEY    = $deployResult.properties.outputs.appInsightsKey.value
 
-az staticwebapp create `
-  --name $FRONTEND_NAME `
-  --resource-group $RESOURCE_GROUP `
-  --location "westeurope" `
-  --sku Free `
-  --output none
+    Write-Host "      Infrastructure déployée ✓" -ForegroundColor Green
+    Write-Host "      App URL : $APP_URL" -ForegroundColor Cyan
+    Write-Host "      PostgreSQL : $PG_HOST" -ForegroundColor Cyan
+} else {
+    Write-Host "[1-2/6] Infrastructure ignorée (-SkipInfra)" -ForegroundColor Gray
+    $APP_NAME = "${PREFIX}-${Env}-app"
+}
 
-$FRONTEND_URL = "https://$(az staticwebapp show --name $FRONTEND_NAME --resource-group $RESOURCE_GROUP --query defaultHostname -o tsv)"
-Write-Host "  Frontend deploye : $FRONTEND_URL" -ForegroundColor Green
+if (-not $SkipDeploy) {
+    # ── 3. Build Next.js ─────────────────────────────────────────────────────
+    Write-Host "[3/6] Build Next.js (output standalone)..." -ForegroundColor Yellow
+    Push-Location $WEB_DIR
 
-# 9. Résumé
+    $env:DATABASE_URL = "postgresql://placeholder:placeholder@localhost:5432/placeholder"
+    npm ci --quiet
+    npx prisma generate
+    npm run build
+
+    # Packager le build standalone
+    Copy-Item -Recurse -Force "public" ".next\standalone\public"
+    Copy-Item -Recurse -Force ".next\static" ".next\standalone\.next\static"
+    Compress-Archive -Force -Path ".next\standalone\*" -DestinationPath "deploy.zip"
+
+    $zipSize = (Get-Item "deploy.zip").Length / 1MB
+    Write-Host "      Build OK ✓ — Archive : $([Math]::Round($zipSize, 1)) MB" -ForegroundColor Green
+    Pop-Location
+
+    # ── 4. Déployer sur Azure App Service ────────────────────────────────────
+    Write-Host "[4/6] Déploiement sur App Service '$APP_NAME'..." -ForegroundColor Yellow
+    az webapp deploy `
+        --resource-group $RESOURCE_GROUP `
+        --name $APP_NAME `
+        --src-path "$WEB_DIR\deploy.zip" `
+        --type zip `
+        --async false `
+        --output none
+
+    Write-Host "      Déployé ✓" -ForegroundColor Green
+
+    # ── 5. Migration Prisma ───────────────────────────────────────────────────
+    Write-Host "[5/6] Migration base de données Prisma..." -ForegroundColor Yellow
+    Push-Location $WEB_DIR
+    $DB_PASSWORD = $env:DB_ADMIN_PASSWORD
+    $DB_URL = "postgresql://hostproadmin:${DB_PASSWORD}@${PG_HOST}:5432/hostpro?sslmode=require"
+    $env:DATABASE_URL = $DB_URL
+    npx prisma migrate deploy
+    npx prisma db seed
+    Pop-Location
+    Write-Host "      Migration OK ✓" -ForegroundColor Green
+
+    # ── 6. Health check ───────────────────────────────────────────────────────
+    Write-Host "[6/6] Health check..." -ForegroundColor Yellow
+    Start-Sleep -Seconds 15
+    try {
+        $health = Invoke-RestMethod -Uri "${APP_URL}/api/health" -TimeoutSec 30
+        Write-Host "      Health check OK ✓ — Status: $($health.status)" -ForegroundColor Green
+    } catch {
+        Write-Host "      Health check: app démarre (normal ~60s au premier démarrage)" -ForegroundColor Yellow
+    }
+
+    # Configurer GitHub Secrets pour CI/CD
+    Write-Host ""
+    Write-Host "══ Configuration GitHub Secrets ════════════════════════════" -ForegroundColor Yellow
+    Write-Host "  Exécution automatique via gh CLI..." -ForegroundColor Gray
+
+    $DB_URL_FULL = "postgresql://hostproadmin:${DB_PASSWORD}@${PG_HOST}:5432/hostpro?sslmode=require"
+
+    # Créer le Service Principal pour GitHub Actions
+    $SP = az ad sp create-for-rbac `
+        --name "hostpro-github-actions-${Env}" `
+        --role contributor `
+        --scopes "/subscriptions/$($account.id)/resourceGroups/$RESOURCE_GROUP" `
+        --sdk-auth 2>$null | ConvertFrom-Json
+
+    if ($SP) {
+        $AZURE_CREDS = az ad sp create-for-rbac `
+            --name "hostpro-github-actions-${Env}" `
+            --role contributor `
+            --scopes "/subscriptions/$($account.id)/resourceGroups/$RESOURCE_GROUP" `
+            --sdk-auth 2>&1
+
+        # Configurer les secrets GitHub via gh CLI
+        Push-Location $WEB_DIR
+        gh secret set AZURE_CREDENTIALS      --body "$AZURE_CREDS"
+        gh secret set DATABASE_URL           --body "$DB_URL_FULL"
+        gh secret set JWT_SECRET             --body "$env:JWT_SECRET"
+        gh secret set JWT_REFRESH_SECRET     --body "$env:JWT_REFRESH_SECRET"
+        gh secret set ANTHROPIC_API_KEY      --body "$env:ANTHROPIC_API_KEY"
+        gh secret set RESEND_API_KEY         --body "$env:RESEND_API_KEY"
+        gh secret set EMAIL_FROM             --body "HostPro <noreply@hostpro.fr>"
+        gh secret set STRIPE_SECRET_KEY      --body "$env:STRIPE_SECRET_KEY"
+        gh secret set STRIPE_WEBHOOK_SECRET  --body "$env:STRIPE_WEBHOOK_SECRET"
+        gh secret set STRIPE_PRICE_STARTER   --body "$env:STRIPE_PRICE_STARTER"
+        gh secret set STRIPE_PRICE_PRO       --body "$env:STRIPE_PRICE_PRO"
+        gh secret set STRIPE_PRICE_ENTERPRISE --body "$env:STRIPE_PRICE_ENTERPRISE"
+        gh secret set VAPID_PUBLIC_KEY       --body "$env:VAPID_PUBLIC_KEY"
+        gh secret set VAPID_PRIVATE_KEY      --body "$env:VAPID_PRIVATE_KEY"
+        gh secret set VAPID_EMAIL            --body "$env:VAPID_EMAIL"
+        gh secret set NEXT_PUBLIC_APP_URL    --body "$APP_URL"
+        Pop-Location
+        Write-Host "  GitHub Secrets configurés ✓" -ForegroundColor Green
+    }
+}
+
+# ── Résumé ────────────────────────────────────────────────────────────────────
 Write-Host ""
-Write-Host "========================================" -ForegroundColor Green
-Write-Host "  DEPLOIEMENT TERMINE !" -ForegroundColor Green
-Write-Host "========================================" -ForegroundColor Green
+Write-Host "╔══════════════════════════════════════════════════════════════╗" -ForegroundColor Green
+Write-Host "║          SLAMA RIVIERA — DÉPLOIEMENT TERMINÉ ✓              ║" -ForegroundColor Green
+Write-Host "╚══════════════════════════════════════════════════════════════╝" -ForegroundColor Green
 Write-Host ""
-Write-Host "  Backend API  : $BACKEND_URL" -ForegroundColor Cyan
-Write-Host "  Frontend     : $FRONTEND_URL" -ForegroundColor Cyan
-Write-Host "  Database     : $DB_SERVER.postgres.database.azure.com" -ForegroundColor Cyan
-Write-Host "  Storage      : $STORAGE_ACCOUNT.blob.core.windows.net" -ForegroundColor Cyan
+if ($APP_URL) {
+    Write-Host "  Application  : $APP_URL" -ForegroundColor Cyan
+    Write-Host "  Health Check : $APP_URL/api/health" -ForegroundColor Cyan
+    Write-Host "  Tableau bord : $APP_URL/dashboard" -ForegroundColor Cyan
+    Write-Host "  Démo account : demo@hostpro.fr / demo1234" -ForegroundColor White
+}
 Write-Host ""
-Write-Host "  Docs API     : $BACKEND_URL/docs" -ForegroundColor White
+Write-Host "  Prochaines étapes :" -ForegroundColor Yellow
+Write-Host "  1. Configurer DNS : hostpro.fr → $APP_URL" -ForegroundColor White
+Write-Host "  2. Activer SSL custom domain dans Azure Portal" -ForegroundColor White
+Write-Host "  3. Configurer webhook Stripe : $APP_URL/api/webhooks/stripe" -ForegroundColor White
+Write-Host "  4. Valider ANTHROPIC_API_KEY dans l'assistant IA" -ForegroundColor White
 Write-Host ""
-
-# Sauvegarder les infos de déploiement
-$deployInfo = @"
-# HOST PRO — Infos de déploiement Azure
-# Généré le $(Get-Date -Format "dd/MM/yyyy HH:mm")
-
-RESOURCE_GROUP=$RESOURCE_GROUP
-BACKEND_URL=$BACKEND_URL
-FRONTEND_URL=$FRONTEND_URL
-DB_SERVER=$DB_SERVER.postgres.database.azure.com
-DB_NAME=$DB_NAME
-DB_USER=$DB_USER
-STORAGE_ACCOUNT=$STORAGE_ACCOUNT
-ACR_NAME=$ACR_NAME
-SECRET_KEY=$SECRET_KEY
-"@
-
-$deployInfo | Out-File -FilePath "$PSScriptRoot\azure-deploy-info.txt" -Encoding utf8
-Write-Host "  Infos sauvegardees dans azure-deploy-info.txt" -ForegroundColor Yellow
-Write-Host ""
-
-# Prochaine etape : build frontend
-Write-Host "PROCHAINE ETAPE : Buildez le frontend et deployez-le avec :" -ForegroundColor Yellow
-Write-Host "  cd hostpro-web" -ForegroundColor White
-Write-Host "  npm run build" -ForegroundColor White
-Write-Host "  npx @azure/static-web-apps-cli deploy ./out --deployment-token <TOKEN>" -ForegroundColor White

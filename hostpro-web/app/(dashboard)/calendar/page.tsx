@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { calendarApi, propertiesApi } from "@/lib/api";
+import { withMock, MOCK_CALENDAR_EVENTS, MOCK_PROPERTIES } from "@/lib/mock";
 import { CalendarEvent, Property } from "@/types";
 import { ChevronLeft, ChevronRight, Plus, X } from "lucide-react";
 
@@ -49,9 +50,12 @@ export default function CalendarPage() {
     const lastDay = getDaysInMonth(year, month);
     const end = `${year}-${String(month + 1).padStart(2, "0")}-${lastDay}`;
     setLoading(true);
-    const [e, p] = await Promise.all([calendarApi.get({ start, end }), propertiesApi.list()]);
-    setEvents(e.data);
-    setProperties(p.data);
+    const [e, p] = await Promise.all([
+      withMock(() => calendarApi.get({ start, end }), MOCK_CALENDAR_EVENTS),
+      withMock(() => propertiesApi.list(), MOCK_PROPERTIES),
+    ]);
+    setEvents((Array.isArray(e) ? e : MOCK_CALENDAR_EVENTS) as any[]);
+    setProperties((Array.isArray(p) ? p : MOCK_PROPERTIES) as any[]);
     setLoading(false);
   };
 
@@ -64,7 +68,7 @@ export default function CalendarPage() {
 
   const getEventsForDay = (day: number) => {
     const d = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-    return events.filter((e) => e.start_date <= d && e.end_date > d);
+    return events.filter((e: any) => (e.start_date ?? e.start) <= d && (e.end_date ?? e.end) > d);
   };
 
   const handleBlock = async (e: React.FormEvent) => {

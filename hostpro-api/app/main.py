@@ -2,9 +2,13 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import time
+import asyncio
+import logging
 
 from app.core.config import settings
 from app.api.v1.router import api_router
+
+logger = logging.getLogger("hostpro")
 
 app = FastAPI(
     title="HOST PRO API",
@@ -39,6 +43,35 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 app.include_router(api_router)
 
+
+# ── iCal Auto-sync scheduler ──────────────────────────────────
+
+_sync_task: asyncio.Task | None = None
+
+
+@app.on_event("startup")
+async def startup():
+    global _sync_task
+    logger.info("HOST PRO API démarré ✓")
+    # Lancer le scheduler iCal en arrière-plan
+    from app.services.ical_sync import auto_sync_loop
+    _sync_task = asyncio.create_task(auto_sync_loop())
+    logger.info("iCal scheduler démarré — sync automatique toutes les 15 min ✓")
+
+
+@app.on_event("shutdown")
+async def shutdown():
+    global _sync_task
+    if _sync_task and not _sync_task.done():
+        _sync_task.cancel()
+        try:
+            await _sync_task
+        except asyncio.CancelledError:
+            pass
+    logger.info("HOST PRO API arrêté.")
+
+
+# ── Health & Root ─────────────────────────────────────────────
 
 @app.get("/health")
 async def health():

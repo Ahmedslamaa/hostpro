@@ -1,0 +1,315 @@
+// HOST PRO — Schéma Prisma (SQLite dev / PostgreSQL prod)
+// Pour la production Azure : DATABASE_PROVIDER=postgresql + changer les types @db.*
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Tenant {
+  id         String   @id @default(cuid())
+  name       String
+  slug       String   @unique
+  plan       String   @default("starter")
+  is_active  Boolean  @default(true)
+  // Stripe billing
+  stripe_customer_id      String?
+  stripe_subscription_id  String?
+  stripe_price_id         String?
+  stripe_status           String?  // active | trialing | past_due | canceled
+  stripe_current_period_end DateTime?
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  users        UserTenant[]
+  properties   Property[]
+  reservations Reservation[]
+  tasks        Task[]
+  messages     MessageThread[]
+
+  @@map("tenants")
+}
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  password_hash String
+  full_name     String?
+  avatar_url    String?
+  is_superadmin Boolean  @default(false)
+  is_active     Boolean  @default(true)
+  // RGPD
+  gdpr_consent_at DateTime?
+  gdpr_consent_ip String?
+  // Sécurité
+  failed_login_attempts Int      @default(0)
+  locked_until          DateTime?
+  last_login_at         DateTime?
+  // Refresh tokens
+  refresh_tokens RefreshToken[]
+  tenants        UserTenant[]
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+
+  @@index([email])
+  @@map("users")
+}
+
+model RefreshToken {
+  id         String    @id @default(cuid())
+  user_id    String
+  user       User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  token_hash String    @unique
+  expires_at DateTime
+  revoked_at DateTime?
+  ip_address String?
+  user_agent String?
+  created_at DateTime  @default(now())
+
+  @@index([user_id])
+  @@index([token_hash])
+  @@map("refresh_tokens")
+}
+
+model UserTenant {
+  id        String   @id @default(cuid())
+  user_id   String
+  tenant_id String
+  user      User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  tenant    Tenant   @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  role      String   @default("viewer")
+  is_active Boolean  @default(true)
+  joined_at DateTime @default(now())
+  invited_by String?
+
+  @@unique([user_id, tenant_id])
+  @@map("user_tenants")
+}
+
+model Property {
+  id            String  @id @default(cuid())
+  tenant_id     String
+  tenant        Tenant  @relation(fields: [tenant_id], references: [id])
+  name          String
+  description   String?
+  property_type String  @default("apartment")
+  status        String  @default("active")
+  address       String?
+  city          String?
+  postal_code   String?
+  country       String  @default("FR")
+  max_guests    Int?
+  bedrooms      Int?
+  bathrooms     Int?
+  surface_m2    Float?
+  base_price_night Float?
+  cleaning_fee     Float  @default(0)
+  security_deposit Float  @default(0)
+  min_stay_nights  Int    @default(1)
+  max_stay_nights  Int?
+  check_in_time    String @default("16:00")
+  check_out_time   String @default("11:00")
+  amenities        String @default("[]") // JSON string for SQLite
+  cover_photo_url  String?
+
+  reservations Reservation[]
+  tasks        Task[]
+  compliance   ComplianceRecord?
+  ical_feeds   IcalFeed[]
+  photos       PropertyPhoto[]
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@index([tenant_id])
+  @@index([status])
+  @@map("properties")
+}
+
+model PropertyPhoto {
+  id          String   @id @default(cuid())
+  property_id String
+  property    Property @relation(fields: [property_id], references: [id], onDelete: Cascade)
+  url         String
+  filename    String
+  position    Int      @default(0)
+  is_cover    Boolean  @default(false)
+  created_at  DateTime @default(now())
+
+  @@index([property_id])
+  @@map("property_photos")
+}
+
+model Reservation {
+  id              String    @id @default(cuid())
+  tenant_id       String
+  tenant          Tenant    @relation(fields: [tenant_id], references: [id])
+  property_id     String
+  property        Property  @relation(fields: [property_id], references: [id])
+  guest_name      String
+  guest_email     String?
+  guest_phone     String?
+  guest_nationality String?
+  check_in        String    // ISO date string
+  check_out       String
+  nights          Int
+  adults          Int       @default(1)
+  children        Int       @default(0)
+  total_amount    Float?
+  cleaning_fee    Float?
+  net_revenue     Float?
+  source          String    @default("manual")
+  status          String    @default("confirmed")
+  external_id     String?
+  notes_internal  String?
+  reference       String?
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@index([tenant_id])
+  @@index([property_id])
+  @@index([status])
+  @@map("reservations")
+}
+
+model Task {
+  id          String    @id @default(cuid())
+  tenant_id   String
+  tenant      Tenant    @relation(fields: [tenant_id], references: [id])
+  property_id String?
+  property    Property? @relation(fields: [property_id], references: [id])
+  title       String
+  description String?
+  type        String    @default("cleaning")
+  status      String    @default("pending")
+  priority    String    @default("normal")
+  due_date    String?
+  completed_at DateTime?
+  assigned_to String?
+  notes       String?
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@index([tenant_id])
+  @@index([property_id])
+  @@index([status])
+  @@map("tasks")
+}
+
+model ComplianceRecord {
+  id                  String   @id @default(cuid())
+  property_id         String   @unique
+  property            Property @relation(fields: [property_id], references: [id], onDelete: Cascade)
+  registration_number String?
+  registration_city   String?
+  registration_expiry String?
+  nuitees_year        Int      @default(0)
+  nuitees_limit       Int      @default(120)
+  nuitees_alert_at    Int      @default(96)
+  current_year        Int      @default(2026)
+  dpe_class           String?
+  dpe_expiry          String?
+  fiscal_regime       String?
+  siret               String?
+  is_compliant        Boolean  @default(true)
+  alerts              String   @default("[]") // JSON string
+
+  updated_at DateTime @updatedAt
+
+  @@map("compliance_records")
+}
+
+model IcalFeed {
+  id          String   @id @default(cuid())
+  property_id String
+  property    Property @relation(fields: [property_id], references: [id], onDelete: Cascade)
+  platform    String
+  url         String
+  direction   String   @default("import")
+  last_sync   DateTime?
+  is_active   Boolean  @default(true)
+  created_at  DateTime @default(now())
+
+  @@index([property_id])
+  @@map("ical_feeds")
+}
+
+model MessageThread {
+  id          String    @id @default(cuid())
+  tenant_id   String
+  tenant      Tenant    @relation(fields: [tenant_id], references: [id])
+  guest_name  String
+  guest_email String?
+  property_id String?
+  platform    String    @default("direct")
+  status      String    @default("open")
+  last_message String?
+  last_message_at DateTime?
+  messages    Message[]
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
+
+  @@index([tenant_id])
+  @@map("message_threads")
+}
+
+model Message {
+  id        String        @id @default(cuid())
+  thread_id String
+  thread    MessageThread @relation(fields: [thread_id], references: [id], onDelete: Cascade)
+  sender    String        @default("host") // host | guest | ai
+  content   String
+  read_at   DateTime?
+  created_at DateTime     @default(now())
+
+  @@index([thread_id])
+  @@map("messages")
+}
+
+model PasswordResetToken {
+  id         String   @id @default(cuid())
+  user_id    String
+  token_hash String   @unique
+  expires_at DateTime
+  used_at    DateTime?
+  ip_address String?
+  created_at DateTime @default(now())
+
+  @@index([user_id])
+  @@index([token_hash])
+  @@map("password_reset_tokens")
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  tenant_id   String?
+  user_id     String?
+  action      String
+  resource    String
+  resource_id String?
+  ip_address  String?
+  user_agent  String?
+  metadata    String?  // JSON string
+  created_at  DateTime @default(now())
+
+  @@index([tenant_id])
+  @@index([user_id])
+  @@map("audit_logs")
+}
+
+model PushSubscription {
+  id         String   @id @default(cuid())
+  user_id    String
+  endpoint   String   @unique
+  p256dh     String
+  auth       String
+  created_at DateTime @default(now())
+
+  @@map("push_subscriptions")
+}

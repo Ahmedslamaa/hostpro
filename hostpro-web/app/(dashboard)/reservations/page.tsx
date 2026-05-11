@@ -1,8 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { reservationsApi, propertiesApi } from "@/lib/api";
-import { Reservation, Property } from "@/types";
+import { reservationsApi } from "@/lib/api";
+import { withMock, MOCK_RESERVATIONS } from "@/lib/mock";
 import { formatDate, formatCurrency, sourceLabel } from "@/lib/utils";
 import { Plus, Search, Eye, ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -31,8 +31,7 @@ const STATUS_TABS = [
 ];
 
 export default function ReservationsPage() {
-  const [reservations, setReservations] = useState<Reservation[]>([]);
-  const [properties, setProperties] = useState<Property[]>([]);
+  const [reservations, setReservations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
@@ -40,18 +39,15 @@ export default function ReservationsPage() {
   const PER_PAGE = 10;
 
   useEffect(() => {
-    Promise.all([reservationsApi.list(), propertiesApi.list()]).then(([r, p]) => {
-      setReservations(r.data);
-      setProperties(p.data);
+    withMock(() => reservationsApi.list(), MOCK_RESERVATIONS).then((data) => {
+      setReservations(Array.isArray(data) ? data : MOCK_RESERVATIONS);
       setLoading(false);
-    }).catch(() => setLoading(false));
+    });
   }, []);
 
-  const propMap = Object.fromEntries(properties.map((p) => [p.id, p.name]));
-
   const filtered = reservations.filter((r) => {
-    const name = r.guest?.full_name?.toLowerCase() || "";
-    const prop = propMap[r.property_id]?.toLowerCase() || "";
+    const name = (r.guest_name || r.guest?.full_name || "").toLowerCase();
+    const prop = (r.property_name || "").toLowerCase();
     const q = search.toLowerCase();
     return (!q || name.includes(q) || prop.includes(q)) && (!statusFilter || r.status === statusFilter);
   });
@@ -67,7 +63,7 @@ export default function ReservationsPage() {
           {reservations.length} réservation{reservations.length !== 1 ? "s" : ""} au total
         </p>
         <Link
-          href="/dashboard/reservations/new"
+          href="/reservations/new"
           className="flex items-center gap-2 bg-[#FF5A5F] hover:bg-[#E00B41] text-white font-semibold px-5 py-2.5 rounded-xl transition-all text-sm"
         >
           <Plus size={16} />
@@ -143,13 +139,16 @@ export default function ReservationsPage() {
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 bg-[#FF5A5F]/10 rounded-full flex items-center justify-center flex-shrink-0">
                             <span className="text-[#FF5A5F] text-xs font-bold">
-                              {(r.guest?.full_name || "?")[0].toUpperCase()}
+                              {(r.guest_name || r.guest?.full_name || "?")[0].toUpperCase()}
                             </span>
                           </div>
-                          <span className="font-semibold text-[#222222]">{r.guest?.full_name || "—"}</span>
+                          <div>
+                            <div className="font-semibold text-[#222222]">{r.guest_name || r.guest?.full_name || "—"}</div>
+                            <div className="text-xs text-[#717171]">{r.reservation_code}</div>
+                          </div>
                         </div>
                       </td>
-                      <td className="px-5 py-4 text-[#717171]">{propMap[r.property_id] || "—"}</td>
+                      <td className="px-5 py-4 text-[#717171]">{r.property_name || "—"}</td>
                       <td className="px-5 py-4 text-[#717171]">
                         {formatDate(r.check_in)} → {formatDate(r.check_out)}
                       </td>
@@ -157,7 +156,7 @@ export default function ReservationsPage() {
                         {r.nights} nuit{r.nights > 1 ? "s" : ""}
                       </td>
                       <td className="px-5 py-4 font-semibold text-[#222222]">
-                        {r.net_revenue ? formatCurrency(r.net_revenue) : "—"}
+                        {r.total_price ? formatCurrency(r.total_price) : r.net_revenue ? formatCurrency(r.net_revenue) : "—"}
                       </td>
                       <td className="px-5 py-4">
                         <span className={`text-xs px-2.5 py-1 rounded-full font-semibold ${sourceCfg.className}`}>
@@ -171,7 +170,7 @@ export default function ReservationsPage() {
                       </td>
                       <td className="px-5 py-4">
                         <Link
-                          href={`/dashboard/reservations/${r.id}`}
+                          href={`/reservations/${r.id}`}
                           className="inline-flex items-center gap-1 text-[#717171] hover:text-[#222222] transition-colors text-xs font-medium"
                         >
                           <Eye size={14} /> Voir

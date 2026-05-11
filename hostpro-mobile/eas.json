@@ -1,0 +1,72 @@
+{
+  "cli": {
+    "version": ">= 10.0.0",
+    "requireCommit": false
+  },
+  "build": {
+    "development": {
+      "comment": "Build de développement — pour Expo Go ou simulateur",
+      "developmentClient": true,
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk",
+        "gradleCommand": ":app:assembleDebug"
+      },
+      "ios": {
+        "simulator": true
+      },
+      "env": {
+        "NODE_ENV": "development",
+        "EXPO_PUBLIC_API_URL": "http://192.168.1.100:3000"
+      }
+    },
+
+    "preview": {
+      "comment": "Distribution interne (TestFlight iOS + APK direct Android) — SANS publication stores",
+      "distribution": "internal",
+      "channel": "preview",
+      "android": {
+        "buildType": "apk",
+        "comment": "APK direct — partage par lien ou QR code (pas de Play Store)"
+      },
+      "ios": {
+        "simulator": false,
+        "comment": "IPA distribué via TestFlight (invitation directe, sans App Store public)"
+      },
+      "env": {
+        "NODE_ENV": "production",
+        "EXPO_PUBLIC_API_URL": "https://app.hostpro.fr"
+      }
+    },
+
+    "production": {
+      "comment": "Build de production (stores publics — à activer quand prêt)",
+      "distribution": "store",
+      "channel": "production",
+      "android": {
+        "buildType": "app-bundle"
+      },
+      "ios": {
+        "simulator": false
+      },
+      "env": {
+        "NODE_ENV": "production",
+        "EXPO_PUBLIC_API_URL": "https://app.hostpro.fr"
+      }
+    }
+  },
+
+  "submit": {
+    "production": {
+      "android": {
+        "serviceAccountKeyPath": "./google-services-key.json",
+        "track": "internal"
+      },
+      "ios": {
+        "appleId": "VOTRE_APPLE_ID@email.com",
+        "ascAppId": "VOTRE_APP_STORE_CONNECT_APP_ID",
+        "appleTeamId": "VOTRE_TEAM_ID"
+      }
+    }
+  }
+}

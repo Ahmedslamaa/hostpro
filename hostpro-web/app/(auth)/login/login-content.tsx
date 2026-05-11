@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { authApi } from "@/lib/api";
 import { useAuthStore } from "@/stores/authStore";
+import { LogoMark } from "@/components/ui/LogoMark";
 
 export function LoginContent() {
   const router = useRouter();
@@ -23,7 +24,7 @@ export function LoginContent() {
       const me = await authApi.me();
       const firstTenant = me.data.tenants?.[0]?.id || "";
       if (firstTenant) localStorage.setItem("tenant_id", firstTenant);
-      router.replace("/");
+      router.replace("/dashboard");
     } catch (err: any) {
       setError(err.response?.data?.detail || "Identifiants incorrects");
     } finally {
@@ -42,7 +43,7 @@ export function LoginContent() {
         <div className="relative z-10 max-w-md">
           {/* Logo */}
           <div className="mb-12">
-            <div className="text-white font-black text-4xl tracking-tight mb-2">HOSTPRO</div>
+            <LogoMark variant="dark" size="xl" className="mb-3" />
             <div className="w-12 h-1 bg-white/40 rounded-full" />
           </div>
 
@@ -74,8 +75,8 @@ export function LoginContent() {
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8 lg:p-12">
         <div className="w-full max-w-md">
           {/* Mobile logo */}
-          <div className="lg:hidden mb-10 text-center">
-            <div className="text-[#FF5A5F] font-black text-3xl tracking-tight">HOSTPRO</div>
+          <div className="lg:hidden mb-10 flex justify-center">
+            <LogoMark variant="light" size="lg" />
           </div>
 
           <div className="mb-8">

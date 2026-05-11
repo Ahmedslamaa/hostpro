@@ -1,40 +1,90 @@
 version: "3.9"
 
-services:
-  api:
-    build: .
-    ports:
-      - "8000:8000"
-    env_file:
-      - .env
-    depends_on:
-      - redis
-    volumes:
-      - ./app:/app/app
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+# ── HOST PRO — Stack locale (dev) ─────────────────────────────────────────────
+# Équivalent de l'infrastructure Azure en local :
+#   postgres  → Azure Database for PostgreSQL
+#   redis     → Azure Cache for Redis
+#   api       → Container App "hostpro-api"
+#   web       → Container App "hostpro-web"
+#
+# Usage :
+#   docker compose up -d postgres redis   # démarrer les services uniquement
+#   docker compose up                      # tout démarrer
+#   docker compose up --build api          # rebuild l'API
 
+services:
+
+  # ── PostgreSQL (Azure DB for PostgreSQL local equivalent) ─────────────────
+  postgres:
+    image: postgres:15-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER:     hostpro
+      POSTGRES_PASSWORD: hostpro_dev_password
+      POSTGRES_DB:       hostpro
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hostpro"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ── Redis (Azure Cache for Redis local equivalent) ─────────────────────────
   redis:
     image: redis:7-alpine
     ports:
       - "6379:6379"
+    command: redis-server --save 60 1 --loglevel warning
     volumes:
       - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
 
-  worker:
-    build: .
+  # ── API FastAPI ────────────────────────────────────────────────────────────
+  api:
+    build:
+      context: .
+      target: runtime          # utilise le stage "runtime" du multi-stage Dockerfile
+    ports:
+      - "8000:8000"
     env_file:
       - .env
+    environment:
+      # Surcharger pour pointer vers les conteneurs Docker locaux
+      DATABASE_URL: postgresql+asyncpg://hostpro:hostpro_dev_password@postgres:5432/hostpro
+      REDIS_URL:    redis://redis:6379/0
+      APP_ENV:      development
     depends_on:
-      - redis
-    command: celery -A app.workers.celery_app worker --loglevel=info
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./app:/app/app          # hot-reload en dev
+      - ./alembic:/app/alembic
+    command: >
+      sh -c "alembic upgrade head &&
+             uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
 
-  beat:
-    build: .
-    env_file:
-      - .env
+  # ── Frontend Next.js ──────────────────────────────────────────────────────
+  web:
+    build:
+      context: ../hostpro-web
+      target: runtime
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:8000
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://api:8000
     depends_on:
-      - redis
-    command: celery -A app.workers.celery_app beat --loglevel=info
+      - api
 
 volumes:
+  postgres_data:
   redis_data:

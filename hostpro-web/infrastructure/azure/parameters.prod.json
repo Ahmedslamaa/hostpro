@@ -1,0 +1,26 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "environment": { "value": "prod" },
+    "location":    { "value": "westeurope" },
+    "prefix":      { "value": "hostpro" },
+    "appUrl":      { "value": "https://app.hostpro.fr" },
+    "dbAdminPassword": {
+      "reference": {
+        "keyVault": {
+          "id": "/subscriptions/VOTRE_SUBSCRIPTION_ID/resourceGroups/hostpro-rg/providers/Microsoft.KeyVault/vaults/bootstrap-kv"
+        },
+        "secretName": "db-admin-password"
+      }
+    },
+    "jwtSecret": {
+      "reference": {
+        "keyVault": {
+          "id": "/subscriptions/VOTRE_SUBSCRIPTION_ID/resourceGroups/hostpro-rg/providers/Microsoft.KeyVault/vaults/bootstrap-kv"
+        },
+        "secretName": "jwt-secret"
+      }
+    }
+  }
+}

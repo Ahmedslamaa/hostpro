@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { calendarApi, propertiesApi, messagesApi, profileApi } from "@/lib/api";
+import { withMock, MOCK_PROPERTIES } from "@/lib/mock";
 import { useAuthStore } from "@/stores/authStore";
 import { Property } from "@/types";
 import { Plus, Save, Lock, User, Link, MessageSquare } from "lucide-react";
@@ -40,7 +41,9 @@ export default function SettingsPage() {
   const [pwSuccess, setPwSuccess] = useState(false);
 
   useEffect(() => {
-    propertiesApi.list().then((r) => setProperties(r.data)).catch(() => {});
+    withMock(() => propertiesApi.list(), MOCK_PROPERTIES).then((d) =>
+      setProperties(Array.isArray(d) ? d : MOCK_PROPERTIES)
+    );
     messagesApi.listTemplates().then((r) => setTemplates(r.data)).catch(() => {});
     if (user) setProfileForm({ full_name: user.full_name || "", phone: "" });
   }, [user]);

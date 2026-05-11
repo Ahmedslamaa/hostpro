@@ -6,10 +6,10 @@ from uuid import UUID
 import re
 
 from app.core.database import get_db
-from app.core.dependencies import get_current_user, get_current_tenant, check_permission
+from app.core.dependencies import get_current_user, get_current_tenant, check_permission, get_subscription, check_limit
 from app.models.property import Property, PropertyPhoto, Owner
 from app.models.user import User
-from app.models.tenant import Tenant
+from app.models.tenant import Tenant, Subscription
 from app.schemas.property import PropertyCreate, PropertyUpdate, PropertyOut, OwnerCreate, OwnerOut
 
 router = APIRouter(prefix="/properties", tags=["properties"])
@@ -49,12 +49,22 @@ async def create_property(
     data: PropertyCreate,
     current_user: User = Depends(get_current_user),
     tenant: Tenant = Depends(get_current_tenant),
+    sub: Subscription | None = Depends(get_subscription),
     db: AsyncSession = Depends(get_db),
 ):
     check_permission(current_user, "properties:write")
+
+    # ── Vérification limite du plan ─────────────────────────────────────────
+    current_count = await db.scalar(
+        select(func.count()).where(Property.tenant_id == tenant.id)
+    )
+    await check_limit(tenant, sub, "properties_limit", current_count,
+        error_msg=f"Vous avez atteint la limite de biens de votre plan. "
+                  f"Passez à un plan supérieur pour ajouter davantage de propriétés.")
+
     slug = slugify(data.name)
-    count = await db.scalar(select(func.count()).where(Property.tenant_id == tenant.id, Property.slug.like(f"{slug}%")))
-    final_slug = f"{slug}-{count + 1}" if count > 0 else slug
+    slug_count = await db.scalar(select(func.count()).where(Property.tenant_id == tenant.id, Property.slug.like(f"{slug}%")))
+    final_slug = f"{slug}-{slug_count + 1}" if slug_count > 0 else slug
 
     prop = Property(tenant_id=tenant.id, slug=final_slug, **data.model_dump(exclude_none=True))
     db.add(prop)

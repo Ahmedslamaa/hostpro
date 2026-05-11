@@ -10,9 +10,9 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# Use sync URL for migrations
-database_url = os.getenv("DATABASE_URL_SYNC") or os.getenv("DATABASE_URL", "").replace("+asyncpg", "")
-config.set_main_option("sqlalchemy.url", database_url)
+# Utilise les propriétés normalisées de Settings (sync URL pour psycopg2 / Alembic)
+from app.core.config import settings as app_settings
+config.set_main_option("sqlalchemy.url", app_settings.database_url_sync)
 
 from app.core.database import Base
 import app.models  # noqa: F401 - registers all models

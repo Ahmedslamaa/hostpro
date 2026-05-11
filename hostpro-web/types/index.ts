@@ -8,11 +8,23 @@ export interface User {
   tenants?: TenantMini[];
 }
 
+export interface SubscriptionInfo {
+  plan: string;
+  status: string | null;
+  trial_end: string | null;
+  current_period_end: string | null;
+  features: Record<string, boolean | number>;
+  properties_limit: number;
+  team_members_limit: number;
+  ical_feeds_limit: number;
+}
+
 export interface TenantMini {
   id: string;
   name: string;
   slug: string;
   role: string;
+  subscription?: SubscriptionInfo | null;
 }
 
 export interface Property {

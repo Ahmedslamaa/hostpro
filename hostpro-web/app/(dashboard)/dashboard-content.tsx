@@ -1,8 +1,10 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { dashboardApi } from "@/lib/api";
 import { formatCurrency, formatDateShort, sourceLabel } from "@/lib/utils";
-import { TrendingUp, Home, Calendar, AlertTriangle, TrendingDown, ArrowUpRight } from "lucide-react";
+import { TrendingUp, Home, Calendar, AlertTriangle, TrendingDown, ArrowUpRight, Plus, Sparkles, Zap, BarChart2, ChevronRight, CheckCircle } from "lucide-react";
+import { withMock, MOCK_DASHBOARD_KPIS, MOCK_REVENUE, MOCK_UPCOMING, MOCK_ALERTS } from "@/lib/mock";
 
 interface KPIs {
   occupancy_rate: number;
@@ -22,7 +24,67 @@ const SOURCE_BADGE: Record<string, string> = {
   abritel: "bg-cyan-100 text-cyan-700",
 };
 
+const ONBOARDING_STEPS = [
+  { id: "property", label: "Ajouter une propriété", desc: "Créez votre premier bien locatif", href: "/properties", icon: Home },
+  { id: "platform", label: "Connecter une plateforme", desc: "Synchronisez Airbnb, Booking.com…", href: "/settings", icon: Calendar },
+  { id: "pricing", label: "Activer la tarification IA", desc: "Optimisez vos prix automatiquement", href: "/pricing", icon: Sparkles },
+  { id: "automation", label: "Configurer l'automatisation", desc: "Check-in, ménage, messages auto", href: "/automation", icon: Zap },
+];
+
+function EmptyDashboard() {
+  const router = useRouter();
+  return (
+    <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
+      <div className="w-20 h-20 bg-[#FF5A5F]/10 border-2 border-[#FF5A5F]/20 rounded-3xl flex items-center justify-center mb-6">
+        <Sparkles size={36} className="text-[#FF5A5F]" />
+      </div>
+      <h2 className="text-2xl font-black text-[#222222] mb-2">Bienvenue sur HOSTPRO !</h2>
+      <p className="text-[#717171] mb-10 max-w-md">
+        Votre tableau de bord est vide pour l'instant. Commencez par ajouter votre première propriété pour débloquer toutes les fonctionnalités.
+      </p>
+
+      <div className="grid grid-cols-2 gap-4 w-full max-w-xl mb-8">
+        {ONBOARDING_STEPS.map((s, i) => (
+          <button
+            key={s.id}
+            onClick={() => router.push(s.href)}
+            className="flex items-start gap-4 bg-white border border-[#DDDDDD] rounded-2xl p-5 hover:shadow-sm hover:border-[#FF5A5F]/30 transition-all text-left group"
+          >
+            <div className="w-10 h-10 bg-[#FF5A5F]/10 rounded-xl flex items-center justify-center flex-shrink-0">
+              <s.icon size={18} className="text-[#FF5A5F]" />
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-1.5 mb-0.5">
+                <span className="text-xs font-bold text-[#BBBBBB]">0{i + 1}</span>
+              </div>
+              <div className="font-semibold text-sm text-[#222222] group-hover:text-[#FF5A5F] transition-colors">{s.label}</div>
+              <div className="text-xs text-[#717171] mt-0.5">{s.desc}</div>
+            </div>
+            <ChevronRight size={16} className="text-[#DDDDDD] group-hover:text-[#FF5A5F] flex-shrink-0 mt-0.5 transition-colors" />
+          </button>
+        ))}
+      </div>
+
+      <button
+        onClick={() => router.push("/properties")}
+        className="inline-flex items-center gap-2 bg-[#FF5A5F] hover:bg-[#E00B41] text-white font-bold px-8 py-3.5 rounded-2xl transition-all shadow-lg shadow-[#FF5A5F]/20"
+      >
+        <Plus size={18} /> Ajouter ma première propriété
+      </button>
+
+      <p className="text-xs text-[#717171] mt-5">
+        Ou{" "}
+        <button onClick={() => router.push("/assistant")} className="text-[#FF5A5F] font-semibold hover:underline">
+          demandez à l'assistant IA
+        </button>{" "}
+        comment démarrer.
+      </p>
+    </div>
+  );
+}
+
 export function DashboardContent() {
+  const router = useRouter();
   const [kpis, setKpis] = useState<KPIs | null>(null);
   const [upcoming, setUpcoming] = useState<any[]>([]);
   const [alerts, setAlerts] = useState<any[]>([]);
@@ -33,20 +95,16 @@ export function DashboardContent() {
   useEffect(() => {
     const load = async () => {
       setLoading(true);
-      try {
-        const [k, u, a, r] = await Promise.all([
-          dashboardApi.kpis(period),
-          dashboardApi.upcoming(14),
-          dashboardApi.alerts(),
-          dashboardApi.revenue(6),
-        ]);
-        setKpis(k.data);
-        setUpcoming(u.data);
-        setAlerts(a.data);
-        setRevenue(r.data);
-      } catch (e) {
-        // handle
-      }
+      const [k, u, a, r] = await Promise.all([
+        withMock(() => dashboardApi.kpis(period), MOCK_DASHBOARD_KPIS),
+        withMock(() => dashboardApi.upcoming(14), MOCK_UPCOMING),
+        withMock(() => dashboardApi.alerts(),     MOCK_ALERTS),
+        withMock(() => dashboardApi.revenue(6),   MOCK_REVENUE),
+      ]);
+      setKpis(k as KPIs);
+      setUpcoming(u as any[]);
+      setAlerts(a as any[]);
+      setRevenue(r as any[]);
       setLoading(false);
     };
     load();
@@ -104,6 +162,11 @@ export function DashboardContent() {
     quarter: "Trimestre",
     year: "Cette année",
   };
+
+  // Show onboarding empty state if no properties
+  if (!loading && kpis && kpis.active_properties === 0) {
+    return <EmptyDashboard />;
+  }
 
   return (
     <div>

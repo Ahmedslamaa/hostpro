@@ -8,7 +8,11 @@ from uuid import UUID
 from app.core.database import get_db
 from app.core.security import decode_token
 from app.models.user import User, UserTenantMembership
-from app.models.tenant import Tenant
+from app.models.tenant import Tenant, Subscription
+from app.core.plans import (
+    get_plan_features, plan_has_feature, plan_get_limit,
+    is_within_limit, ACTIVE_STATUSES
+)
 
 bearer_scheme = HTTPBearer()
 
@@ -133,3 +137,84 @@ def require_permission(permission: str):
         check_permission(current_user, permission)
         return current_user
     return checker
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Contrôle d'accès par abonnement
+# ═══════════════════════════════════════════════════════════════════════════
+
+async def get_subscription(
+    tenant: Tenant = Depends(get_current_tenant),
+    db: AsyncSession = Depends(get_db),
+) -> Subscription | None:
+    """Charge la souscription active du tenant courant."""
+    return await db.scalar(
+        select(Subscription).where(Subscription.tenant_id == tenant.id)
+    )
+
+
+def _resolve_plan(tenant: Tenant, sub: Subscription | None) -> str:
+    """Retourne le plan effectif (tenant.plan est la source de vérité)."""
+    if sub and sub.status in ACTIVE_STATUSES:
+        return sub.plan
+    return tenant.plan  # fallback sur le plan du tenant
+
+
+def check_feature(
+    tenant: Tenant,
+    sub: "Subscription | None",
+    feature: str,
+    error_msg: str | None = None,
+) -> None:
+    """
+    Lève HTTP 403 si le plan actif n'inclut pas la feature demandée.
+    Usage : check_feature(tenant, sub, "ai_pricing")
+    """
+    plan = _resolve_plan(tenant, sub)
+    if not plan_has_feature(plan, feature):
+        plan_features = get_plan_features(plan)
+        msg = error_msg or (
+            f"Fonctionnalité non disponible dans votre plan '{plan}'. "
+            f"Passez à un plan supérieur pour accéder à cette fonctionnalité."
+        )
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "code": "FEATURE_NOT_IN_PLAN",
+                "feature": feature,
+                "current_plan": plan,
+                "message": msg,
+            },
+        )
+
+
+async def check_limit(
+    tenant: Tenant,
+    sub: "Subscription | None",
+    limit_key: str,
+    current_count: int,
+    error_msg: str | None = None,
+) -> None:
+    """
+    Lève HTTP 403 si current_count a atteint la limite du plan.
+    Usage : await check_limit(tenant, sub, "properties_limit", nb_biens)
+    """
+    plan = _resolve_plan(tenant, sub)
+    limit = plan_get_limit(plan, limit_key)
+    if limit != -1 and current_count >= limit:
+        msg = error_msg or (
+            f"Limite atteinte pour votre plan '{plan}' : "
+            f"{limit} {limit_key.replace('_limit', '').replace('_', ' ')}(s) maximum. "
+            f"Passez à un plan supérieur pour en ajouter davantage."
+        )
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "code": "PLAN_LIMIT_REACHED",
+                "limit_key": limit_key,
+                "limit": limit,
+                "current": current_count,
+                "current_plan": plan,
+                "message": msg,
+            },
+        )

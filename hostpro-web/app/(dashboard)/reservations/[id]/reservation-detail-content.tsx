@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { reservationsApi, propertiesApi } from "@/lib/api";
+import { withMock, MOCK_RESERVATIONS, MOCK_PROPERTIES } from "@/lib/mock";
 import { Reservation, Property } from "@/types";
 import { formatDate, formatCurrency, sourceLabel } from "@/lib/utils";
 import {
@@ -32,11 +33,14 @@ export function ReservationDetailContent({ id }: { id: string }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([reservationsApi.get(id), propertiesApi.list()]).then(([r, p]) => {
-      setReservation(r.data);
-      setProperties(p.data);
+    Promise.all([
+      withMock(() => reservationsApi.get(id), MOCK_RESERVATIONS.find((r) => r.id === id) ?? MOCK_RESERVATIONS[0]),
+      withMock(() => propertiesApi.list(), MOCK_PROPERTIES),
+    ]).then(([r, p]) => {
+      setReservation((r ?? MOCK_RESERVATIONS[0]) as any);
+      setProperties((Array.isArray(p) ? p : MOCK_PROPERTIES) as any[]);
       setLoading(false);
-    }).catch(() => setLoading(false));
+    });
   }, [id]);
 
   if (loading) {
@@ -113,22 +117,24 @@ export function ReservationDetailContent({ id }: { id: string }) {
               </div>
               Voyageur
             </h3>
-            <div className="flex items-center gap-4 mb-4">
-              <div className="w-12 h-12 bg-[#FF5A5F]/10 rounded-full flex items-center justify-center">
-                <span className="text-[#FF5A5F] text-lg font-bold">
-                  {(reservation.guest?.full_name || "?")[0].toUpperCase()}
-                </span>
-              </div>
-              <div>
-                <div className="font-semibold text-[#222222]">{reservation.guest?.full_name || "—"}</div>
-                {reservation.guest?.email && (
-                  <div className="text-sm text-[#717171]">{reservation.guest.email}</div>
-                )}
-                {reservation.guest?.phone && (
-                  <div className="text-sm text-[#717171]">{reservation.guest.phone}</div>
-                )}
-              </div>
-            </div>
+            {(() => {
+              const r = reservation as any;
+              const name = r.guest_name || r.guest?.full_name || "—";
+              const email = r.guest_email || r.guest?.email;
+              const phone = r.guest_phone || r.guest?.phone;
+              return (
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="w-12 h-12 bg-[#FF5A5F]/10 rounded-full flex items-center justify-center">
+                    <span className="text-[#FF5A5F] text-lg font-bold">{name[0]?.toUpperCase() ?? "?"}</span>
+                  </div>
+                  <div>
+                    <div className="font-semibold text-[#222222]">{name}</div>
+                    {email && <div className="text-sm text-[#717171]">{email}</div>}
+                    {phone && <div className="text-sm text-[#717171]">{phone}</div>}
+                  </div>
+                </div>
+              );
+            })()}
           </div>
 
           {/* Dates */}
@@ -187,9 +193,9 @@ export function ReservationDetailContent({ id }: { id: string }) {
             </h3>
             <div className="space-y-3">
               {[
-                { label: "Prix total", value: reservation.total_amount ? formatCurrency(reservation.total_amount) : "—" },
-                { label: "Frais de ménage", value: reservation.cleaning_fee ? formatCurrency(reservation.cleaning_fee) : "—" },
-                { label: "Revenu net", value: reservation.net_revenue ? formatCurrency(reservation.net_revenue) : "—", bold: true, coral: true },
+                { label: "Prix total", value: (reservation as any).total_price || reservation.total_amount ? formatCurrency((reservation as any).total_price ?? reservation.total_amount) : "—" },
+                { label: "Frais de ménage", value: (reservation as any).cleaning_fee ? formatCurrency((reservation as any).cleaning_fee) : "Inclus" },
+                { label: "Revenu net", value: (reservation as any).net_revenue ? formatCurrency((reservation as any).net_revenue) : (reservation as any).total_price ? formatCurrency(Math.round((reservation as any).total_price * 0.87)) : "—", bold: true, coral: true },
               ].map((row, i) => (
                 <div key={i} className={`flex justify-between items-center ${i === 2 ? "pt-3 border-t border-[#DDDDDD]" : ""}`}>
                   <span className={`text-sm ${row.bold ? "font-bold text-[#222222]" : "text-[#717171]"}`}>

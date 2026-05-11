@@ -1,0 +1,228 @@
+# ═══════════════════════════════════════════════════════════════════════════
+# HOST PRO — CI/CD → Azure Container Apps
+#
+# Déclencheurs :
+#   push main   → déploiement en production
+#   push dev    → déploiement en staging/dev
+#   PR vers main → lint + build (pas de déploiement)
+#
+# Secrets GitHub requis (Settings → Secrets and variables → Actions) :
+#   AZURE_CREDENTIALS          → JSON de la Service Principal (az ad sp create-for-rbac)
+#   AZURE_SUBSCRIPTION_ID      → ID de l'abonnement Azure
+#   AZURE_RESOURCE_GROUP       → Nom du Resource Group (ex: hostpro-prod)
+#   ACR_LOGIN_SERVER           → ex: hostproacrprod.azurecr.io
+#   ACR_USERNAME               → Admin username ACR
+#   ACR_PASSWORD               → Admin password ACR
+#   DB_ADMIN_PASSWORD          → Mot de passe PostgreSQL (pour déploiement Bicep)
+#   JWT_SECRET_KEY             → Clé secrète JWT
+# ═══════════════════════════════════════════════════════════════════════════
+
+name: Deploy to Azure
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+  pull_request:
+    branches:
+      - main
+
+env:
+  API_IMAGE:  ${{ secrets.ACR_LOGIN_SERVER }}/hostpro-api
+  WEB_IMAGE:  ${{ secrets.ACR_LOGIN_SERVER }}/hostpro-web
+
+jobs:
+  # ── 1. Lint & Tests ─────────────────────────────────────────────────────
+  lint:
+    name: Lint & Build Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+          cache-dependency-path: hostpro-api/requirements.txt
+
+      - name: Install Python deps
+        working-directory: hostpro-api
+        run: pip install -r requirements.txt
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: hostpro-web/package-lock.json
+
+      - name: Install Node deps
+        working-directory: hostpro-web
+        run: npm ci
+
+      - name: Next.js type check
+        working-directory: hostpro-web
+        run: npx tsc --noEmit
+        continue-on-error: true   # non-bloquant pendant la phase de dev
+
+  # ── 2. Build & Push images Docker vers ACR ──────────────────────────────
+  build:
+    name: Build & Push to ACR
+    runs-on: ubuntu-latest
+    needs: lint
+    if: github.event_name == 'push'
+    outputs:
+      api_tag: ${{ steps.meta.outputs.api_tag }}
+      web_tag: ${{ steps.meta.outputs.web_tag }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compute image tags
+        id: meta
+        run: |
+          SHA=${GITHUB_SHA::8}
+          BRANCH=${GITHUB_REF_NAME}
+          echo "api_tag=${SHA}" >> "$GITHUB_OUTPUT"
+          echo "web_tag=${SHA}" >> "$GITHUB_OUTPUT"
+          echo "branch=${BRANCH}" >> "$GITHUB_OUTPUT"
+
+      - name: Login to Azure Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ secrets.ACR_LOGIN_SERVER }}
+          username: ${{ secrets.ACR_USERNAME }}
+          password: ${{ secrets.ACR_PASSWORD }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # ── API ──────────────────────────────────────────────────────────────
+      - name: Build & Push API image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./hostpro-api
+          push: true
+          tags: |
+            ${{ env.API_IMAGE }}:${{ steps.meta.outputs.api_tag }}
+            ${{ env.API_IMAGE }}:latest
+          cache-from: type=registry,ref=${{ env.API_IMAGE }}:buildcache
+          cache-to:   type=registry,ref=${{ env.API_IMAGE }}:buildcache,mode=max
+
+      # ── Web ──────────────────────────────────────────────────────────────
+      - name: Build & Push Web image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./hostpro-web
+          push: true
+          build-args: |
+            NEXT_PUBLIC_API_URL=${{ github.ref_name == 'main' && 'https://hostpro-prod-api.azurecontainerapps.io' || 'https://hostpro-dev-api.azurecontainerapps.io' }}
+          tags: |
+            ${{ env.WEB_IMAGE }}:${{ steps.meta.outputs.web_tag }}
+            ${{ env.WEB_IMAGE }}:latest
+          cache-from: type=registry,ref=${{ env.WEB_IMAGE }}:buildcache
+          cache-to:   type=registry,ref=${{ env.WEB_IMAGE }}:buildcache,mode=max
+
+  # ── 3. Deploy infrastructure Bicep ──────────────────────────────────────
+  infra:
+    name: Deploy Azure Infrastructure
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref_name == 'main'   # infra uniquement sur main (prod)
+    environment: production
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Deploy Bicep (what-if first)
+        uses: azure/arm-deploy@v2
+        with:
+          subscriptionId:  ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          resourceGroupName: ${{ secrets.AZURE_RESOURCE_GROUP }}
+          template:        ./infra/main.bicep
+          parameters:      >
+            env=prod
+            dbAdminPassword=${{ secrets.DB_ADMIN_PASSWORD }}
+            jwtSecretKey=${{ secrets.JWT_SECRET_KEY }}
+            frontendUrl=https://app.hostpro.fr
+          deploymentMode:  Incremental
+          failOnStdErr:    false
+
+  # ── 4. Deploy Container Apps ─────────────────────────────────────────────
+  deploy:
+    name: Deploy Container Apps
+    runs-on: ubuntu-latest
+    needs: [build, infra]
+    if: always() && needs.build.result == 'success' && github.event_name == 'push'
+    environment: ${{ github.ref_name == 'main' && 'production' || 'staging' }}
+
+    steps:
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Set env-specific vars
+        id: vars
+        run: |
+          if [[ "${{ github.ref_name }}" == "main" ]]; then
+            echo "env=prod"       >> "$GITHUB_OUTPUT"
+            echo "api_app=hostpro-prod-api"  >> "$GITHUB_OUTPUT"
+            echo "web_app=hostpro-prod-web"  >> "$GITHUB_OUTPUT"
+            echo "rg=${{ secrets.AZURE_RESOURCE_GROUP }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "env=dev"        >> "$GITHUB_OUTPUT"
+            echo "api_app=hostpro-dev-api"   >> "$GITHUB_OUTPUT"
+            echo "web_app=hostpro-dev-web"   >> "$GITHUB_OUTPUT"
+            echo "rg=hostpro-dev" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Update API Container App image
+        run: |
+          az containerapp update \
+            --name ${{ steps.vars.outputs.api_app }} \
+            --resource-group ${{ steps.vars.outputs.rg }} \
+            --image ${{ env.API_IMAGE }}:${{ needs.build.outputs.api_tag }}
+
+      - name: Update Web Container App image
+        run: |
+          az containerapp update \
+            --name ${{ steps.vars.outputs.web_app }} \
+            --resource-group ${{ steps.vars.outputs.rg }} \
+            --image ${{ env.WEB_IMAGE }}:${{ needs.build.outputs.web_tag }}
+
+      - name: Wait for API healthcheck
+        run: |
+          echo "Attente du démarrage de l'API..."
+          sleep 20
+          API_FQDN=$(az containerapp show \
+            --name ${{ steps.vars.outputs.api_app }} \
+            --resource-group ${{ steps.vars.outputs.rg }} \
+            --query "properties.configuration.ingress.fqdn" -o tsv)
+          curl -sf "https://${API_FQDN}/health" \
+            && echo "API OK ✓" \
+            || (echo "API health check failed ✗" && exit 1)
+
+      - name: Post deployment summary
+        run: |
+          API_URL=$(az containerapp show \
+            --name ${{ steps.vars.outputs.api_app }} \
+            --resource-group ${{ steps.vars.outputs.rg }} \
+            --query "properties.configuration.ingress.fqdn" -o tsv)
+          WEB_URL=$(az containerapp show \
+            --name ${{ steps.vars.outputs.web_app }} \
+            --resource-group ${{ steps.vars.outputs.rg }} \
+            --query "properties.configuration.ingress.fqdn" -o tsv)
+          echo "## Déploiement réussi ✓" >> $GITHUB_STEP_SUMMARY
+          echo "| Service | URL |" >> $GITHUB_STEP_SUMMARY
+          echo "|---------|-----|" >> $GITHUB_STEP_SUMMARY
+          echo "| API     | https://${API_URL} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Web     | https://${WEB_URL} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Commit  | ${{ github.sha }} |" >> $GITHUB_STEP_SUMMARY

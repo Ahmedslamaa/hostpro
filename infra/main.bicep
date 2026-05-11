@@ -153,7 +153,7 @@ resource postgres 'Microsoft.DBforPostgreSQL/flexibleServers@2023-03-01-preview'
       startMinute: 0
     }
     authConfig: { activeDirectoryAuth: 'Disabled', passwordAuth: 'Enabled' }
-    network: { publicNetworkAccess: 'Enabled' }
+    // publicNetworkAccess est géré par les règles de firewall
   }
 }
 
@@ -178,7 +178,7 @@ resource storage 'Microsoft.Storage/storageAccounts@2023-01-01' = {
   location: location
   tags: tags
   kind: 'StorageV2'
-  sku: { name: isProd ? 'Standard_GRS' : 'Standard_LRS' }
+  sku: { name: 'Standard_LRS' }  // LRS suffit pour Azure for Students
   properties: {
     accessTier: 'Hot'
     supportsHttpsTrafficOnly: true
@@ -207,8 +207,8 @@ resource appPlan 'Microsoft.Web/serverfarms@2022-09-01' = {
   tags: tags
   kind: 'linux'
   sku: {
-    name: isProd ? 'P1v3' : 'B2'
-    tier: isProd ? 'PremiumV3' : 'Basic'
+    name: isProd ? 'B2' : 'B1'
+    tier: 'Basic'
   }
   properties: {
     reserved: true  // Linux

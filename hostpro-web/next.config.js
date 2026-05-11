@@ -11,8 +11,9 @@ const CSP = [
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com data:",
   "img-src 'self' data: blob: https://*.blob.core.windows.net https://*.azurewebsites.net https://images.unsplash.com",
-  // connect-src: self only (no external localhost:8000 proxy anymore)
-  "connect-src 'self' https://*.azure.com https://*.applicationinsights.azure.com https://api.resend.com",
+  isDev
+    ? "connect-src 'self' ws://localhost:3000 wss://localhost:3000 https://*.azure.com"
+    : "connect-src 'self' https://*.azure.com https://*.applicationinsights.azure.com https://api.resend.com",
   // Service Worker support
   "worker-src 'self'",
   "frame-ancestors 'none'",
@@ -32,7 +33,7 @@ const securityHeaders = [
   { key: "Content-Security-Policy",  value: CSP },
   { key: "Cross-Origin-Opener-Policy",    value: "same-origin" },
   { key: "Cross-Origin-Resource-Policy",  value: "same-origin" },
-  { key: "Cross-Origin-Embedder-Policy",  value: "require-corp" },
+  ...(isDev ? [] : [{ key: "Cross-Origin-Embedder-Policy", value: "require-corp" }]),
   ...(isDev ? [] : [
     { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
   ]),
@@ -57,10 +58,10 @@ const nextConfig = {
 
   async headers() {
     return [
-      {
+      ...(isDev ? [] : [{
         source: "/(.*)",
         headers: securityHeaders,
-      },
+      }]),
       {
         source: "/_next/static/(.*)",
         headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],

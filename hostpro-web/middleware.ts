@@ -15,6 +15,7 @@ const PUBLIC_PATHS = [
   "/api/v1/auth/refresh",
   "/api/v1/auth/forgot-password",
   "/api/v1/auth/reset-password",
+  "/api/v1/auth/demo",
   "/api/health",
   "/api/webhooks/stripe",
   "/sw.js",

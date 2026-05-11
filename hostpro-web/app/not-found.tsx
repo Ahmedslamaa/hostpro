@@ -1,8 +1,11 @@
+"use client";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { LogoMark } from "@/components/ui/LogoMark";
 import { Home, ArrowLeft } from "lucide-react";
 
 export default function NotFound() {
+  const router = useRouter();
   return (
     <div className="min-h-screen bg-[#F7F7F7] flex flex-col items-center justify-center px-4">
       <div className="text-center max-w-md">
@@ -21,12 +24,12 @@ export default function NotFound() {
           >
             <Home size={16} /> Tableau de bord
           </Link>
-          <Link
-            href="javascript:history.back()"
+          <button
+            onClick={() => router.back()}
             className="flex items-center gap-2 border border-[#DDDDDD] text-[#222222] font-semibold px-6 py-3 rounded-xl hover:bg-white transition-all"
           >
             <ArrowLeft size={16} /> Retour
-          </Link>
+          </button>
         </div>
       </div>
     </div>

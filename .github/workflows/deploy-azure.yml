@@ -127,12 +127,18 @@ jobs:
           USER=$(echo '${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}' | grep -oP 'userName="\K[^"]+' | head -1)
           PASS=$(echo '${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}' | grep -oP 'userPWD="\K[^"]+' | head -1)
           echo "Deploying to https://${{ env.WEBAPP_NAME }}.scm.azurewebsites.net/api/zipdeploy"
-          curl -X POST "https://${{ env.WEBAPP_NAME }}.scm.azurewebsites.net/api/zipdeploy" \
-            -u "$USER:$PASS" \
-            -H "Content-Type: application/zip" \
-            --data-binary @deploy.zip \
-            -f --retry 3 --max-time 300 \
-            -w "\nHTTP Status: %{http_code}\n"
+          for i in 1 2 3; do
+            HTTP=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+              "https://${{ env.WEBAPP_NAME }}.scm.azurewebsites.net/api/zipdeploy?isAsync=true" \
+              -u "$USER:$PASS" \
+              -H "Content-Type: application/zip" \
+              --data-binary @deploy.zip \
+              --max-time 300)
+            echo "Attempt $i: HTTP $HTTP"
+            [ "$HTTP" = "202" ] && break
+            sleep 15
+          done
+          [ "$HTTP" = "202" ] && echo "Deploy accepted" || (echo "Deploy failed: $HTTP" && exit 1)
 
       - name: Résumé du déploiement
         run: |

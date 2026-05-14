@@ -43,13 +43,6 @@ const nextConfig = {
   output: "standalone",
   poweredByHeader: false,
 
-  // Keep Node.js-only libraries out of webpack bundling
-  // node-ical uses BigInt at module level which webpack can't polyfill
-  // Next.js 14 uses experimental.serverComponentsExternalPackages
-  experimental: {
-    serverComponentsExternalPackages: ["node-ical"],
-  },
-
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "*.blob.core.windows.net" },

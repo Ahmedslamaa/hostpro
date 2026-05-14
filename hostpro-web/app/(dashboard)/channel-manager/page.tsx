@@ -630,7 +630,7 @@ export default function ChannelManagerPage() {
 
   const handleFeedDeleted = (id: string) => setFeeds(f => f.filter(x => x.id !== id));
 
-  const connectedPlatforms = [...new Set(feeds.map(f => f.platform))].length;
+  const connectedPlatforms = Array.from(new Set(feeds.map(f => f.platform))).length;
   const activeRes = reservations.filter(r => r.status !== "cancelled").length;
 
   if (loading) return (

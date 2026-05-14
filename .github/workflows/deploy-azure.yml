@@ -53,9 +53,11 @@ jobs:
         working-directory: hostpro-web
         run: npm ci
 
-      - name: Generate Prisma client
+      - name: Patch schema for PostgreSQL + generate Prisma client
         working-directory: hostpro-web
-        run: npx prisma generate
+        run: |
+          sed -i 's/provider = "sqlite"/provider = "postgresql"/' prisma/schema.prisma
+          npx prisma generate
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
@@ -126,6 +128,7 @@ jobs:
           app-name: ${{ env.WEBAPP_NAME }}
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
           package: deploy.zip
+          startup-command: "node server.js"
 
       - name: Résumé du déploiement
         run: |

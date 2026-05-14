@@ -116,14 +116,24 @@ jobs:
         with:
           name: deploy-package
 
-      # Méthode fiable : azure/webapps-deploy@v3 avec publish-profile
-      # (ZipDeploy natif, pas de lock Kudu, pas de WEBSITE_RUN_FROM_PACKAGE)
+      # ZipDeploy synchrone via Kudu (publish-profile credentials)
+      # Évite le bug slot-name de azure/webapps-deploy@v3
       - name: Déployer sur Azure App Service
-        uses: azure/webapps-deploy@v3
-        with:
-          app-name: ${{ env.WEBAPP_NAME }}
-          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-          package: deploy.zip
+        run: |
+          PROFILE='${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}'
+          USER=$(echo "$PROFILE" | grep -oE 'userName="[^"]+"' | head -1 | cut -d'"' -f2)
+          PASS=$(echo "$PROFILE" | grep -oE 'userPWD="[^"]+"'  | head -1 | cut -d'"' -f2)
+          echo "Deploying to https://${{ env.WEBAPP_NAME }}.scm.azurewebsites.net/api/zipdeploy"
+          HTTP=$(curl -s -o /tmp/deploy_out.txt -w "%{http_code}" \
+            -X POST \
+            "https://${{ env.WEBAPP_NAME }}.scm.azurewebsites.net/api/zipdeploy" \
+            -u "$USER:$PASS" \
+            -H "Content-Type: application/zip" \
+            --data-binary @deploy.zip \
+            --max-time 600)
+          cat /tmp/deploy_out.txt
+          echo "HTTP: $HTTP"
+          [ "$HTTP" = "200" ] || [ "$HTTP" = "204" ] && echo "✅ Deploy OK" || (echo "❌ Deploy failed: $HTTP" && exit 1)
 
       - name: Health check post-déploiement
         run: |

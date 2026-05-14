@@ -149,8 +149,8 @@ function ChBadge({ ch }: { ch: Channel }) {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function MessagesPage() {
-  const [convs, setConvs] = useState<Conversation[]>(MOCK);
-  const [sel, setSel] = useState<Conversation | null>(MOCK[0]);
+  const [convs, setConvs] = useState<Conversation[]>([]);
+  const [sel, setSel] = useState<Conversation | null>(null);
   const [search, setSearch] = useState("");
   const [chFilter, setChFilter] = useState<Channel | "all">("all");
   const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "active" | "resolved">("all");
@@ -159,7 +159,72 @@ export default function MessagesPage() {
   const [showTpl, setShowTpl] = useState(false);
   const [showAI, setShowAI] = useState(false);
   const [mobileView, setMobileView] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [isDemo, setIsDemo] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
+
+  // ── Load threads from API ──────────────────────────────────────
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const res = await fetch("/api/v1/messages/threads");
+        const threads = await res.json();
+        if (Array.isArray(threads) && threads.length > 0) {
+          // Fetch property names for threads
+          const propsRes = await fetch("/api/v1/properties");
+          const props: any[] = await propsRes.json();
+          const propMap: Record<string, string> = {};
+          props.forEach((p: any) => { propMap[p.id] = p.name; });
+
+          const mapped: Conversation[] = threads.map((t: any) => ({
+            id: t.id,
+            guestName: t.guest_name ?? "Voyageur",
+            property: propMap[t.property_id] ?? "Votre bien",
+            channel: (t.platform ?? "direct") as Channel,
+            lastMessage: t.last_message ?? "Nouvelle conversation",
+            lastTs: t.last_message_at ? new Date(t.last_message_at) : new Date(t.created_at),
+            unread: 0,
+            status: t.status === "open" ? "active" : t.status === "resolved" ? "resolved" : "pending",
+            tags: [],
+            messages: [],
+            botEnabled: false,
+          }));
+          setConvs(mapped);
+          setIsDemo(false);
+        } else {
+          // No real threads yet — show demo data
+          setConvs(MOCK);
+          setSel(MOCK[0]);
+          setIsDemo(true);
+        }
+      } catch {
+        setConvs(MOCK);
+        setSel(MOCK[0]);
+        setIsDemo(true);
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, []);
+
+  // ── Load messages when a thread is selected ────────────────────
+  const loadMessages = async (conv: Conversation) => {
+    if (isDemo) return; // mock data already has messages
+    try {
+      const res = await fetch(`/api/v1/messages/threads/${conv.id}/messages`);
+      const msgs = await res.json();
+      const mapped: Msg[] = Array.isArray(msgs) ? msgs.map((m: any) => ({
+        id: m.id,
+        body: m.content,
+        sender: m.sender as "guest" | "host" | "bot",
+        timestamp: new Date(m.created_at),
+        status: "read" as MessageStatus,
+      })) : [];
+      setConvs(prev => prev.map(c => c.id === conv.id ? { ...c, messages: mapped } : c));
+      setSel(prev => prev?.id === conv.id ? { ...prev, messages: mapped } : prev);
+    } catch { /* ignore */ }
+  };
 
   const totalUnread = convs.reduce((s, c) => s + c.unread, 0);
 
@@ -182,6 +247,7 @@ export default function MessagesPage() {
     setShowAI(false);
     setShowTpl(false);
     setConvs(prev => prev.map(x => x.id === c.id ? { ...x, unread: 0 } : x));
+    loadMessages(c);
   };
 
   const sendMsg = async (body: string, isBot = false) => {
@@ -194,7 +260,16 @@ export default function MessagesPage() {
     setInput("");
     setShowTpl(false);
     setShowAI(false);
-    await new Promise(r => setTimeout(r, 400));
+    // Persist to API (skip for demo mode)
+    if (!isDemo) {
+      try {
+        await fetch(`/api/v1/messages/threads/${sel.id}/messages`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ content: body, sender: isBot ? "bot" : "host" }),
+        });
+      } catch { /* ignore */ }
+    }
     setSending(false);
   };
 
@@ -212,8 +287,22 @@ export default function MessagesPage() {
     return ["Bonjour ! Comment puis-je vous aider ? 😊", "Merci pour votre message, je reviens vers vous rapidement."];
   };
 
+  if (loading) return (
+    <div className="flex items-center justify-center h-64">
+      <div className="w-8 h-8 border-2 border-[#FF5A5F] border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
+
   return (
-    <div className="flex h-[calc(100vh-80px)] -m-6 overflow-hidden">
+    <div className="flex flex-col h-[calc(100vh-80px)] -m-6 overflow-hidden">
+      {/* Demo banner */}
+      {isDemo && (
+        <div className="flex-shrink-0 bg-amber-50 border-b border-amber-200 px-4 py-2 flex items-center gap-2 text-xs text-amber-700">
+          <AlertCircle size={13} className="flex-shrink-0" />
+          <span><strong>Mode démo</strong> — Aucun fil de discussion réel. Les messages Airbnb ne sont pas accessibles via iCal (limitation Airbnb). Créez vos conversations manuellement.</span>
+        </div>
+      )}
+      <div className="flex flex-1 overflow-hidden">
 
       {/* LEFT — conversation list */}
       <div className={cn("w-80 flex-shrink-0 flex flex-col border-r border-[#DDDDDD] bg-white", mobileView && "hidden md:flex")}>
@@ -487,6 +576,7 @@ export default function MessagesPage() {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }

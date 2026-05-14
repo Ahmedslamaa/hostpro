@@ -170,6 +170,8 @@ export function middleware(request: NextRequest) {
       if (!authHeader?.startsWith("Bearer ")) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       }
+      // Bearer token present — let API route validate it, don't redirect
+      return NextResponse.next();
     }
 
     // Forward cookie token as header so API routes can pick it up

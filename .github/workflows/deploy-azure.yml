@@ -122,12 +122,17 @@ jobs:
         with:
           name: deploy-package
 
-      - name: Déployer sur Azure App Service
-        uses: azure/webapps-deploy@v3
-        with:
-          app-name: ${{ env.WEBAPP_NAME }}
-          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-          package: deploy.zip
+      - name: Déployer sur Azure App Service (ZipDeploy)
+        run: |
+          USER=$(echo '${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}' | grep -oP 'userName="\K[^"]+' | head -1)
+          PASS=$(echo '${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}' | grep -oP 'userPWD="\K[^"]+' | head -1)
+          echo "Deploying to https://${{ env.WEBAPP_NAME }}.scm.azurewebsites.net/api/zipdeploy"
+          curl -X POST "https://${{ env.WEBAPP_NAME }}.scm.azurewebsites.net/api/zipdeploy" \
+            -u "$USER:$PASS" \
+            -H "Content-Type: application/zip" \
+            --data-binary @deploy.zip \
+            -f --retry 3 --max-time 300 \
+            -w "\nHTTP Status: %{http_code}\n"
 
       - name: Résumé du déploiement
         run: |

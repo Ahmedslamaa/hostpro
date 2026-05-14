@@ -45,7 +45,10 @@ const nextConfig = {
 
   // Keep Node.js-only libraries out of webpack bundling
   // node-ical uses BigInt at module level which webpack can't polyfill
-  serverExternalPackages: ["node-ical"],
+  // Next.js 14 uses experimental.serverComponentsExternalPackages
+  experimental: {
+    serverComponentsExternalPackages: ["node-ical"],
+  },
 
   images: {
     remotePatterns: [

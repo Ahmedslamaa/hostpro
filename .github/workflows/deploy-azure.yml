@@ -90,6 +90,19 @@ jobs:
         run: |
           cp -r .next/static  .next/standalone/.next/static
           cp -r public        .next/standalone/public
+
+          # Oryx exclut les répertoires cachés (.prisma) lors de la compression node_modules.
+          # On copie l'engine Prisma Linux dans un dossier NON-caché.
+          # PRISMA_QUERY_ENGINE_LIBRARY est configuré dans les app settings Azure.
+          mkdir -p .next/standalone/prisma-engines
+          # Chercher le bon binaire selon la plateforme CI (debian ou musl)
+          for bin in \
+            node_modules/.prisma/client/libquery_engine-debian-openssl-3.0.x.so.node \
+            node_modules/.prisma/client/libquery_engine-linux-musl-openssl-3.0.x.so.node \
+            node_modules/.prisma/client/libquery_engine-linux-musl.so.node; do
+            [ -f "$bin" ] && cp "$bin" .next/standalone/prisma-engines/ && echo "Copied: $bin"
+          done
+
           cd .next/standalone
           zip -r ../../deploy.zip . -x "*.map"
 

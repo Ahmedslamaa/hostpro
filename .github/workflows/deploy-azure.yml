@@ -1,6 +1,6 @@
 # ═══════════════════════════════════════════════════════════════════════════
-# HOST PRO — CI/CD → Azure App Service (Publish Profile)
-# Compatible Azure for Students (pas de Service Principal requis)
+# HOST PRO — CI/CD → Azure App Service
+# Compatible Azure for Students (Publish Profile auth)
 #
 # Déclencheurs :
 #   push main   → build + déploiement production
@@ -10,15 +10,12 @@
 #   AZURE_WEBAPP_PUBLISH_PROFILE  → Profil de publication App Service
 #   AZURE_WEBAPP_NAME             → hostpro-dev-app
 #   DATABASE_URL                  → postgresql://...
-#   JWT_SECRET                    → secret JWT
-#   JWT_REFRESH_SECRET            → secret JWT refresh
+#   JWT_SECRET / JWT_REFRESH_SECRET
 #   ANTHROPIC_API_KEY
 #   RESEND_API_KEY
-#   STRIPE_SECRET_KEY
-#   STRIPE_WEBHOOK_SECRET
+#   STRIPE_SECRET_KEY / STRIPE_WEBHOOK_SECRET
 #   STRIPE_PRICE_STARTER / PRO / ENTERPRISE
 #   VAPID_PUBLIC_KEY / VAPID_PRIVATE_KEY / VAPID_EMAIL
-#   NEXT_PUBLIC_APP_URL
 # ═══════════════════════════════════════════════════════════════════════════
 
 name: Deploy to Azure
@@ -91,11 +88,8 @@ jobs:
       - name: Préparer le package de déploiement
         working-directory: hostpro-web
         run: |
-          # Copier les fichiers statiques dans standalone
-          cp -r .next/static .next/standalone/.next/static
-          cp -r public .next/standalone/public
-
-          # Créer le ZIP de déploiement
+          cp -r .next/static  .next/standalone/.next/static
+          cp -r public        .next/standalone/public
           cd .next/standalone
           zip -r ../../deploy.zip . -x "*.map"
 
@@ -122,25 +116,29 @@ jobs:
         with:
           name: deploy-package
 
-      - name: Déployer sur Azure App Service (ZipDeploy)
+      # Méthode fiable : azure/webapps-deploy@v3 avec publish-profile
+      # (ZipDeploy natif, pas de lock Kudu, pas de WEBSITE_RUN_FROM_PACKAGE)
+      - name: Déployer sur Azure App Service
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ env.WEBAPP_NAME }}
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: deploy.zip
+
+      - name: Health check post-déploiement
         run: |
-          USER=$(echo '${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}' | grep -oP 'userName="\K[^"]+' | head -1)
-          PASS=$(echo '${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}' | grep -oP 'userPWD="\K[^"]+' | head -1)
-          echo "Deploying to https://${{ env.WEBAPP_NAME }}.scm.azurewebsites.net/api/zipdeploy"
-          for i in 1 2 3; do
-            HTTP=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
-              "https://${{ env.WEBAPP_NAME }}.scm.azurewebsites.net/api/zipdeploy?isAsync=true" \
-              -u "$USER:$PASS" \
-              -H "Content-Type: application/zip" \
-              --data-binary @deploy.zip \
-              --max-time 300)
-            echo "Attempt $i: HTTP $HTTP"
-            [ "$HTTP" = "202" ] && break
+          echo "Attente démarrage (30s)..."
+          sleep 30
+          for i in 1 2 3 4 5; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://${{ env.WEBAPP_NAME }}.azurewebsites.net/api/health)
+            echo "Attempt $i: HTTP $STATUS"
+            [ "$STATUS" = "200" ] && echo "✅ App healthy" && exit 0
             sleep 15
           done
-          [ "$HTTP" = "202" ] && echo "Deploy accepted" || (echo "Deploy failed: $HTTP" && exit 1)
+          echo "❌ Health check failed" && exit 1
 
       - name: Résumé du déploiement
+        if: success()
         run: |
           echo "## ✅ Déploiement réussi" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY

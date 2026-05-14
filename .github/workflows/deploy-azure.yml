@@ -116,14 +116,18 @@ jobs:
         with:
           name: deploy-package
 
-      # ZipDeploy via curl avec credentials Kudu dédiés (pas de masquage secret)
+      # ZipDeploy via curl — credentials passés par env vars pour éviter l'expansion bash du $ dans le username Kudu
       - name: Déployer sur Azure App Service
+        env:
+          KUDU_USER: ${{ secrets.AZURE_KUDU_USER }}
+          KUDU_PASS: ${{ secrets.AZURE_KUDU_PASS }}
+          WEBAPP: ${{ env.WEBAPP_NAME }}
         run: |
-          echo "Deploying to https://${{ env.WEBAPP_NAME }}.scm.azurewebsites.net..."
+          echo "Deploying to https://${WEBAPP}.scm.azurewebsites.net..."
           HTTP=$(curl -s -o /tmp/deploy_out.txt -w "%{http_code}" \
             -X POST \
-            "https://${{ env.WEBAPP_NAME }}.scm.azurewebsites.net/api/zipdeploy" \
-            -u "${{ secrets.AZURE_KUDU_USER }}:${{ secrets.AZURE_KUDU_PASS }}" \
+            "https://${WEBAPP}.scm.azurewebsites.net/api/zipdeploy" \
+            --user "${KUDU_USER}:${KUDU_PASS}" \
             -H "Content-Type: application/zip" \
             --data-binary @deploy.zip \
             --max-time 600)

@@ -16,7 +16,21 @@ export async function GET(req: NextRequest) {
     orderBy: { created_at: "desc" },
   });
 
-  return NextResponse.json(properties);
+  // Normalize for UI compatibility
+  const normalized = properties.map((p) => ({
+    ...p,
+    // UI aliases
+    type: p.property_type,
+    base_price: p.base_price_night,
+    amenities: (() => { try { return JSON.parse(p.amenities as string); } catch { return []; } })(),
+    // Computed fields — no real-time calculation here for list view perf
+    monthly_revenue: null,
+    occupancy_rate: null,
+    nights_booked: null,
+    platforms: [],
+  }));
+
+  return NextResponse.json(normalized);
 }
 
 export async function POST(req: NextRequest) {

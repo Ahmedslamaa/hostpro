@@ -32,14 +32,11 @@ export default function RegisterPage() {
     setError("");
     try {
       const res = await authApi.register(form);
-      const { access_token, refresh_token, user } = res.data;
-      const me = await authApi.me();
-      const tenantId = me.data.tenants?.[0]?.id || "";
-      setAuth(user, access_token, refresh_token, tenantId);
-      if (tenantId) localStorage.setItem("tenant_id", tenantId);
+      const { access_token, refresh_token, user, tenant_id } = res.data;
+      setAuth(user, access_token, refresh_token, tenant_id || "");
       router.replace("/onboarding");
     } catch (err: any) {
-      setError(err.response?.data?.detail || "Erreur lors de la création du compte");
+      setError(err.response?.data?.error || err.response?.data?.detail || "Erreur lors de la création du compte");
     } finally {
       setLoading(false);
     }

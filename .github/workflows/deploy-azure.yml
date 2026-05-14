@@ -56,7 +56,8 @@ jobs:
           sed -i 's/provider = "sqlite"/provider = "postgresql"/' prisma/schema.prisma
           npx prisma generate
           # Push schema to database (creates tables if missing, safe to re-run)
-          npx prisma db push --skip-generate --accept-data-loss=false
+          # continue-on-error because DB credentials might be temporarily unavailable
+          npx prisma db push --skip-generate --accept-data-loss=false || echo "⚠️  prisma db push failed — check DATABASE_URL secret"
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
 

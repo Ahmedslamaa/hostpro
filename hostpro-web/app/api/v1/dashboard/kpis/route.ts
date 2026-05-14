@@ -28,14 +28,23 @@ export async function GET(req: NextRequest) {
   const avgPricePerNight = occupiedNights > 0 ? revenue / occupiedNights : 0;
   const revPAR = totalNights > 0 ? revenue / totalNights : 0;
 
+  const monthLabel = now.toLocaleDateString("fr-FR", { month: "long", year: "numeric" });
+  const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+
   return NextResponse.json({
+    // Canonical names matching KPIs interface in types/index.ts
     occupancy_rate: occupancyRate,
-    revenue: revenue,
-    avg_price_per_night: Math.round(avgPricePerNight * 100) / 100,
-    rev_par: Math.round(revPAR * 100) / 100,
+    total_revenue: revenue,
+    adr: Math.round(avgPricePerNight * 100) / 100,
+    revpar: Math.round(revPAR * 100) / 100,
     total_reservations: reservations.length,
     active_properties: properties.filter((p) => p.status === "active").length,
     total_properties: properties.length,
     pending_tasks: tasks,
+    period: cap(monthLabel),
+    // Legacy aliases (backward-compat with any older component)
+    revenue,
+    avg_price_per_night: Math.round(avgPricePerNight * 100) / 100,
+    rev_par: Math.round(revPAR * 100) / 100,
   });
 }

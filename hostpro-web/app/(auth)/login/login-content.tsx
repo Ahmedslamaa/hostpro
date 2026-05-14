@@ -18,15 +18,11 @@ export function LoginContent() {
     setError("");
     try {
       const res = await authApi.login(form);
-      const { access_token, refresh_token, user } = res.data;
-      const tenantId = user.tenants?.[0]?.id || "";
-      setAuth(user, access_token, refresh_token, tenantId);
-      const me = await authApi.me();
-      const firstTenant = me.data.tenants?.[0]?.id || "";
-      if (firstTenant) localStorage.setItem("tenant_id", firstTenant);
+      const { access_token, refresh_token, user, tenant_id } = res.data;
+      setAuth(user, access_token, refresh_token, tenant_id || "");
       router.replace("/dashboard");
     } catch (err: any) {
-      setError(err.response?.data?.detail || "Identifiants incorrects");
+      setError(err.response?.data?.error || err.response?.data?.detail || "Identifiants incorrects");
     } finally {
       setLoading(false);
     }

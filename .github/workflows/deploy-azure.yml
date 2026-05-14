@@ -116,13 +116,20 @@ jobs:
         with:
           name: deploy-package
 
-      # azure/webapps-deploy@v2 — stable avec publish-profile, pas de bug slot-name
+      # ZipDeploy via curl avec credentials Kudu dédiés (pas de masquage secret)
       - name: Déployer sur Azure App Service
-        uses: azure/webapps-deploy@v2
-        with:
-          app-name: ${{ env.WEBAPP_NAME }}
-          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-          package: deploy.zip
+        run: |
+          echo "Deploying to https://${{ env.WEBAPP_NAME }}.scm.azurewebsites.net..."
+          HTTP=$(curl -s -o /tmp/deploy_out.txt -w "%{http_code}" \
+            -X POST \
+            "https://${{ env.WEBAPP_NAME }}.scm.azurewebsites.net/api/zipdeploy" \
+            -u "${{ secrets.AZURE_KUDU_USER }}:${{ secrets.AZURE_KUDU_PASS }}" \
+            -H "Content-Type: application/zip" \
+            --data-binary @deploy.zip \
+            --max-time 600)
+          cat /tmp/deploy_out.txt || true
+          echo "HTTP status: $HTTP"
+          [ "$HTTP" = "200" ] || [ "$HTTP" = "204" ] && echo "✅ Deploy OK" || (echo "❌ Deploy failed: $HTTP" && exit 1)
 
       - name: Health check post-déploiement
         run: |

@@ -13,11 +13,24 @@ export const metadata: Metadata = {
   description: "PMS premium pour gestionnaires locatifs saisonniers",
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://app.hostpro.fr"),
   robots: { index: false, follow: false }, // SaaS privé — ne pas indexer
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "HostPro",
+  },
+  other: {
+    "mobile-web-app-capable": "yes",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="fr">
+      <head>
+        <meta name="theme-color" content="#FF5A5F" />
+        <link rel="manifest" href="/manifest.json" />
+      </head>
       <body className={font.className}>
         {children}
         <CookieBanner />

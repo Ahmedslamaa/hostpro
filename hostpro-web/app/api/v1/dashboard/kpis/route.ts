@@ -19,10 +19,8 @@ export async function GET(req: NextRequest) {
     db.task.count({ where: { tenant_id: tenantId, status: { not: "done" } } }),
   ]);
 
-  const totalNights = properties.reduce((sum, p) => {
-    const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-    return sum + daysInMonth;
-  }, 0) * (properties.length || 1);
+  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  const totalNights = properties.length * daysInMonth;
 
   const occupiedNights = reservations.reduce((sum, r) => sum + r.nights, 0);
   const occupancyRate = totalNights > 0 ? Math.round((occupiedNights / totalNights) * 100) : 0;

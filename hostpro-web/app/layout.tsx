@@ -11,7 +11,7 @@ const font = Plus_Jakarta_Sans({
 export const metadata: Metadata = {
   title: "HOST PRO — Gestion locative saisonnière",
   description: "PMS premium pour gestionnaires locatifs saisonniers",
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "https://app.hostpro.fr"),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://app.hostpro.fr"),
   robots: { index: false, follow: false }, // SaaS privé — ne pas indexer
 };
 

@@ -33,9 +33,9 @@ const PLATFORMS = [
     id: "airbnb",
     name: "Airbnb",
     logo: "A",
-    logoColor: "text-[#FF5A5F]",
-    logoBg: "bg-[#FF5A5F]/10",
-    borderColor: "border-[#FF5A5F]/30",
+    logoColor: "text-primary-500",
+    logoBg: "bg-primary-500/10",
+    borderColor: "border-primary-500/30",
     description: "Synchronisez vos réservations et calendriers Airbnb.",
     popular: true,
     instructions: [
@@ -149,15 +149,15 @@ function ConnectModal({
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden">
         {/* Header */}
-        <div className="flex items-center gap-4 px-6 py-5 border-b border-[#DDDDDD]">
+        <div className="flex items-center gap-4 px-6 py-5 border-b border-neutral-200">
           <div className={`w-12 h-12 ${platform.logoBg} rounded-2xl flex items-center justify-center font-black text-xl ${platform.logoColor}`}>
             {platform.logo}
           </div>
           <div className="flex-1">
-            <h2 className="font-bold text-[#222222]">Connecter {platform.name}</h2>
-            <p className="text-xs text-[#717171] mt-0.5">{platform.description}</p>
+            <h2 className="font-bold text-neutral-900">Connecter {platform.name}</h2>
+            <p className="text-xs text-neutral-500 mt-0.5">{platform.description}</p>
           </div>
-          <button onClick={onClose} className="text-[#717171] hover:text-[#222222]"><X size={20} /></button>
+          <button onClick={onClose} className="text-neutral-500 hover:text-neutral-900"><X size={20} /></button>
         </div>
 
         <div className="px-6 py-5 space-y-5">
@@ -173,11 +173,11 @@ function ConnectModal({
 
           {/* Property selector */}
           <div>
-            <label className="text-sm font-semibold text-[#222222] mb-1.5 block">Propriété concernée</label>
+            <label className="text-sm font-semibold text-neutral-900 mb-1.5 block">Propriété concernée</label>
             <select
               value={propertyId}
               onChange={e => setPropertyId(e.target.value)}
-              className="w-full border border-[#DDDDDD] rounded-xl px-4 py-2.5 text-sm outline-none focus:border-[#FF5A5F] bg-white"
+              className="w-full border border-neutral-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-primary-500 bg-white"
             >
               {properties.map(p => (
                 <option key={p.id} value={p.id}>{p.name}{p.city ? ` — ${p.city}` : ""}</option>
@@ -187,17 +187,17 @@ function ConnectModal({
 
           {/* iCal URL */}
           <div>
-            <label className="text-sm font-semibold text-[#222222] mb-1.5 block">
-              URL iCal <span className="text-[#FF5A5F]">*</span>
+            <label className="text-sm font-semibold text-neutral-900 mb-1.5 block">
+              URL iCal <span className="text-primary-500">*</span>
             </label>
             <input
               value={icalUrl}
               onChange={e => setIcalUrl(e.target.value)}
               placeholder="https://www.airbnb.fr/calendar/ical/..."
-              className="w-full border border-[#DDDDDD] rounded-xl px-4 py-2.5 text-sm font-mono outline-none focus:border-[#FF5A5F] transition-colors"
+              className="w-full border border-neutral-200 rounded-xl px-4 py-2.5 text-sm font-mono outline-none focus:border-primary-500 transition-colors"
             />
-            <p className="text-xs text-[#717171] mt-1.5">
-              L'URL doit commencer par <code className="bg-[#F7F7F7] px-1 rounded">https://</code>
+            <p className="text-xs text-neutral-500 mt-1.5">
+              L'URL doit commencer par <code className="bg-neutral-100 px-1 rounded">https://</code>
             </p>
           </div>
 
@@ -208,14 +208,14 @@ function ConnectModal({
           )}
         </div>
 
-        <div className="px-6 py-4 border-t border-[#DDDDDD] flex gap-3">
-          <button onClick={onClose} className="flex-1 border border-[#DDDDDD] text-[#222222] font-semibold py-3 rounded-xl text-sm hover:bg-[#F7F7F7] transition-colors">
+        <div className="px-6 py-4 border-t border-neutral-200 flex gap-3">
+          <button onClick={onClose} className="flex-1 border border-neutral-200 text-neutral-900 font-semibold py-3 rounded-xl text-sm hover:bg-neutral-100 transition-colors">
             Annuler
           </button>
           <button
             onClick={handleSave}
             disabled={!valid || saving}
-            className="flex-1 bg-[#FF5A5F] hover:bg-[#E00B41] disabled:opacity-40 text-white font-bold py-3 rounded-xl text-sm transition-colors flex items-center justify-center gap-2"
+            className="flex-1 bg-primary-500 hover:bg-[#E00B41] disabled:opacity-40 text-white font-bold py-3 rounded-xl text-sm transition-colors flex items-center justify-center gap-2"
           >
             {saving
               ? <><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Connexion...</>
@@ -270,7 +270,7 @@ function FeedRow({
     : "Jamais";
 
   return (
-    <div className="bg-white border border-[#DDDDDD] rounded-2xl p-5">
+    <div className="bg-white border border-neutral-200 rounded-2xl p-5">
       <div className="flex items-center gap-4">
         {/* Logo */}
         <div className={`w-10 h-10 ${platform.logoBg} rounded-xl flex items-center justify-center font-black text-sm flex-shrink-0 ${platform.logoColor}`}>
@@ -280,11 +280,11 @@ function FeedRow({
         {/* Info */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-0.5">
-            <span className="font-semibold text-sm text-[#222222]">{platform.name}</span>
+            <span className="font-semibold text-sm text-neutral-900">{platform.name}</span>
             <span className="text-[#DDDDDD]">·</span>
-            <span className="text-sm text-[#717171] truncate">{property?.name ?? "Propriété inconnue"}</span>
+            <span className="text-sm text-neutral-500 truncate">{property?.name ?? "Propriété inconnue"}</span>
           </div>
-          <div className="flex items-center gap-3 text-xs text-[#717171]">
+          <div className="flex items-center gap-3 text-xs text-neutral-500">
             <span className={`flex items-center gap-1 px-2 py-0.5 rounded-full font-semibold ${statusConfig.color}`}>
               <span className={`w-1.5 h-1.5 rounded-full ${statusConfig.dot}`} />
               {statusConfig.label}
@@ -302,7 +302,7 @@ function FeedRow({
           <button
             onClick={copyExport}
             title="Copier l'URL iCal HOSTPRO (à coller dans la plateforme)"
-            className="flex items-center gap-1.5 border border-[#DDDDDD] text-[#717171] hover:text-[#222222] text-xs font-medium px-3 py-2 rounded-xl hover:bg-[#F7F7F7] transition-colors"
+            className="flex items-center gap-1.5 border border-neutral-200 text-neutral-500 hover:text-neutral-900 text-xs font-medium px-3 py-2 rounded-xl hover:bg-neutral-100 transition-colors"
           >
             {copied ? <CheckCircle size={12} className="text-green-500" /> : <Copy size={12} />}
             {copied ? "Copié !" : "Export URL"}
@@ -312,7 +312,7 @@ function FeedRow({
           <button
             onClick={handleSync}
             disabled={syncing}
-            className="flex items-center gap-1.5 border border-[#DDDDDD] text-[#222222] text-xs font-semibold px-3 py-2 rounded-xl hover:bg-[#F7F7F7] transition-colors"
+            className="flex items-center gap-1.5 border border-neutral-200 text-neutral-900 text-xs font-semibold px-3 py-2 rounded-xl hover:bg-neutral-100 transition-colors"
           >
             <RefreshCw size={12} className={syncing ? "animate-spin" : ""} />
             {syncing ? "Sync..." : "Sync"}
@@ -396,8 +396,8 @@ export default function IntegrationsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-black text-[#222222]">Intégrations & Connecteurs</h1>
-          <p className="text-sm text-[#717171] mt-0.5">
+          <h1 className="text-2xl font-black text-neutral-900">Intégrations & Connecteurs</h1>
+          <p className="text-sm text-neutral-500 mt-0.5">
             iCal bidirectionnel · Airbnb · Booking · Abritel · Sync toutes les 15 min
           </p>
         </div>
@@ -406,7 +406,7 @@ export default function IntegrationsPage() {
             <button
               onClick={handleSyncAll}
               disabled={syncingAll}
-              className="flex items-center gap-2 border border-[#DDDDDD] text-[#222222] text-sm font-semibold px-4 py-2.5 rounded-xl hover:bg-[#F7F7F7] transition-colors"
+              className="flex items-center gap-2 border border-neutral-200 text-neutral-900 text-sm font-semibold px-4 py-2.5 rounded-xl hover:bg-neutral-100 transition-colors"
             >
               <RefreshCw size={15} className={syncingAll ? "animate-spin" : ""} />
               {syncingAll ? "Synchronisation..." : "Tout synchroniser"}
@@ -424,7 +424,7 @@ export default function IntegrationsPage() {
       {/* Connected feeds */}
       {!loading && feeds.length > 0 && (
         <div>
-          <h2 className="font-bold text-[#222222] mb-3 flex items-center gap-2">
+          <h2 className="font-bold text-neutral-900 mb-3 flex items-center gap-2">
             <CheckCircle size={16} className="text-green-500" />
             Flux connectés ({feeds.length})
           </h2>
@@ -444,7 +444,7 @@ export default function IntegrationsPage() {
 
       {/* Platforms to connect */}
       <div>
-        <h2 className="font-bold text-[#222222] mb-3">Ajouter une intégration</h2>
+        <h2 className="font-bold text-neutral-900 mb-3">Ajouter une intégration</h2>
         <div className="grid grid-cols-3 gap-4">
           {PLATFORMS.map(p => {
             const isConnected = connectedIds.has(p.id);
@@ -452,7 +452,7 @@ export default function IntegrationsPage() {
               <div
                 key={p.id}
                 className={`bg-white border rounded-2xl p-5 flex flex-col gap-4 transition-all
-                  ${isConnected ? "border-green-200" : "border-[#DDDDDD] hover:border-[#FF5A5F]/30 hover:shadow-sm"}`}
+                  ${isConnected ? "border-green-200" : "border-neutral-200 hover:border-primary-500/30 hover:shadow-sm"}`}
               >
                 {/* Top */}
                 <div className="flex items-start justify-between">
@@ -462,10 +462,10 @@ export default function IntegrationsPage() {
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="font-bold text-sm text-[#222222]">{p.name}</span>
-                        {p.popular && <span className="text-[9px] font-black bg-[#FF5A5F] text-white px-1.5 py-0.5 rounded-full">TOP</span>}
+                        <span className="font-bold text-sm text-neutral-900">{p.name}</span>
+                        {p.popular && <span className="text-[9px] font-black bg-primary-500 text-white px-1.5 py-0.5 rounded-full">TOP</span>}
                       </div>
-                      <span className="text-xs text-[#717171]">iCal</span>
+                      <span className="text-xs text-neutral-500">iCal</span>
                     </div>
                   </div>
                   {isConnected && (
@@ -475,15 +475,15 @@ export default function IntegrationsPage() {
                   )}
                 </div>
 
-                <p className="text-xs text-[#717171] leading-relaxed">{p.description}</p>
+                <p className="text-xs text-neutral-500 leading-relaxed">{p.description}</p>
 
                 <button
                   onClick={() => setModalPlatform(p)}
                   disabled={properties.length === 0}
                   className={`w-full flex items-center justify-center gap-1.5 text-xs font-bold py-2.5 rounded-xl transition-colors
                     ${isConnected
-                      ? "border border-[#DDDDDD] text-[#222222] hover:bg-[#F7F7F7]"
-                      : "bg-[#FF5A5F] hover:bg-[#E00B41] text-white"
+                      ? "border border-neutral-200 text-neutral-900 hover:bg-neutral-100"
+                      : "bg-primary-500 hover:bg-[#E00B41] text-white"
                     } disabled:opacity-40 disabled:cursor-not-allowed`}
                 >
                   <Plus size={13} />
@@ -494,12 +494,12 @@ export default function IntegrationsPage() {
           })}
 
           {/* Empty slot — request integration */}
-          <div className="border-2 border-dashed border-[#DDDDDD] rounded-2xl p-5 flex flex-col items-center justify-center gap-3 hover:border-[#FF5A5F]/40 transition-colors cursor-pointer group min-h-[200px]">
-            <div className="w-11 h-11 bg-[#F7F7F7] group-hover:bg-[#FF5A5F]/10 rounded-2xl flex items-center justify-center transition-colors">
-              <Plug size={20} className="text-[#DDDDDD] group-hover:text-[#FF5A5F] transition-colors" />
+          <div className="border-2 border-dashed border-neutral-200 rounded-2xl p-5 flex flex-col items-center justify-center gap-3 hover:border-primary-500/40 transition-colors cursor-pointer group min-h-[200px]">
+            <div className="w-11 h-11 bg-neutral-100 group-hover:bg-primary-500/10 rounded-2xl flex items-center justify-center transition-colors">
+              <Plug size={20} className="text-[#DDDDDD] group-hover:text-primary-500 transition-colors" />
             </div>
             <div className="text-center">
-              <div className="font-semibold text-sm text-[#717171] group-hover:text-[#222222]">Demander une intégration</div>
+              <div className="font-semibold text-sm text-neutral-500 group-hover:text-neutral-900">Demander une intégration</div>
               <div className="text-xs text-[#BBBBBB] mt-0.5">Autre plateforme ?</div>
             </div>
           </div>
@@ -518,28 +518,28 @@ export default function IntegrationsPage() {
       )}
 
       {/* Info footer — bidirectional sync explanation */}
-      <div className="bg-[#F7F7F7] border border-[#DDDDDD] rounded-2xl p-5 flex items-start gap-4">
+      <div className="bg-neutral-100 border border-neutral-200 rounded-2xl p-5 flex items-start gap-4">
         <div className="w-9 h-9 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5">
           <Calendar size={16} className="text-blue-600" />
         </div>
         <div className="flex-1">
-          <div className="font-semibold text-sm text-[#222222] mb-1">Synchronisation bidirectionnelle iCal</div>
-          <p className="text-xs text-[#717171] leading-relaxed">
+          <div className="font-semibold text-sm text-neutral-900 mb-1">Synchronisation bidirectionnelle iCal</div>
+          <p className="text-xs text-neutral-500 leading-relaxed">
             HOSTPRO <strong>importe</strong> vos réservations depuis chaque plateforme (via leur URL iCal)
             et <strong>exporte</strong> un calendrier iCal que vous pouvez coller dans Airbnb, Booking.com
             et Abritel pour bloquer les dates automatiquement. Sync auto toutes les <strong>15 minutes</strong>.
           </p>
           <div className="flex flex-wrap gap-3 mt-3">
-            <span className="flex items-center gap-1.5 text-xs bg-white border border-[#DDDDDD] rounded-full px-3 py-1">
+            <span className="flex items-center gap-1.5 text-xs bg-white border border-neutral-200 rounded-full px-3 py-1">
               <CheckCircle size={10} className="text-green-500" /> Import réservations
             </span>
-            <span className="flex items-center gap-1.5 text-xs bg-white border border-[#DDDDDD] rounded-full px-3 py-1">
+            <span className="flex items-center gap-1.5 text-xs bg-white border border-neutral-200 rounded-full px-3 py-1">
               <CheckCircle size={10} className="text-green-500" /> Blocage dates automatique
             </span>
-            <span className="flex items-center gap-1.5 text-xs bg-white border border-[#DDDDDD] rounded-full px-3 py-1">
+            <span className="flex items-center gap-1.5 text-xs bg-white border border-neutral-200 rounded-full px-3 py-1">
               <CheckCircle size={10} className="text-green-500" /> Déduplication des événements
             </span>
-            <span className="flex items-center gap-1.5 text-xs bg-white border border-[#DDDDDD] rounded-full px-3 py-1">
+            <span className="flex items-center gap-1.5 text-xs bg-white border border-neutral-200 rounded-full px-3 py-1">
               <CheckCircle size={10} className="text-green-500" /> Création automatique des réservations
             </span>
           </div>
@@ -558,3 +558,4 @@ export default function IntegrationsPage() {
     </div>
   );
 }
+

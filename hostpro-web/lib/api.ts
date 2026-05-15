@@ -98,11 +98,21 @@ export const tasksApi = {
 
 // ── Messages ──────────────────────────────────────────────────────────────────
 export const messagesApi = {
+  // Unified messaging API (Phase 2)
+  list: (params?: any) => api.get("/messages/threads", { params }),
+  getMessages: (threadId: string) => api.get(`/messages/threads/${threadId}`),
+  send: (threadId: string, data: { message: string }) =>
+    api.post(`/messages/threads/${threadId}/reply`, data),
+  sync: (propertyId?: string) =>
+    api.post("/messages/sync", { propertyId }),
+
+  // Legacy API (kept for backwards compatibility)
   listThreads: (params?: any) => api.get("/messages/threads", { params }),
   getThread: (id: string) => api.get(`/messages/threads/${id}`),
   createThread: (data: any) => api.post("/messages/threads", data),
   sendMessage: (threadId: string, data: any) =>
     api.post(`/messages/threads/${threadId}/messages`, data),
+
   // Message templates (stored locally for now)
   listTemplates: () => Promise.resolve({ data: [] as any[] }),
   createTemplate: (_data: any) => Promise.resolve({ data: {} }),

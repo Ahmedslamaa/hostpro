@@ -240,35 +240,88 @@ model IcalFeed {
   @@map("ical_feeds")
 }
 
-model MessageThread {
-  id          String    @id @default(cuid())
-  tenant_id   String
-  tenant      Tenant    @relation(fields: [tenant_id], references: [id])
-  guest_name  String
-  guest_email String?
-  property_id String?
-  platform    String    @default("direct")
-  status      String    @default("open")
-  last_message String?
-  last_message_at DateTime?
-  messages    Message[]
-  created_at  DateTime  @default(now())
-  updated_at  DateTime  @updatedAt
+// Intégrations de plateforme pour messages
+model PlatformIntegration {
+  id                    String    @id @default(cuid())
+  tenant_id             String
+  platform              String    // airbnb | booking | abritel | tripadvisor
+  status                String    @default("active")
+
+  // Credentials chiffrés
+  api_key               String?   @db.Text
+  oauth_token           String?   @db.Text
+  oauth_refresh         String?   @db.Text
+
+  last_sync             DateTime?
+  sync_error            String?
+  created_at            DateTime  @default(now())
+  updated_at            DateTime  @updatedAt
+
+  messageThreads        MessageThread[]
 
   @@index([tenant_id])
+  @@index([platform])
+  @@map("platform_integrations")
+}
+
+model MessageThread {
+  id                      String    @id @default(cuid())
+  tenant_id               String
+  tenant                  Tenant    @relation(fields: [tenant_id], references: [id])
+  property_id             String?
+  reservation_id          String?
+  guest_name              String
+  guest_email             String?
+
+  // Identifiants externes pour déduplication (JSON: {"airbnb": "123", "booking": "456"})
+  platform_thread_ids     String    @default("{}") @db.Text
+  platform_integration_id String?
+  platformIntegration     PlatformIntegration? @relation(fields: [platform_integration_id], references: [id], onDelete: SetNull)
+
+  subject                 String?
+  status                  String    @default("open")
+  unread_count            Int       @default(0)
+  last_message_at         DateTime?
+
+  messages                Message[]
+  created_at              DateTime  @default(now())
+  updated_at              DateTime  @updatedAt
+
+  @@index([tenant_id])
+  @@index([property_id])
+  @@index([status])
+  @@index([last_message_at])
   @@map("message_threads")
 }
 
 model Message {
-  id        String        @id @default(cuid())
-  thread_id String
-  thread    MessageThread @relation(fields: [thread_id], references: [id], onDelete: Cascade)
-  sender    String        @default("host") // host | guest | ai
-  content   String
-  read_at   DateTime?
-  created_at DateTime     @default(now())
+  id                String        @id @default(cuid())
+  thread_id         String
+  thread            MessageThread @relation(fields: [thread_id], references: [id], onDelete: Cascade)
+
+  // Identifiant externe pour déduplication
+  platform_message_id String?
+  platform          String    @default("direct") // airbnb | booking | abritel | direct
+
+  sender            String    // host | guest | support
+  sender_name       String
+  body              String    @db.Text
+
+  is_read           Boolean   @default(false)
+  read_at           DateTime?
+  sent_at           DateTime  @default(now())
+
+  // Traçabilité sync
+  synced_to         String    @default("{}") @db.Text  // JSON: {"airbnb": true, "booking": false}
+  sync_error        String?
+
+  created_at        DateTime  @default(now())
+  updated_at        DateTime  @updatedAt
 
   @@index([thread_id])
+  @@index([platform])
+  @@index([sender])
+  @@unique([thread_id, platform_message_id])
   @@map("messages")
 }
 
@@ -305,11 +358,14 @@ model AuditLog {
 
 model PushSubscription {
   id         String   @id @default(cuid())
+  tenant_id  String   // Support multi-tenant
   user_id    String
   endpoint   String   @unique
   p256dh     String
   auth       String
   created_at DateTime @default(now())
 
+  @@index([tenant_id])
+  @@index([user_id])
   @@map("push_subscriptions")
 }

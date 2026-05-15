@@ -1,35 +1,97 @@
-import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/db";
-import { getAuthFromRequest, getTenantId } from "@/lib/auth-server";
+﻿/**
+ * GET /api/v1/messages/threads
+ * Lister les conversations avec filtrage et pagination
+ */
+
+import { NextRequest, NextResponse } from 'next/server';
+import { PrismaClient } from '@prisma/client';
+
+const db = new PrismaClient();
 
 export async function GET(req: NextRequest) {
-  const auth = getAuthFromRequest(req);
-  if (!auth) return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
-  const tenantId = getTenantId(req, auth);
+  try {
+    const { searchParams } = new URL(req.url);
 
-  const threads = await db.messageThread.findMany({
-    where: { tenant_id: tenantId },
-    include: { messages: { orderBy: { created_at: "desc" }, take: 1 } },
-    orderBy: { updated_at: "desc" },
-  });
+    const tenantId = req.headers.get('x-tenant-id');
+    if (!tenantId) {
+      return NextResponse.json(
+        { error: 'Missing x-tenant-id header' },
+        { status: 400 }
+      );
+    }
 
-  return NextResponse.json(threads);
-}
+    const propertyId = searchParams.get('property_id');
+    const status = searchParams.get('status') || 'open';
+    const platformFilter = searchParams.get('platform');
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = 20;
+    const searchQuery = searchParams.get('search') || '';
 
-export async function POST(req: NextRequest) {
-  const auth = getAuthFromRequest(req);
-  if (!auth) return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
-  const tenantId = getTenantId(req, auth);
-
-  const data = await req.json();
-  const thread = await db.messageThread.create({
-    data: {
+    // Construire le filtre
+    const where: any = {
       tenant_id: tenantId,
-      guest_name: data.guest_name,
-      guest_email: data.guest_email,
-      property_id: data.property_id,
-      platform: data.platform ?? "direct",
-    },
-  });
-  return NextResponse.json(thread, { status: 201 });
+      status
+    };
+
+    if (propertyId) {
+      where.property_id = propertyId;
+    }
+
+    if (searchQuery) {
+      where.OR = [
+        { guest_name: { contains: searchQuery, mode: 'insensitive' } },
+        { guest_email: { contains: searchQuery, mode: 'insensitive' } }
+      ];
+    }
+
+    if (platformFilter) {
+      where.platformIntegration = { platform: platformFilter };
+    }
+
+    // Récupérer le total pour la pagination
+    const total = await db.messageThread.count({ where });
+
+    // Récupérer les threads
+    const threads = await db.messageThread.findMany({
+      where,
+      include: {
+        messages: {
+          take: 1,
+          orderBy: { sent_at: 'desc' }
+        },
+        platformIntegration: true
+      },
+      orderBy: { last_message_at: 'desc' },
+      skip: (page - 1) * limit,
+      take: limit
+    });
+
+    // Formater la réponse
+    const formattedThreads = threads.map((thread) => ({
+      id: thread.id,
+      guestName: thread.guest_name,
+      guestEmail: thread.guest_email,
+      platform: thread.platformIntegration?.platform || 'direct',
+      unreadCount: thread.unread_count,
+      lastMessageAt: thread.last_message_at?.toISOString() || null,
+      preview: thread.messages[0]?.body?.slice(0, 100) || '',
+      status: thread.status
+    }));
+
+    return NextResponse.json({
+      threads: formattedThreads,
+      total,
+      page,
+      limit,
+      pages: Math.ceil(total / limit)
+    });
+  } catch (error) {
+    console.error('GET /api/v1/messages/threads error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  } finally {
+    await db.$disconnect();
+  }
 }

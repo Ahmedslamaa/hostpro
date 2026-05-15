@@ -5,10 +5,10 @@ import { useToastStore } from "@/stores/toastStore";
 import { Users, Plus, Mail, ShieldCheck, Eye, Crown, X, AlertCircle } from "lucide-react";
 
 const ROLE_CONFIG: Record<string, { label: string; className: string; icon: any }> = {
-  admin:   { label: "Administrateur", className: "bg-[#FF5A5F]/10 text-[#FF5A5F]",  icon: Crown },
+  admin:   { label: "Administrateur", className: "bg-primary-500/10 text-primary-600",  icon: Crown },
   manager: { label: "Manager",        className: "bg-blue-100 text-blue-700",        icon: ShieldCheck },
   staff:   { label: "Staff",          className: "bg-amber-100 text-amber-700",      icon: Users },
-  viewer:  { label: "Lecteur",        className: "bg-[#F7F7F7] text-[#717171]",     icon: Eye },
+  viewer:  { label: "Lecteur",        className: "bg-neutral-100 text-neutral-500",     icon: Eye },
 };
 
 function getInitials(name: string | null, email: string): string {
@@ -61,18 +61,18 @@ export default function TeamPage() {
     }
   };
 
-  const inputClass = "border border-[#DDDDDD] rounded-xl px-4 py-3 text-sm text-[#222222] placeholder-[#717171] focus:outline-none focus:border-[#222222] focus:ring-2 focus:ring-[#222222]/10 w-full transition-all";
+  const inputClass = "border border-neutral-200 rounded-xl px-4 py-3 text-sm text-neutral-900 placeholder-[#717171] focus:outline-none focus:border-neutral-900 focus:ring-2 focus:ring-neutral-900/10 w-full transition-all";
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <p className="text-sm text-[#717171]">
+        <p className="text-sm text-neutral-500">
           {loading ? "Chargement…" : `${members.length} membre${members.length !== 1 ? "s" : ""} dans votre espace`}
         </p>
         <button
           onClick={() => setShowInvite(true)}
-          className="flex items-center gap-2 bg-[#FF5A5F] hover:bg-[#E00B41] text-white font-semibold px-5 py-2.5 rounded-xl transition-all text-sm"
+          className="flex items-center gap-2 bg-primary-500 hover:bg-primary-600 text-white font-semibold px-5 py-2.5 rounded-xl transition-all text-sm"
         >
           <Plus size={16} /> Inviter un membre
         </button>
@@ -80,26 +80,26 @@ export default function TeamPage() {
 
       {/* Invite form */}
       {showInvite && (
-        <div className="bg-white rounded-2xl border border-[#DDDDDD] p-6 shadow-sm">
+        <div className="bg-white rounded-2xl border border-neutral-200 p-6 shadow-sm">
           <div className="flex items-center justify-between mb-5">
-            <h2 className="font-bold text-[#222222]">Inviter un nouveau membre</h2>
-            <button onClick={() => setShowInvite(false)} className="text-[#717171] hover:text-[#222222]">
+            <h2 className="font-bold text-neutral-900">Inviter un nouveau membre</h2>
+            <button onClick={() => setShowInvite(false)} className="text-neutral-500 hover:text-neutral-900">
               <X size={18} />
             </button>
           </div>
           <form onSubmit={handleInvite} className="grid grid-cols-3 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-[#717171] mb-1.5">Email *</label>
+              <label className="block text-xs font-semibold text-neutral-500 mb-1.5">Email *</label>
               <input required type="email" className={inputClass} placeholder="prenom@exemple.fr"
                 value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-[#717171] mb-1.5">Nom complet</label>
+              <label className="block text-xs font-semibold text-neutral-500 mb-1.5">Nom complet</label>
               <input type="text" className={inputClass} placeholder="Prénom Nom"
                 value={form.full_name} onChange={e => setForm({ ...form, full_name: e.target.value })} />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-[#717171] mb-1.5">Rôle</label>
+              <label className="block text-xs font-semibold text-neutral-500 mb-1.5">Rôle</label>
               <select className={inputClass} value={form.role} onChange={e => setForm({ ...form, role: e.target.value })}>
                 <option value="admin">Administrateur</option>
                 <option value="manager">Manager</option>
@@ -109,11 +109,11 @@ export default function TeamPage() {
             </div>
             <div className="col-span-3 flex justify-end gap-3 pt-2">
               <button type="button" onClick={() => setShowInvite(false)}
-                className="px-5 py-2.5 border border-[#DDDDDD] rounded-xl text-sm text-[#717171] hover:bg-[#F7F7F7] transition-colors">
+                className="px-5 py-2.5 border border-neutral-200 rounded-xl text-sm text-neutral-500 hover:bg-neutral-100 transition-colors">
                 Annuler
               </button>
               <button type="submit" disabled={saving}
-                className="px-5 py-2.5 bg-[#FF5A5F] hover:bg-[#E00B41] text-white font-semibold rounded-xl text-sm transition-colors disabled:opacity-50">
+                className="px-5 py-2.5 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-xl text-sm transition-colors disabled:opacity-50">
                 {saving ? "Envoi…" : "Ajouter"}
               </button>
             </div>
@@ -124,13 +124,13 @@ export default function TeamPage() {
       {/* Members list */}
       {loading ? (
         <div className="space-y-3">
-          {[...Array(2)].map((_, i) => <div key={i} className="h-20 bg-white rounded-2xl border border-[#DDDDDD] animate-pulse" />)}
+          {[...Array(2)].map((_, i) => <div key={i} className="h-20 bg-white rounded-2xl border border-neutral-200 animate-pulse" />)}
         </div>
       ) : members.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-[#DDDDDD] flex flex-col items-center justify-center py-20 shadow-sm">
+        <div className="bg-white rounded-2xl border border-neutral-200 flex flex-col items-center justify-center py-20 shadow-sm">
           <Users size={40} className="text-[#DDDDDD] mb-4" />
-          <p className="font-semibold text-[#222222] mb-1">Aucun membre d'équipe</p>
-          <p className="text-sm text-[#717171]">Invitez des collaborateurs pour gérer vos biens ensemble</p>
+          <p className="font-semibold text-neutral-900 mb-1">Aucun membre d'équipe</p>
+          <p className="text-sm text-neutral-500">Invitez des collaborateurs pour gérer vos biens ensemble</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -138,10 +138,10 @@ export default function TeamPage() {
             const roleCfg = ROLE_CONFIG[m.role] ?? ROLE_CONFIG.viewer;
             const RoleIcon = roleCfg.icon;
             return (
-              <div key={m.id} className="bg-white rounded-2xl border border-[#DDDDDD] p-5 shadow-sm flex items-center gap-4">
+              <div key={m.id} className="bg-white rounded-2xl border border-neutral-200 p-5 shadow-sm flex items-center gap-4">
                 {/* Avatar */}
-                <div className="w-12 h-12 bg-[#FF5A5F]/10 rounded-2xl flex items-center justify-center flex-shrink-0">
-                  <span className="text-[#FF5A5F] font-black text-sm">
+                <div className="w-12 h-12 bg-primary-500/10 rounded-2xl flex items-center justify-center flex-shrink-0">
+                  <span className="text-primary-600 font-black text-sm">
                     {getInitials(m.full_name, m.email)}
                   </span>
                 </div>
@@ -149,12 +149,12 @@ export default function TeamPage() {
                 {/* Info */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="font-semibold text-[#222222] text-sm">{m.full_name ?? m.email}</span>
+                    <span className="font-semibold text-neutral-900 text-sm">{m.full_name ?? m.email}</span>
                     {!m.is_active && (
-                      <span className="text-xs bg-[#F7F7F7] text-[#717171] px-2 py-0.5 rounded-full">Inactif</span>
+                      <span className="text-xs bg-neutral-100 text-neutral-500 px-2 py-0.5 rounded-full">Inactif</span>
                     )}
                   </div>
-                  <div className="flex items-center gap-1 text-xs text-[#717171] mt-0.5">
+                  <div className="flex items-center gap-1 text-xs text-neutral-500 mt-0.5">
                     <Mail size={11} />
                     <span>{m.email}</span>
                   </div>
@@ -166,8 +166,8 @@ export default function TeamPage() {
                 </span>
 
                 {/* Last login */}
-                <div className="text-right text-xs text-[#717171] flex-shrink-0 w-32">
-                  <div className="font-medium text-[#222222]">Dernière connexion</div>
+                <div className="text-right text-xs text-neutral-500 flex-shrink-0 w-32">
+                  <div className="font-medium text-neutral-900">Dernière connexion</div>
                   <div>{timeSince(m.last_login_at)}</div>
                 </div>
               </div>

@@ -64,7 +64,7 @@ export default function CompliancePage() {
   };
 
   const inputClass =
-    "border border-[#DDDDDD] rounded-xl px-3.5 py-2.5 text-sm text-[#222222] placeholder-[#717171] focus:outline-none focus:border-[#222222] focus:ring-2 focus:ring-[#222222]/10 w-full transition-all";
+    "border border-neutral-200 rounded-xl px-3.5 py-2.5 text-sm text-neutral-900 placeholder-[#717171] focus:outline-none focus:border-neutral-900 focus:ring-2 focus:ring-neutral-900/10 w-full transition-all";
 
   return (
     <div>
@@ -83,14 +83,14 @@ export default function CompliancePage() {
       {loading ? (
         <div className="space-y-4">
           {[...Array(3)].map((_, i) => (
-            <div key={i} className="h-48 bg-white rounded-2xl border border-[#DDDDDD] animate-pulse shadow-sm" />
+            <div key={i} className="h-48 bg-white rounded-2xl border border-neutral-200 animate-pulse shadow-sm" />
           ))}
         </div>
       ) : records.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-[#DDDDDD] flex flex-col items-center justify-center py-24 shadow-sm">
+        <div className="bg-white rounded-2xl border border-neutral-200 flex flex-col items-center justify-center py-24 shadow-sm">
           <ShieldCheck size={40} className="text-[#DDDDDD] mb-4" />
-          <h3 className="font-semibold text-[#222222] mb-2">Aucune donnée de conformité</h3>
-          <p className="text-[#717171] text-sm">Ajoutez des propriétés pour suivre leur conformité</p>
+          <h3 className="font-semibold text-neutral-900 mb-2">Aucune donnée de conformité</h3>
+          <p className="text-neutral-500 text-sm">Ajoutez des propriétés pour suivre leur conformité</p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -107,14 +107,14 @@ export default function CompliancePage() {
               <div
                 key={r.property_id}
                 className={`bg-white rounded-2xl border p-6 shadow-sm ${
-                  r.is_compliant ? "border-[#DDDDDD]" : "border-amber-200"
+                  r.is_compliant ? "border-neutral-200" : "border-amber-200"
                 }`}
               >
                 {/* Header */}
                 <div className="flex items-start justify-between mb-5">
                   <div>
                     <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-bold text-[#222222] text-lg">{propMap[r.property_id] || "Propriété"}</h3>
+                      <h3 className="font-bold text-neutral-900 text-lg">{propMap[r.property_id] || "Propriété"}</h3>
                       {r.is_compliant ? (
                         <CheckCircle2 size={18} className="text-green-500" />
                       ) : (
@@ -135,13 +135,13 @@ export default function CompliancePage() {
                     <div className="flex gap-2">
                       <button
                         onClick={() => setEditing(null)}
-                        className="flex items-center gap-1.5 border border-[#DDDDDD] text-[#717171] font-medium px-3 py-1.5 rounded-xl hover:bg-[#F7F7F7] transition-all text-sm"
+                        className="flex items-center gap-1.5 border border-neutral-200 text-neutral-500 font-medium px-3 py-1.5 rounded-xl hover:bg-neutral-100 transition-all text-sm"
                       >
                         <X size={14} /> Annuler
                       </button>
                       <button
                         onClick={saveEdit}
-                        className="flex items-center gap-1.5 bg-[#FF5A5F] hover:bg-[#E00B41] text-white font-semibold px-3 py-1.5 rounded-xl transition-all text-sm"
+                        className="flex items-center gap-1.5 bg-primary-500 hover:bg-primary-600 text-white font-semibold px-3 py-1.5 rounded-xl transition-all text-sm"
                       >
                         <Save size={14} /> Enregistrer
                       </button>
@@ -149,7 +149,7 @@ export default function CompliancePage() {
                   ) : (
                     <button
                       onClick={() => startEdit(r)}
-                      className="flex items-center gap-1.5 border border-[#DDDDDD] text-[#222222] font-medium px-3 py-1.5 rounded-xl hover:bg-[#F7F7F7] transition-all text-sm"
+                      className="flex items-center gap-1.5 border border-neutral-200 text-neutral-900 font-medium px-3 py-1.5 rounded-xl hover:bg-neutral-100 transition-all text-sm"
                     >
                       <Pencil size={14} /> Gérer
                     </button>
@@ -167,7 +167,7 @@ export default function CompliancePage() {
                       { key: "siret", label: "SIRET", type: "text", placeholder: "12345678901234" },
                     ].map(({ key, label, type, placeholder }) => (
                       <div key={key}>
-                        <label className="text-[#222222] text-sm font-semibold mb-2 block">{label}</label>
+                        <label className="text-neutral-900 text-sm font-semibold mb-2 block">{label}</label>
                         <input
                           type={type}
                           placeholder={placeholder}
@@ -178,7 +178,7 @@ export default function CompliancePage() {
                       </div>
                     ))}
                     <div>
-                      <label className="text-[#222222] text-sm font-semibold mb-2 block">Régime fiscal</label>
+                      <label className="text-neutral-900 text-sm font-semibold mb-2 block">Régime fiscal</label>
                       <select
                         className={inputClass}
                         value={editForm.fiscal_regime}
@@ -195,33 +195,33 @@ export default function CompliancePage() {
                   <div className="grid grid-cols-4 gap-6">
                     {/* Nuitées progress */}
                     <div>
-                      <div className="text-xs font-semibold text-[#717171] uppercase tracking-wide mb-3">
+                      <div className="text-xs font-semibold text-neutral-500 uppercase tracking-wide mb-3">
                         Nuitées {r.current_year || new Date().getFullYear()}
                       </div>
                       <div className="flex items-end gap-1 mb-2">
-                        <span className="text-3xl font-bold text-[#222222]">{r.nuitees_year}</span>
-                        <span className="text-[#717171] text-sm mb-0.5">/ {r.nuitees_limit}</span>
+                        <span className="text-3xl font-bold text-neutral-900">{r.nuitees_year}</span>
+                        <span className="text-neutral-500 text-sm mb-0.5">/ {r.nuitees_limit}</span>
                       </div>
-                      <div className="h-2.5 bg-[#F7F7F7] rounded-full overflow-hidden mb-1.5">
+                      <div className="h-2.5 bg-neutral-100 rounded-full overflow-hidden mb-1.5">
                         <div
                           className={`h-2.5 rounded-full transition-all ${barColor}`}
                           style={{ width: `${pct}%` }}
                         />
                       </div>
-                      <div className="text-xs text-[#717171]">{r.nuitees_limit - r.nuitees_year} nuitées restantes</div>
+                      <div className="text-xs text-neutral-500">{r.nuitees_limit - r.nuitees_year} nuitées restantes</div>
                     </div>
 
                     {/* Registration */}
                     <div>
-                      <div className="text-xs font-semibold text-[#717171] uppercase tracking-wide mb-3">
+                      <div className="text-xs font-semibold text-neutral-500 uppercase tracking-wide mb-3">
                         Enregistrement
                       </div>
                       {r.registration_number ? (
                         <>
-                          <div className="font-mono text-sm font-semibold text-[#222222]">{r.registration_number}</div>
-                          <div className="text-xs text-[#717171] mt-0.5">{r.registration_city}</div>
+                          <div className="font-mono text-sm font-semibold text-neutral-900">{r.registration_number}</div>
+                          <div className="text-xs text-neutral-500 mt-0.5">{r.registration_city}</div>
                           {r.registration_expiry && (
-                            <div className="text-xs text-[#717171] mt-0.5">Exp. {r.registration_expiry}</div>
+                            <div className="text-xs text-neutral-500 mt-0.5">Exp. {r.registration_expiry}</div>
                           )}
                         </>
                       ) : (
@@ -233,7 +233,7 @@ export default function CompliancePage() {
 
                     {/* DPE */}
                     <div>
-                      <div className="text-xs font-semibold text-[#717171] uppercase tracking-wide mb-3">DPE</div>
+                      <div className="text-xs font-semibold text-neutral-500 uppercase tracking-wide mb-3">DPE</div>
                       {r.dpe_class ? (
                         <div className="flex items-center gap-2">
                           <span
@@ -243,29 +243,29 @@ export default function CompliancePage() {
                           >
                             {r.dpe_class}
                           </span>
-                          {r.dpe_expiry && <div className="text-xs text-[#717171]">Exp. {r.dpe_expiry}</div>}
+                          {r.dpe_expiry && <div className="text-xs text-neutral-500">Exp. {r.dpe_expiry}</div>}
                         </div>
                       ) : (
-                        <div className="text-sm text-[#717171]">Non renseigné</div>
+                        <div className="text-sm text-neutral-500">Non renseigné</div>
                       )}
                     </div>
 
                     {/* Fiscal */}
                     <div>
-                      <div className="text-xs font-semibold text-[#717171] uppercase tracking-wide mb-3">
+                      <div className="text-xs font-semibold text-neutral-500 uppercase tracking-wide mb-3">
                         Régime fiscal
                       </div>
                       {r.fiscal_regime ? (
                         <>
-                          <div className="text-sm font-semibold text-[#222222]">
+                          <div className="text-sm font-semibold text-neutral-900">
                             {REGIME_LABELS[r.fiscal_regime] || r.fiscal_regime}
                           </div>
                           {r.siret && (
-                            <div className="font-mono text-xs text-[#717171] mt-0.5">SIRET: {r.siret}</div>
+                            <div className="font-mono text-xs text-neutral-500 mt-0.5">SIRET: {r.siret}</div>
                           )}
                         </>
                       ) : (
-                        <div className="text-sm text-[#717171]">Non renseigné</div>
+                        <div className="text-sm text-neutral-500">Non renseigné</div>
                       )}
                     </div>
                   </div>

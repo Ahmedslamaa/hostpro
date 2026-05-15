@@ -2,7 +2,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { Sidebar } from "@/components/layout/Sidebar";
-import { MobileMenu } from "@/components/layout/MobileMenu";
 import { ToastContainer } from "@/components/ui/Toast";
 import {
   Bell, AlertTriangle, CheckCircle2, XCircle,
@@ -96,14 +95,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     setReadNotifs(new Set<string>(alerts.map((_, i) => String(i))));
 
   return (
-    <div className="flex min-h-screen bg-neutral-50 dark:bg-neutral-900">
+    <div className="flex min-h-screen bg-neutral-100">
       <Sidebar />
-      <div className="flex-1 lg:ml-60 flex flex-col min-h-screen">
+      <div className="flex-1 ml-60 flex flex-col min-h-screen">
 
         {/* ── Top header ──────────────────────────────────────────── */}
-        <header className="bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700 px-4 lg:px-8 py-5 flex items-center justify-between sticky top-0 z-30 shadow-sm">
-          <button onClick={() => {}} className="lg:hidden"><MobileMenu /></button>
-          <h1 className="text-2xl font-bold text-neutral-900 dark:text-white">{pageTitle}</h1>
+        <header className="bg-white border-b border-neutral-200 px-8 py-5 flex items-center justify-between sticky top-0 z-30 shadow-sm">
+          <h1 className="text-2xl font-bold text-neutral-900">{pageTitle}</h1>
 
           <div className="flex items-center gap-2">
 

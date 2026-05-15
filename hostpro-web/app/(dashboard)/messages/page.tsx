@@ -121,12 +121,12 @@ const AI_SUGGESTIONS: Record<string, string[]> = {
 // ── Channel config ─────────────────────────────────────────────────────────────
 
 const CH: Record<Channel, { label: string; color: string; bg: string; letter: string }> = {
-  airbnb:   { label: "Airbnb",      color: "text-[#FF5A5F]", bg: "bg-[#FF5A5F]/10", letter: "A" },
+  airbnb:   { label: "Airbnb",      color: "text-primary-600", bg: "bg-primary-500/10", letter: "A" },
   booking:  { label: "Booking",     color: "text-blue-600",  bg: "bg-blue-50",       letter: "B" },
   whatsapp: { label: "WhatsApp",    color: "text-green-600", bg: "bg-green-50",      letter: "W" },
   sms:      { label: "SMS",         color: "text-purple-600",bg: "bg-purple-50",     letter: "S" },
   email:    { label: "Email",       color: "text-amber-600", bg: "bg-amber-50",      letter: "E" },
-  direct:   { label: "Direct",      color: "text-[#222222]", bg: "bg-[#F7F7F7]",    letter: "D" },
+  direct:   { label: "Direct",      color: "text-neutral-900", bg: "bg-neutral-100",    letter: "D" },
 };
 
 function formatTs(d: Date) {
@@ -289,7 +289,7 @@ export default function MessagesPage() {
 
   if (loading) return (
     <div className="flex items-center justify-center h-64">
-      <div className="w-8 h-8 border-2 border-[#FF5A5F] border-t-transparent rounded-full animate-spin" />
+      <div className="w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
     </div>
   );
 
@@ -305,31 +305,31 @@ export default function MessagesPage() {
       <div className="flex flex-1 overflow-hidden">
 
       {/* LEFT — conversation list */}
-      <div className={cn("w-80 flex-shrink-0 flex flex-col border-r border-[#DDDDDD] bg-white", mobileView && "hidden md:flex")}>
+      <div className={cn("w-80 flex-shrink-0 flex flex-col border-r border-neutral-200 bg-white", mobileView && "hidden md:flex")}>
 
         {/* Header */}
-        <div className="px-4 py-4 border-b border-[#DDDDDD]">
+        <div className="px-4 py-4 border-b border-neutral-200">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <h1 className="font-bold text-[#222222] text-lg">Messages</h1>
-              {totalUnread > 0 && <span className="bg-[#FF5A5F] text-white text-[9px] font-black px-1.5 py-0.5 rounded-full">{totalUnread}</span>}
+              <h1 className="font-bold text-neutral-900 text-lg">Messages</h1>
+              {totalUnread > 0 && <span className="bg-primary-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded-full">{totalUnread}</span>}
             </div>
-            <button className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-[#F7F7F7] text-[#717171] transition-colors">
+            <button className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-neutral-100 text-neutral-500 transition-colors">
               <PlusCircle size={16} />
             </button>
           </div>
           <div className="relative mb-3">
-            <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#BBBBBB]" />
+            <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-300" />
             <input
               value={search} onChange={e => setSearch(e.target.value)}
-              placeholder="Rechercher..." className="w-full pl-8 pr-3 py-2 bg-[#F7F7F7] border border-[#DDDDDD] rounded-xl text-sm outline-none focus:border-[#FF5A5F] placeholder-[#BBBBBB]"
+              placeholder="Rechercher..." className="w-full pl-8 pr-3 py-2 bg-neutral-100 border border-neutral-200 rounded-xl text-sm outline-none focus:border-primary-500 placeholder-[#BBBBBB]"
             />
           </div>
           <div className="flex gap-1">
             {(["all", "pending", "active", "resolved"] as const).map(s => (
               <button key={s} onClick={() => setStatusFilter(s)}
                 className={cn("flex-1 py-1 text-[9px] font-bold rounded-lg transition-colors",
-                  statusFilter === s ? "bg-[#FF5A5F] text-white" : "bg-[#F7F7F7] text-[#717171] hover:bg-[#EEEEEE]"
+                  statusFilter === s ? "bg-primary-500 text-white" : "bg-neutral-100 text-neutral-500 hover:bg-[#EEEEEE]"
                 )}>
                 {s === "all" ? "Tous" : s === "pending" ? "En attente" : s === "active" ? "Actifs" : "Résolus"}
               </button>
@@ -338,15 +338,15 @@ export default function MessagesPage() {
         </div>
 
         {/* Channel filter */}
-        <div className="px-3 py-2 border-b border-[#DDDDDD] flex gap-1.5 overflow-x-auto">
+        <div className="px-3 py-2 border-b border-neutral-200 flex gap-1.5 overflow-x-auto">
           <button onClick={() => setChFilter("all")}
             className={cn("flex-shrink-0 text-[9px] font-bold px-2.5 py-1 rounded-full border transition-colors",
-              chFilter === "all" ? "bg-[#222222] text-white border-[#222222]" : "border-[#DDDDDD] text-[#717171]"
+              chFilter === "all" ? "bg-neutral-900 text-white border-[#222222]" : "border-neutral-200 text-neutral-500"
             )}>Tous</button>
           {(Object.keys(CH) as Channel[]).map(ch => (
             <button key={ch} onClick={() => setChFilter(ch)}
               className={cn("flex-shrink-0 text-[9px] font-bold px-2.5 py-1 rounded-full border transition-colors",
-                chFilter === ch ? `${CH[ch].bg} ${CH[ch].color} border-current` : "border-[#DDDDDD] text-[#717171]"
+                chFilter === ch ? `${CH[ch].bg} ${CH[ch].color} border-current` : "border-neutral-200 text-neutral-500"
               )}>
               {CH[ch].label}
             </button>
@@ -358,10 +358,10 @@ export default function MessagesPage() {
           {filtered.map(c => (
             <button key={c.id} onClick={() => selectConv(c)}
               className={cn("w-full text-left px-4 py-3 border-b border-[#F7F7F7] hover:bg-[#FAFAFA] transition-colors",
-                sel?.id === c.id && "bg-[#FF5A5F]/5 border-l-2 border-l-[#FF5A5F]"
+                sel?.id === c.id && "bg-primary-500/5 border-l-2 border-l-[#FF5A5F]"
               )}>
               <div className="flex gap-3">
-                <div className="w-10 h-10 bg-[#FF5A5F]/10 rounded-full flex items-center justify-center text-[#FF5A5F] text-sm font-bold flex-shrink-0 relative">
+                <div className="w-10 h-10 bg-primary-500/10 rounded-full flex items-center justify-center text-primary-600 text-sm font-bold flex-shrink-0 relative">
                   {c.guestName.slice(0, 2).toUpperCase()}
                   {c.botEnabled && (
                     <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
@@ -371,17 +371,17 @@ export default function MessagesPage() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between mb-0.5">
-                    <span className="text-sm font-semibold text-[#222222] truncate">{c.guestName}</span>
+                    <span className="text-sm font-semibold text-neutral-900 truncate">{c.guestName}</span>
                     <div className="flex items-center gap-1 ml-2 flex-shrink-0">
-                      <span className="text-[10px] text-[#BBBBBB]">{formatTs(c.lastTs)}</span>
-                      {c.unread > 0 && <span className="bg-[#FF5A5F] text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center">{c.unread}</span>}
+                      <span className="text-[10px] text-neutral-300">{formatTs(c.lastTs)}</span>
+                      {c.unread > 0 && <span className="bg-primary-500 text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center">{c.unread}</span>}
                     </div>
                   </div>
                   <div className="flex items-center gap-1.5 mb-1">
                     <ChBadge ch={c.channel} />
-                    <span className="text-[10px] text-[#BBBBBB] truncate">{c.property}</span>
+                    <span className="text-[10px] text-neutral-300 truncate">{c.property}</span>
                   </div>
-                  <p className="text-xs text-[#717171] truncate">{c.lastMessage}</p>
+                  <p className="text-xs text-neutral-500 truncate">{c.lastMessage}</p>
                 </div>
               </div>
             </button>
@@ -389,12 +389,12 @@ export default function MessagesPage() {
         </div>
 
         {/* Bot stats */}
-        <div className="px-4 py-3 border-t border-[#DDDDDD] bg-[#F7F7F7] flex items-center justify-between">
+        <div className="px-4 py-3 border-t border-neutral-200 bg-neutral-100 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-6 h-6 bg-green-100 rounded-lg flex items-center justify-center">
               <Bot size={12} className="text-green-600" />
             </div>
-            <span className="text-xs font-semibold text-[#222222]">Bot IA actif</span>
+            <span className="text-xs font-semibold text-neutral-900">Bot IA actif</span>
           </div>
           <span className="text-xs font-bold text-green-600">
             {convs.filter(c => c.botEnabled).length}/{convs.length}
@@ -407,36 +407,36 @@ export default function MessagesPage() {
         <div className={cn("flex-1 flex flex-col bg-white min-w-0", !mobileView && "hidden md:flex")}>
 
           {/* Header */}
-          <div className="flex items-center gap-3 px-5 py-3 border-b border-[#DDDDDD]">
-            <button onClick={() => setMobileView(false)} className="md:hidden text-[#717171]">
+          <div className="flex items-center gap-3 px-5 py-3 border-b border-neutral-200">
+            <button onClick={() => setMobileView(false)} className="md:hidden text-neutral-500">
               <ArrowLeft size={18} />
             </button>
-            <div className="w-10 h-10 bg-[#FF5A5F]/10 rounded-full flex items-center justify-center text-[#FF5A5F] text-sm font-bold flex-shrink-0">
+            <div className="w-10 h-10 bg-primary-500/10 rounded-full flex items-center justify-center text-primary-600 text-sm font-bold flex-shrink-0">
               {sel.guestName.slice(0, 2).toUpperCase()}
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-bold text-[#222222]">{sel.guestName}</span>
+                <span className="font-bold text-neutral-900">{sel.guestName}</span>
                 <ChBadge ch={sel.channel} />
                 <span className={cn("text-[10px] font-bold px-1.5 py-0.5 rounded-full",
                   sel.status === "pending" ? "bg-amber-100 text-amber-700" :
                   sel.status === "active" ? "bg-green-100 text-green-700" :
-                  "bg-[#F7F7F7] text-[#717171]"
+                  "bg-neutral-100 text-neutral-500"
                 )}>
                   {sel.status === "pending" ? "En attente" : sel.status === "active" ? "Actif" : "Résolu"}
                 </span>
               </div>
-              <div className="flex items-center gap-3 text-xs text-[#717171] mt-0.5">
+              <div className="flex items-center gap-3 text-xs text-neutral-500 mt-0.5">
                 <span className="flex items-center gap-1"><Home size={10} />{sel.property}</span>
                 {sel.checkIn && <span>📅 {sel.checkIn} → {sel.checkOut}</span>}
-                {sel.reservationId && <span className="font-mono text-[#BBBBBB]">{sel.reservationId}</span>}
+                {sel.reservationId && <span className="font-mono text-neutral-300">{sel.reservationId}</span>}
               </div>
             </div>
             <button onClick={() => toggleBot(sel.id)}
               className={cn("flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-xl border transition-all",
                 sel.botEnabled
                   ? "bg-green-50 border-green-200 text-green-700 hover:bg-green-100"
-                  : "bg-[#F7F7F7] border-[#DDDDDD] text-[#717171] hover:bg-[#EEEEEE]"
+                  : "bg-neutral-100 border-neutral-200 text-neutral-500 hover:bg-[#EEEEEE]"
               )}>
               <Bot size={12} />
               {sel.botEnabled ? "Bot ON" : "Bot OFF"}
@@ -451,19 +451,19 @@ export default function MessagesPage() {
               return (
                 <div key={msg.id} className={cn("flex gap-2", isGuest ? "justify-start" : "justify-end")}>
                   {isGuest && (
-                    <div className="w-7 h-7 bg-[#FF5A5F]/10 rounded-full flex items-center justify-center text-[#FF5A5F] text-xs font-bold flex-shrink-0 mt-0.5">
+                    <div className="w-7 h-7 bg-primary-500/10 rounded-full flex items-center justify-center text-primary-600 text-xs font-bold flex-shrink-0 mt-0.5">
                       {sel.guestName[0]}
                     </div>
                   )}
                   <div className={cn(
                     "max-w-[70%] rounded-2xl px-4 py-2.5 text-sm",
-                    isGuest ? "bg-white border border-[#DDDDDD] text-[#222222] rounded-tl-sm"
+                    isGuest ? "bg-white border border-neutral-200 text-neutral-900 rounded-tl-sm"
                     : isBot ? "bg-gradient-to-br from-green-500 to-green-600 text-white rounded-tr-sm"
-                    : "bg-[#FF5A5F] text-white rounded-tr-sm"
+                    : "bg-primary-500 text-white rounded-tr-sm"
                   )}>
                     {isBot && <div className="flex items-center gap-1 mb-1 opacity-80"><Bot size={10} /><span className="text-[9px] font-bold">Bot IA</span></div>}
                     <p className="whitespace-pre-wrap leading-relaxed">{msg.body}</p>
-                    <div className={cn("flex items-center gap-1 mt-1 text-[10px]", isGuest ? "text-[#BBBBBB]" : "text-white/70 justify-end")}>
+                    <div className={cn("flex items-center gap-1 mt-1 text-[10px]", isGuest ? "text-neutral-300" : "text-white/70 justify-end")}>
                       <span>{msg.timestamp.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}</span>
                       {!isGuest && msg.status === "read" && <CheckCheck size={10} />}
                       {!isGuest && msg.status === "delivered" && <CheckCheck size={10} className="opacity-50" />}
@@ -472,7 +472,7 @@ export default function MessagesPage() {
                   </div>
                   {!isGuest && (
                     <div className={cn("w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0 mt-0.5",
-                      isBot ? "bg-green-500" : "bg-[#FF5A5F]"
+                      isBot ? "bg-green-500" : "bg-primary-500"
                     )}>
                       {isBot ? <Bot size={12} /> : "H"}
                     </div>
@@ -485,16 +485,16 @@ export default function MessagesPage() {
 
           {/* AI suggestions */}
           {showAI && (
-            <div className="border-t border-[#DDDDDD] bg-gradient-to-r from-[#FF5A5F]/5 to-purple-50 px-5 py-3">
+            <div className="border-t border-neutral-200 bg-gradient-to-r from-[#FF5A5F]/5 to-purple-50 px-5 py-3">
               <div className="flex items-center gap-2 mb-2">
-                <Sparkles size={13} className="text-[#FF5A5F]" />
-                <span className="text-xs font-bold text-[#222222]">Suggestions IA</span>
-                <button onClick={() => setShowAI(false)} className="ml-auto text-[#717171]"><X size={13} /></button>
+                <Sparkles size={13} className="text-primary-600" />
+                <span className="text-xs font-bold text-neutral-900">Suggestions IA</span>
+                <button onClick={() => setShowAI(false)} className="ml-auto text-neutral-500"><X size={13} /></button>
               </div>
               <div className="space-y-2">
                 {getAI().map((s, i) => (
                   <button key={i} onClick={() => { setInput(s); setShowAI(false); }}
-                    className="w-full text-left text-xs bg-white border border-[#DDDDDD] rounded-xl px-3 py-2 hover:border-[#FF5A5F] hover:bg-[#FF5A5F]/5 transition-colors">
+                    className="w-full text-left text-xs bg-white border border-neutral-200 rounded-xl px-3 py-2 hover:border-primary-500 hover:bg-primary-500/5 transition-colors">
                     {s.slice(0, 120)}{s.length > 120 ? "…" : ""}
                   </button>
                 ))}
@@ -504,21 +504,21 @@ export default function MessagesPage() {
 
           {/* Templates */}
           {showTpl && (
-            <div className="border-t border-[#DDDDDD] bg-[#FAFAFA] px-5 py-3">
+            <div className="border-t border-neutral-200 bg-[#FAFAFA] px-5 py-3">
               <div className="flex items-center gap-2 mb-2">
                 <Zap size={13} className="text-amber-500" />
-                <span className="text-xs font-bold text-[#222222]">Modèles de réponse</span>
-                <button onClick={() => setShowTpl(false)} className="ml-auto text-[#717171]"><X size={13} /></button>
+                <span className="text-xs font-bold text-neutral-900">Modèles de réponse</span>
+                <button onClick={() => setShowTpl(false)} className="ml-auto text-neutral-500"><X size={13} /></button>
               </div>
               <div className="grid grid-cols-3 gap-2">
                 {TEMPLATES.map((t, i) => (
                   <button key={i} onClick={() => { setInput(t.body); setShowTpl(false); }}
-                    className="text-left bg-white border border-[#DDDDDD] rounded-xl px-3 py-2 hover:border-[#FF5A5F] transition-colors">
+                    className="text-left bg-white border border-neutral-200 rounded-xl px-3 py-2 hover:border-primary-500 transition-colors">
                     <div className="flex items-center gap-1 mb-1">
                       <Zap size={10} className="text-amber-500" />
-                      <span className="text-xs font-bold text-[#222222]">{t.label}</span>
+                      <span className="text-xs font-bold text-neutral-900">{t.label}</span>
                     </div>
-                    <p className="text-[10px] text-[#717171] line-clamp-2">{t.body.slice(0, 60)}…</p>
+                    <p className="text-[10px] text-neutral-500 line-clamp-2">{t.body.slice(0, 60)}…</p>
                   </button>
                 ))}
               </div>
@@ -526,7 +526,7 @@ export default function MessagesPage() {
           )}
 
           {/* Composer */}
-          <div className="px-5 py-4 border-t border-[#DDDDDD] bg-white">
+          <div className="px-5 py-4 border-t border-neutral-200 bg-white">
             <div className="flex items-end gap-3">
               <div className="flex-1">
                 <textarea
@@ -534,7 +534,7 @@ export default function MessagesPage() {
                   onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMsg(input); } }}
                   placeholder="Tapez votre message... (Entrée pour envoyer)"
                   rows={2}
-                  className="w-full border border-[#DDDDDD] rounded-2xl px-4 py-3 text-sm text-[#222222] placeholder-[#BBBBBB] outline-none focus:border-[#FF5A5F] resize-none"
+                  className="w-full border border-neutral-200 rounded-2xl px-4 py-3 text-sm text-neutral-900 placeholder-[#BBBBBB] outline-none focus:border-primary-500 resize-none"
                 />
               </div>
               <div className="flex flex-col gap-2 pb-0.5">
@@ -542,26 +542,26 @@ export default function MessagesPage() {
                   <button onClick={() => { setShowAI(!showAI); setShowTpl(false); }}
                     title="Suggestions IA"
                     className={cn("w-8 h-8 flex items-center justify-center rounded-xl transition-colors",
-                      showAI ? "bg-[#FF5A5F] text-white" : "bg-[#F7F7F7] text-[#717171] hover:bg-[#EEEEEE]"
+                      showAI ? "bg-primary-500 text-white" : "bg-neutral-100 text-neutral-500 hover:bg-[#EEEEEE]"
                     )}>
                     <Sparkles size={14} />
                   </button>
                   <button onClick={() => { setShowTpl(!showTpl); setShowAI(false); }}
                     title="Modèles"
                     className={cn("w-8 h-8 flex items-center justify-center rounded-xl transition-colors",
-                      showTpl ? "bg-amber-500 text-white" : "bg-[#F7F7F7] text-[#717171] hover:bg-[#EEEEEE]"
+                      showTpl ? "bg-amber-500 text-white" : "bg-neutral-100 text-neutral-500 hover:bg-[#EEEEEE]"
                     )}>
                     <Zap size={14} />
                   </button>
                 </div>
                 <button onClick={() => sendMsg(input)} disabled={!input.trim() || sending}
-                  className="w-[68px] h-8 bg-[#FF5A5F] hover:bg-[#E00B41] disabled:opacity-40 text-white rounded-xl flex items-center justify-center transition-colors">
+                  className="w-[68px] h-8 bg-primary-500 hover:bg-primary-600 disabled:opacity-40 text-white rounded-xl flex items-center justify-center transition-colors">
                   {sending ? <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Send size={14} />}
                 </button>
               </div>
             </div>
             <div className="flex items-center gap-4 mt-2">
-              <span className="text-[10px] text-[#BBBBBB]">Maj+Entrée pour saut de ligne</span>
+              <span className="text-[10px] text-neutral-300">Maj+Entrée pour saut de ligne</span>
               {sel.botEnabled && <span className="flex items-center gap-1 text-[10px] text-green-600 font-medium"><Bot size={10} /> Réponses automatiques activées</span>}
             </div>
           </div>
@@ -569,10 +569,10 @@ export default function MessagesPage() {
       ) : (
         <div className="flex-1 flex items-center justify-center bg-[#FAFAFA]">
           <div className="text-center">
-            <div className="w-16 h-16 bg-[#F7F7F7] rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 bg-neutral-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <MessageSquare size={28} className="text-[#DDDDDD]" />
             </div>
-            <p className="text-[#717171] font-medium">Sélectionnez une conversation</p>
+            <p className="text-neutral-500 font-medium">Sélectionnez une conversation</p>
           </div>
         </div>
       )}

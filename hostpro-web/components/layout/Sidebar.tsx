@@ -106,14 +106,12 @@ export function Sidebar() {
       <aside className="w-60 min-h-screen bg-white border-r border-neutral-200 flex flex-col fixed left-0 top-0 h-screen z-30">
 
         {/* Logo - Clickable for navigation to dashboard */}
-        <Link href="/dashboard" className="group">
-          <div className="px-6 py-5 border-b border-neutral-200 hover:bg-neutral-50 transition-colors duration-200 cursor-pointer">
-            <LogoMark variant="light" size="md" />
-            <div className="text-xs text-neutral-500 mt-2 group-hover:text-neutral-600 transition-colors duration-200">
-              Gestion locative IA
-            </div>
+        <div className="group px-6 py-5 border-b border-neutral-200 hover:bg-neutral-50 transition-colors duration-200">
+          <LogoMark as="link" href="/dashboard" variant="light" size="md" />
+          <div className="text-xs text-neutral-500 mt-2 group-hover:text-neutral-600 transition-colors duration-200">
+            Gestion locative IA
           </div>
-        </Link>
+        </div>
 
         {/* Plan badge */}
         <div className="px-4 pt-3 pb-1">

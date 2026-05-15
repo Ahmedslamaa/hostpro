@@ -39,7 +39,7 @@ export function LoginContent() {
         <div className="relative z-10 max-w-md">
           {/* Logo */}
           <div className="mb-12">
-            <LogoMark variant="dark" size="xl" className="mb-3" />
+            <LogoMark variant="dark" size="lg" className="mb-3" />
             <div className="w-12 h-1 bg-white/40 rounded-full" />
           </div>
 

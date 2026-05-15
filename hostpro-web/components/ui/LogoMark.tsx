@@ -17,10 +17,10 @@ interface LogoMarkProps {
 }
 
 const SIZES = {
-  sm: { wrap: "text-base", pro: "text-xs px-1.5 py-0.5 rounded-md" },
-  md: { wrap: "text-xl", pro: "text-sm px-2.5 py-1 rounded-lg" },
-  lg: { wrap: "text-3xl", pro: "text-lg px-3 py-1.5 rounded-lg" },
-  xl: { wrap: "text-4xl", pro: "text-2xl px-4 py-2 rounded-xl" },
+  sm: { wrap: "text-base", pro: "text-xs px-2 py-1 rounded-md" },
+  md: { wrap: "text-xl", pro: "text-sm px-2.5 py-1.5 rounded-lg" },
+  lg: { wrap: "text-3xl", pro: "text-base px-3.5 py-2 rounded-lg" },
+  xl: { wrap: "text-4xl", pro: "text-lg px-4 py-2.5 rounded-xl" },
 };
 
 const LogoMark = React.forwardRef<HTMLDivElement | HTMLAnchorElement, LogoMarkProps>(

@@ -29,7 +29,7 @@ export default function LandingPage() {
       {/* ── NAVBAR ── */}
       <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-neutral-200">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <LogoMark variant="light" size="md" />
+          <LogoMark variant="light" size="lg" />
           <nav className="hidden md:flex items-center gap-8">
             {[["Fonctionnalités","#fonctionnalites"],["Tarifs","#tarifs"],["Avis clients","#avisclients"],["FAQ","#faq"]].map(([l, h]) => (
               <a key={l} href={h} className="hp-navlink text-sm text-neutral-500 hover:text-neutral-900 font-medium transition-colors">{l}</a>

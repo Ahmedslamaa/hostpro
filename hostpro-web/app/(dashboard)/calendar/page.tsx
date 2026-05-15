@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { calendarApi, propertiesApi } from "@/lib/api";
-import { withMock, MOCK_CALENDAR_EVENTS, MOCK_PROPERTIES } from "@/lib/mock";
+import { calendarApi } from "@/lib/api";
 import { CalendarEvent, Property } from "@/types";
 import { ChevronLeft, ChevronRight, Plus, X } from "lucide-react";
 
@@ -50,12 +49,14 @@ export default function CalendarPage() {
     const lastDay = getDaysInMonth(year, month);
     const end = `${year}-${String(month + 1).padStart(2, "0")}-${lastDay}`;
     setLoading(true);
-    const [e, p] = await Promise.all([
-      withMock(() => calendarApi.get({ start, end }), MOCK_CALENDAR_EVENTS),
-      withMock(() => propertiesApi.list(), MOCK_PROPERTIES),
-    ]);
-    setEvents((Array.isArray(e) ? e : MOCK_CALENDAR_EVENTS) as any[]);
-    setProperties((Array.isArray(p) ? p : MOCK_PROPERTIES) as any[]);
+    try {
+      const [e, p] = await Promise.all([
+        fetch(`/api/v1/calendar?start=${start}&end=${end}`).then(r => r.json()),
+        fetch("/api/v1/properties").then(r => r.json()),
+      ]);
+      setEvents(Array.isArray(e) ? e : []);
+      setProperties(Array.isArray(p) ? p : []);
+    } catch { setEvents([]); setProperties([]); }
     setLoading(false);
   };
 

@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { complianceApi, propertiesApi } from "@/lib/api";
-import { withMock, MOCK_COMPLIANCE, MOCK_PROPERTIES } from "@/lib/mock";
+import { complianceApi } from "@/lib/api";
 import { ComplianceRecord, Property } from "@/types";
 import { ShieldCheck, ShieldAlert, AlertTriangle, CheckCircle2, Pencil, X, Save } from "lucide-react";
 
@@ -31,13 +30,12 @@ export default function CompliancePage() {
 
   useEffect(() => {
     Promise.all([
-      withMock(() => complianceApi.list(), MOCK_COMPLIANCE),
-      withMock(() => propertiesApi.list(), MOCK_PROPERTIES),
+      fetch("/api/v1/compliance").then(r => r.json()),
+      fetch("/api/v1/properties").then(r => r.json()),
     ]).then(([c, p]) => {
-      setRecords((Array.isArray(c) ? c : MOCK_COMPLIANCE) as any[]);
-      setProperties((Array.isArray(p) ? p : MOCK_PROPERTIES) as any[]);
-      setLoading(false);
-    });
+      setRecords(Array.isArray(c) ? c : []);
+      setProperties(Array.isArray(p) ? p : []);
+    }).catch(() => {}).finally(() => setLoading(false));
   }, []);
 
   const propMap = Object.fromEntries(properties.map((p) => [p.id, p.name]));

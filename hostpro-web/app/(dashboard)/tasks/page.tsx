@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { tasksApi, propertiesApi } from "@/lib/api";
-import { withMock, MOCK_TASKS, MOCK_PROPERTIES } from "@/lib/mock";
+import { tasksApi } from "@/lib/api";
 import { Task, Property } from "@/types";
 import { formatDate } from "@/lib/utils";
 import { Plus, Calendar, X, CheckCircle2 } from "lucide-react";
@@ -43,12 +42,14 @@ export default function TasksPage() {
 
   const load = async () => {
     setLoading(true);
-    const [t, p] = await Promise.all([
-      withMock(() => tasksApi.list({}), MOCK_TASKS),
-      withMock(() => propertiesApi.list(), MOCK_PROPERTIES),
-    ]);
-    setTasks((Array.isArray(t) ? t : MOCK_TASKS) as any[]);
-    setProperties((Array.isArray(p) ? p : MOCK_PROPERTIES) as any[]);
+    try {
+      const [t, p] = await Promise.all([
+        fetch("/api/v1/tasks").then(r => r.json()),
+        fetch("/api/v1/properties").then(r => r.json()),
+      ]);
+      setTasks(Array.isArray(t) ? t : []);
+      setProperties(Array.isArray(p) ? p : []);
+    } catch { setTasks([]); setProperties([]); }
     setLoading(false);
   };
 

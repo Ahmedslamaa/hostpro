@@ -1,8 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { propertiesApi } from "@/lib/api";
-import { withMock, MOCK_PROPERTIES } from "@/lib/mock";
 import { formatCurrency } from "@/lib/utils";
 import { Plus, Home, MapPin, Users, BedDouble, TrendingUp, Moon, Eye, Pencil, Star } from "lucide-react";
 
@@ -33,10 +31,11 @@ export default function PropertiesPage() {
   const [filter, setFilter] = useState<"all" | "active" | "maintenance">("all");
 
   useEffect(() => {
-    withMock(() => propertiesApi.list(), MOCK_PROPERTIES).then((data) => {
-      setProperties(Array.isArray(data) ? data : MOCK_PROPERTIES);
-      setLoading(false);
-    });
+    fetch("/api/v1/properties")
+      .then(r => r.json())
+      .then(data => { setProperties(Array.isArray(data) ? data : []); })
+      .catch(() => setProperties([]))
+      .finally(() => setLoading(false));
   }, []);
 
   const filtered = filter === "all" ? properties : properties.filter((p) => p.status === filter);

@@ -31,7 +31,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="theme-color" content="#FF5A5F" />
         <link rel="manifest" href="/manifest.json" />
       </head>
-      <body className={font.className}>
+      <body className={`${font.className} bg-neutral-50 text-neutral-900 antialiased`}>
         {children}
         <CookieBanner />
       </body>

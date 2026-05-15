@@ -1,8 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { reservationsApi, propertiesApi } from "@/lib/api";
-import { withMock, MOCK_PROPERTIES } from "@/lib/mock";
+import { reservationsApi } from "@/lib/api";
 import { useToastStore } from "@/stores/toastStore";
 import { Property } from "@/types";
 import { ChevronLeft } from "lucide-react";
@@ -29,8 +28,10 @@ export default function NewReservationPage() {
   const toast = useToastStore();
 
   useEffect(() => {
-    withMock(() => propertiesApi.list({ status: "active" }), MOCK_PROPERTIES as any)
-      .then((p) => setProperties((Array.isArray(p) ? p : MOCK_PROPERTIES) as any[]));
+    fetch("/api/v1/properties")
+      .then(r => r.json())
+      .then(p => setProperties((Array.isArray(p) ? p : []) as any[]))
+      .catch(() => setProperties([]));
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {

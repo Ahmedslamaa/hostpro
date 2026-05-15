@@ -1,8 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { reservationsApi, propertiesApi } from "@/lib/api";
-import { withMock, MOCK_RESERVATIONS, MOCK_PROPERTIES } from "@/lib/mock";
+import { reservationsApi } from "@/lib/api";
 import { Reservation, Property } from "@/types";
 import { formatDate, formatCurrency, sourceLabel } from "@/lib/utils";
 import {
@@ -34,11 +33,11 @@ export function ReservationDetailContent({ id }: { id: string }) {
 
   useEffect(() => {
     Promise.all([
-      withMock(() => reservationsApi.get(id), MOCK_RESERVATIONS.find((r) => r.id === id) ?? MOCK_RESERVATIONS[0]),
-      withMock(() => propertiesApi.list(), MOCK_PROPERTIES),
+      fetch(`/api/v1/reservations/${id}`).then(r => r.json()).catch(() => null),
+      fetch("/api/v1/properties").then(r => r.json()).catch(() => []),
     ]).then(([r, p]) => {
-      setReservation((r ?? MOCK_RESERVATIONS[0]) as any);
-      setProperties((Array.isArray(p) ? p : MOCK_PROPERTIES) as any[]);
+      setReservation(r as any);
+      setProperties((Array.isArray(p) ? p : []) as any[]);
       setLoading(false);
     });
   }, [id]);

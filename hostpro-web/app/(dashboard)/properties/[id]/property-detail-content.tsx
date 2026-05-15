@@ -2,7 +2,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { propertiesApi } from "@/lib/api";
-import { withMock, MOCK_PROPERTIES, MOCK_RESERVATIONS, MOCK_TASKS } from "@/lib/mock";
 import { Property } from "@/types";
 import { formatCurrency, propertyTypeLabel } from "@/lib/utils";
 import {
@@ -26,21 +25,27 @@ const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
 export function PropertyDetailContent({ id }: { id: string }) {
   const router = useRouter();
   const [property, setProperty] = useState<Property | null>(null);
+  const [reservations, setReservations] = useState<any[]>([]);
+  const [tasks, setTasks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState("apercu");
 
-  // Derived mock data filtered by property
-  const propId = id;
-  const propReservations = MOCK_RESERVATIONS.filter((r) => r.property_id === propId).slice(0, 5);
-  const propTasks = MOCK_TASKS.filter((t) => t.property_id === propId);
-
   useEffect(() => {
-    const mockProp = MOCK_PROPERTIES.find((p) => p.id === id) ?? MOCK_PROPERTIES[0];
-    withMock(() => propertiesApi.get(id), mockProp as any).then((p) => {
+    Promise.all([
+      fetch(`/api/v1/properties/${id}`).then(r => r.json()).catch(() => null),
+      fetch(`/api/v1/reservations?property_id=${id}&limit=200`).then(r => r.json()).catch(() => []),
+      fetch(`/api/v1/tasks?property_id=${id}`).then(r => r.json()).catch(() => []),
+    ]).then(([p, res, tsk]) => {
       setProperty(p as any);
+      setReservations(Array.isArray(res) ? res.slice(0, 5) : []);
+      setTasks(Array.isArray(tsk) ? tsk : []);
       setLoading(false);
     });
   }, [id]);
+
+  // Derived data filtered by property
+  const propReservations = reservations;
+  const propTasks = tasks;
 
   if (loading) {
     return (

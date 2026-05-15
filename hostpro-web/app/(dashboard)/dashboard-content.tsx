@@ -4,7 +4,6 @@ import { useRouter } from "next/navigation";
 import { dashboardApi } from "@/lib/api";
 import { formatCurrency, formatDateShort, sourceLabel } from "@/lib/utils";
 import { TrendingUp, Home, Calendar, AlertTriangle, TrendingDown, ArrowUpRight, Plus, Sparkles, Zap, BarChart2, ChevronRight, CheckCircle } from "lucide-react";
-import { withMock, MOCK_DASHBOARD_KPIS, MOCK_REVENUE, MOCK_UPCOMING, MOCK_ALERTS } from "@/lib/mock";
 
 interface KPIs {
   occupancy_rate: number;
@@ -95,16 +94,23 @@ export function DashboardContent() {
   useEffect(() => {
     const load = async () => {
       setLoading(true);
-      const [k, u, a, r] = await Promise.all([
-        withMock(() => dashboardApi.kpis(period), MOCK_DASHBOARD_KPIS),
-        withMock(() => dashboardApi.upcoming(14), MOCK_UPCOMING),
-        withMock(() => dashboardApi.alerts(),     MOCK_ALERTS),
-        withMock(() => dashboardApi.revenue(6),   MOCK_REVENUE),
-      ]);
-      setKpis(k as KPIs);
-      setUpcoming(u as any[]);
-      setAlerts(a as any[]);
-      setRevenue(r as any[]);
+      try {
+        const [k, u, a, r] = await Promise.all([
+          fetch(`/api/v1/dashboard/kpis?period=${period}`).then(res => res.json()).catch(() => null),
+          fetch("/api/v1/dashboard/upcoming?days=14").then(res => res.json()).catch(() => []),
+          fetch("/api/v1/dashboard/alerts").then(res => res.json()).catch(() => []),
+          fetch("/api/v1/dashboard/revenue?months=6").then(res => res.json()).catch(() => []),
+        ]);
+        setKpis(k as KPIs);
+        setUpcoming(Array.isArray(u) ? u : []);
+        setAlerts(Array.isArray(a) ? a : []);
+        setRevenue(Array.isArray(r) ? r : []);
+      } catch {
+        setKpis(null);
+        setUpcoming([]);
+        setAlerts([]);
+        setRevenue([]);
+      }
       setLoading(false);
     };
     load();

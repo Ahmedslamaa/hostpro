@@ -8,7 +8,6 @@ import {
   LogOut, User, Settings, ChevronDown,
 } from "lucide-react";
 import { useAuthStore } from "@/stores/authStore";
-import { MOCK_ALERTS } from "@/lib/mock";
 
 const PAGE_TITLES: Record<string, string> = {
   "/dashboard": "Tableau de bord",
@@ -50,6 +49,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [notifOpen, setNotifOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [readNotifs, setReadNotifs] = useState<Set<string>>(new Set());
+  const [alerts, setAlerts] = useState<any[]>([]);
 
   const notifRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
@@ -69,8 +69,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     if (!token) router.replace("/login");
   }, [router]);
 
+  useEffect(() => {
+    fetch("/api/v1/dashboard/alerts")
+      .then(r => r.json())
+      .then(d => setAlerts(Array.isArray(d) ? d : []))
+      .catch(() => setAlerts([]));
+  }, []);
+
   const pageTitle = getPageTitle(pathname);
-  const unreadCount = MOCK_ALERTS.length - readNotifs.size;
+  const unreadCount = alerts.length - readNotifs.size;
 
   const handleLogout = () => {
     logout();
@@ -83,7 +90,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   };
 
   const markAllRead = () =>
-    setReadNotifs(new Set<string>(MOCK_ALERTS.map((_, i) => String(i))));
+    setReadNotifs(new Set<string>(alerts.map((_, i) => String(i))));
 
   return (
     <div className="flex min-h-screen bg-[#F7F7F7]">
@@ -122,13 +129,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   </div>
 
                   <div className="max-h-72 overflow-y-auto divide-y divide-[#F7F7F7]">
-                    {MOCK_ALERTS.length === 0 ? (
+                    {alerts.length === 0 ? (
                       <div className="flex flex-col items-center justify-center py-8 text-[#717171]">
                         <CheckCircle2 size={28} className="text-[#DDDDDD] mb-2" />
                         <p className="text-sm">Aucune notification</p>
                       </div>
                     ) : (
-                      MOCK_ALERTS.map((alert, i) => {
+                      alerts.map((alert, i) => {
                         const isRead = readNotifs.has(String(i));
                         const dotColor =
                           alert.severity === "critical" ? "bg-red-500"

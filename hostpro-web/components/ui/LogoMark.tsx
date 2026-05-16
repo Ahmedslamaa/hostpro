@@ -1,6 +1,5 @@
 import React from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 /**
@@ -42,14 +41,15 @@ const LogoMark = React.forwardRef<HTMLDivElement | HTMLAnchorElement, LogoMarkPr
           "select-none inline-block",
           className
         )}
+        style={{ width: s.width, height: s.height }}
       >
-        <Image
+        <img
           src="/hostpro-logo.svg"
           alt="HOST PRO"
           width={s.width}
           height={s.height}
-          priority
-          className="w-full h-auto"
+          style={{ width: "100%", height: "auto" }}
+          loading="eager"
         />
       </div>
     );

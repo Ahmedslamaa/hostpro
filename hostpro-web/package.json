@@ -7,10 +7,16 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "type-check": "tsc --noEmit",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "lighthouse": "lhci autorun",
+    "lighthouse:dev": "lighthouse http://localhost:3000 --view",
     "db:push": "prisma db push",
+    "db:migrate": "prisma migrate dev",
     "db:seed": "npx tsx prisma/seed.ts",
-    "db:studio": "prisma studio",
-    "test": "jest"
+    "db:studio": "prisma studio"
   },
   "prisma": {
     "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"

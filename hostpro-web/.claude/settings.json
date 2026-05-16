@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git *)",
+      "Bash(npm *)",
+      "Bash(ls *)",
+      "Bash(cat *)",
+      "Bash(grep *)",
+      "Bash(find *)",
+      "Bash(curl *)",
+      "Bash(curl -I *)",
+      "Bash(pwd)",
+      "Bash(echo *)",
+      "Read",
+      "Glob",
+      "Grep"
+    ],
+    "defaultMode": "acceptEdits"
+  },
+  "attribution": {
+    "commit": "Co-Authored-By: Claude Haiku 4.5 <noreply@anthropic.com>"
+  }
+}

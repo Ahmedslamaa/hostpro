@@ -235,8 +235,8 @@ async function main() {
     }).catch(() => null);
   }
 
-  console.log("✅ Seed terminé !");
-  console.log("📧 Email: demo@hostpro.fr");
+  console.log(" Seed terminé !");
+  console.log(" Email: demo@hostpro.fr");
   console.log("🔑 Mot de passe: demo1234");
 }
 

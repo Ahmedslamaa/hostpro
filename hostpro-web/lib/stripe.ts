@@ -1,9 +1,6 @@
 import Stripe from "stripe";
 
-if (!process.env.STRIPE_SECRET_KEY && process.env.NODE_ENV === "production") {
-  throw new Error("STRIPE_SECRET_KEY is required in production");
-}
-
+// Create Stripe instance with test key if secret key is not available (for build time)
 export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY ?? "sk_test_placeholder", {
   apiVersion: "2026-04-22.dahlia",
   typescript: true,

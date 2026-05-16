@@ -28,16 +28,12 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="fr">
-<<<<<<< HEAD
-      <body className={font.className}>
-        <ServiceWorkerRegister />
-=======
       <head>
         <meta name="theme-color" content="#FF5A5F" />
         <link rel="manifest" href="/manifest.json" />
       </head>
       <body className={`${font.className} bg-neutral-50 text-neutral-900 antialiased`}>
->>>>>>> 37e76865155c39a4fea0b6b9d939bb34cc7b078e
+        <ServiceWorkerRegister />
         {children}
         <CookieBanner />
       </body>

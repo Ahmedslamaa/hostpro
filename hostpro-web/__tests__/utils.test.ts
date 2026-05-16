@@ -38,22 +38,22 @@ describe("compliance alerts", () => {
     expect(computeAlerts({ registration_number: "12345", dpe_class: "B", nuitees_year: 50, nuitees_limit: 120, nuitees_alert_at: 96 })).toHaveLength(0);
   });
 
-  test("numéro manquant → alerte", () => {
+  test("numéro manquant  alerte", () => {
     const alerts = computeAlerts({ nuitees_year: 50, nuitees_limit: 120, nuitees_alert_at: 96 });
     expect(alerts).toContain("Numéro d'enregistrement manquant");
   });
 
-  test("DPE E → alerte", () => {
+  test("DPE E  alerte", () => {
     const alerts = computeAlerts({ registration_number: "12345", dpe_class: "E", nuitees_year: 50, nuitees_limit: 120, nuitees_alert_at: 96 });
     expect(alerts.some((a) => a.includes("DPE classe E"))).toBe(true);
   });
 
-  test("seuil nuitées atteint → alerte", () => {
+  test("seuil nuitées atteint  alerte", () => {
     const alerts = computeAlerts({ registration_number: "12345", nuitees_year: 100, nuitees_limit: 120, nuitees_alert_at: 96 });
     expect(alerts.some((a) => a.includes("Seuil"))).toBe(true);
   });
 
-  test("plafond nuitées dépassé → alerte critique", () => {
+  test("plafond nuitées dépassé  alerte critique", () => {
     const alerts = computeAlerts({ registration_number: "12345", nuitees_year: 120, nuitees_limit: 120, nuitees_alert_at: 96 });
     expect(alerts).toContain("Plafond de nuitées atteint");
   });

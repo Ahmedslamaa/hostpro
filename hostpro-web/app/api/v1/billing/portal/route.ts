@@ -6,6 +6,14 @@ import { db } from "@/lib/db";
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
 export async function POST(req: NextRequest) {
+  // Check for Stripe configuration at runtime
+  if (!process.env.STRIPE_SECRET_KEY) {
+    return NextResponse.json(
+      { error: "Stripe is not configured" },
+      { status: 503 }
+    );
+  }
+
   const guard = await requireAuth(req, { minRole: "admin" });
   if (guard instanceof NextResponse) return guard;
   const { tenantId } = guard;

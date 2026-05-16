@@ -2,7 +2,8 @@
 // Pour la production Azure : DATABASE_PROVIDER=postgresql + changer les types @db.*
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl", "linux-musl-openssl-3.0.x", "debian-openssl-3.0.x"]
 }
 
 datasource db {
@@ -248,9 +249,9 @@ model PlatformIntegration {
   status                String    @default("active")
 
   // Credentials chiffrés
-  api_key               String?   @db.Text
-  oauth_token           String?   @db.Text
-  oauth_refresh         String?   @db.Text
+  api_key               String?
+  oauth_token           String?
+  oauth_refresh         String?
 
   last_sync             DateTime?
   sync_error            String?
@@ -274,7 +275,7 @@ model MessageThread {
   guest_email             String?
 
   // Identifiants externes pour déduplication (JSON: {"airbnb": "123", "booking": "456"})
-  platform_thread_ids     String    @default("{}") @db.Text
+  platform_thread_ids     String    @default("{}")
   platform_integration_id String?
   platformIntegration     PlatformIntegration? @relation(fields: [platform_integration_id], references: [id], onDelete: SetNull)
 
@@ -305,14 +306,14 @@ model Message {
 
   sender            String    // host | guest | support
   sender_name       String
-  body              String    @db.Text
+  body              String
 
   is_read           Boolean   @default(false)
   read_at           DateTime?
   sent_at           DateTime  @default(now())
 
   // Traçabilité sync
-  synced_to         String    @default("{}") @db.Text  // JSON: {"airbnb": true, "booking": false}
+  synced_to         String    @default("{}")  // JSON: {"airbnb": true, "booking": false}
   sync_error        String?
 
   created_at        DateTime  @default(now())

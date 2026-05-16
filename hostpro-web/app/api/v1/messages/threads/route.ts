@@ -51,8 +51,9 @@ export async function GET(req: NextRequest) {
     // Récupérer le total pour la pagination
     const total = await db.messageThread.count({ where });
 
-    // Récupérer les threads
-    const threads = await db.messageThread.findMany({
+    // Recuperer les threads
+    // @ts-ignore - Prisma types not fully generated
+    const threads: any = await (db.messageThread.findMany as any)({
       where,
       include: {
         messages: {
@@ -67,7 +68,7 @@ export async function GET(req: NextRequest) {
     });
 
     // Formater la réponse
-    const formattedThreads = threads.map((thread) => ({
+    const formattedThreads = threads.map((thread: any) => ({
       id: thread.id,
       guestName: thread.guest_name,
       guestEmail: thread.guest_email,

@@ -7,22 +7,26 @@ export async function GET(req: NextRequest) {
   if (!auth) return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
   const tenantId = getTenantId(req, auth);
 
+  const { searchParams } = req.nextUrl;
+  const days = parseInt(searchParams.get("days") ?? "14");
+
   const today = new Date().toISOString().slice(0, 10);
-  const inWeek = new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10);
+  const horizon = new Date(Date.now() + days * 86400000).toISOString().slice(0, 10);
 
   const arrivals = await db.reservation.findMany({
-    where: { tenant_id: tenantId, check_in: { gte: today, lte: inWeek }, status: { in: ["confirmed", "pending"] } },
-    include: { property: { select: { name: true } } },
+    where: { tenant_id: tenantId, check_in: { gte: today, lte: horizon }, status: { in: ["confirmed", "pending"] } },
+    include: { property: { select: { id: true, name: true } } },
     orderBy: { check_in: "asc" },
-    take: 10,
+    take: 20,
   });
 
-  const departures = await db.reservation.findMany({
-    where: { tenant_id: tenantId, check_out: { gte: today, lte: inWeek }, status: "confirmed" },
-    include: { property: { select: { name: true } } },
-    orderBy: { check_out: "asc" },
-    take: 10,
-  });
+  // Flatten to match UI expectations: property_name at top level
+  const normalized = arrivals.map((r) => ({
+    ...r,
+    reservation_id: r.id,
+    property_name: r.property?.name ?? "",
+    property: undefined,
+  }));
 
-  return NextResponse.json({ arrivals, departures });
+  return NextResponse.json(normalized);
 }

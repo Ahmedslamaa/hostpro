@@ -2,9 +2,9 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { dashboardApi } from "@/lib/api";
-import { formatCurrency, formatDateShort, sourceLabel } from "@/lib/utils";
+import { formatCurrency, formatDateShort, sourceLabel, cn } from "@/lib/utils";
 import { TrendingUp, Home, Calendar, AlertTriangle, TrendingDown, ArrowUpRight, Plus, Sparkles, Zap, BarChart2, ChevronRight, CheckCircle } from "lucide-react";
-import { withMock, MOCK_DASHBOARD_KPIS, MOCK_REVENUE, MOCK_UPCOMING, MOCK_ALERTS } from "@/lib/mock";
+import { colors } from "@/lib/design-system";
 
 interface KPIs {
   occupancy_rate: number;
@@ -17,11 +17,11 @@ interface KPIs {
 }
 
 const SOURCE_BADGE: Record<string, string> = {
-  airbnb: "bg-[#FF5A5F]/10 text-[#FF5A5F]",
-  booking: "bg-blue-100 text-blue-700",
-  manual: "bg-[#FF5A5F]/10 text-[#FF5A5F]",
-  direct: "bg-[#FF5A5F]/10 text-[#FF5A5F]",
-  abritel: "bg-cyan-100 text-cyan-700",
+  airbnb: "bg-primary-50 text-primary-600",
+  booking: "bg-blue-50 text-blue-700",
+  manual: "bg-primary-50 text-primary-600",
+  direct: "bg-primary-50 text-primary-600",
+  abritel: "bg-cyan-50 text-cyan-700",
 };
 
 const ONBOARDING_STEPS = [
@@ -35,11 +35,11 @@ function EmptyDashboard() {
   const router = useRouter();
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
-      <div className="w-20 h-20 bg-[#FF5A5F]/10 border-2 border-[#FF5A5F]/20 rounded-3xl flex items-center justify-center mb-6">
-        <Sparkles size={36} className="text-[#FF5A5F]" />
+      <div className="w-20 h-20 bg-primary-50 border-2 border-primary-100 rounded-3xl flex items-center justify-center mb-6">
+        <Sparkles size={36} className="text-primary-500" />
       </div>
-      <h2 className="text-2xl font-black text-[#222222] mb-2">Bienvenue sur HOSTPRO !</h2>
-      <p className="text-[#717171] mb-10 max-w-md">
+      <h2 className="text-3xl font-black text-neutral-900 mb-2">Bienvenue sur HOSTPRO !</h2>
+      <p className="text-neutral-600 mb-10 max-w-md text-base">
         Votre tableau de bord est vide pour l'instant. Commencez par ajouter votre première propriété pour débloquer toutes les fonctionnalités.
       </p>
 
@@ -48,33 +48,33 @@ function EmptyDashboard() {
           <button
             key={s.id}
             onClick={() => router.push(s.href)}
-            className="flex items-start gap-4 bg-white border border-[#DDDDDD] rounded-2xl p-5 hover:shadow-sm hover:border-[#FF5A5F]/30 transition-all text-left group"
+            className="flex items-start gap-4 bg-white border border-neutral-200 rounded-xl p-5 hover:shadow-md hover:border-primary-100 transition-all duration-200 text-left group"
           >
-            <div className="w-10 h-10 bg-[#FF5A5F]/10 rounded-xl flex items-center justify-center flex-shrink-0">
-              <s.icon size={18} className="text-[#FF5A5F]" />
+            <div className="w-10 h-10 bg-primary-50 rounded-lg flex items-center justify-center flex-shrink-0">
+              <s.icon size={18} className="text-primary-500" />
             </div>
             <div className="flex-1">
               <div className="flex items-center gap-1.5 mb-0.5">
-                <span className="text-xs font-bold text-[#BBBBBB]">0{i + 1}</span>
+                <span className="text-xs font-bold text-neutral-400">0{i + 1}</span>
               </div>
-              <div className="font-semibold text-sm text-[#222222] group-hover:text-[#FF5A5F] transition-colors">{s.label}</div>
-              <div className="text-xs text-[#717171] mt-0.5">{s.desc}</div>
+              <div className="font-semibold text-sm text-neutral-900 group-hover:text-primary-600 transition-colors duration-200">{s.label}</div>
+              <div className="text-xs text-neutral-600 mt-0.5">{s.desc}</div>
             </div>
-            <ChevronRight size={16} className="text-[#DDDDDD] group-hover:text-[#FF5A5F] flex-shrink-0 mt-0.5 transition-colors" />
+            <ChevronRight size={16} className="text-neutral-300 group-hover:text-primary-500 flex-shrink-0 mt-0.5 transition-colors duration-200" />
           </button>
         ))}
       </div>
 
       <button
         onClick={() => router.push("/properties")}
-        className="inline-flex items-center gap-2 bg-[#FF5A5F] hover:bg-[#E00B41] text-white font-bold px-8 py-3.5 rounded-2xl transition-all shadow-lg shadow-[#FF5A5F]/20"
+        className="inline-flex items-center gap-2 bg-primary-500 hover:bg-primary-600 text-white font-semibold px-8 py-3 rounded-xl transition-all duration-200 shadow-md hover:shadow-lg"
       >
         <Plus size={18} /> Ajouter ma première propriété
       </button>
 
-      <p className="text-xs text-[#717171] mt-5">
+      <p className="text-xs text-neutral-600 mt-5">
         Ou{" "}
-        <button onClick={() => router.push("/assistant")} className="text-[#FF5A5F] font-semibold hover:underline">
+        <button onClick={() => router.push("/assistant")} className="text-primary-600 font-semibold hover:text-primary-700 transition-colors">
           demandez à l'assistant IA
         </button>{" "}
         comment démarrer.
@@ -95,16 +95,23 @@ export function DashboardContent() {
   useEffect(() => {
     const load = async () => {
       setLoading(true);
-      const [k, u, a, r] = await Promise.all([
-        withMock(() => dashboardApi.kpis(period), MOCK_DASHBOARD_KPIS),
-        withMock(() => dashboardApi.upcoming(14), MOCK_UPCOMING),
-        withMock(() => dashboardApi.alerts(),     MOCK_ALERTS),
-        withMock(() => dashboardApi.revenue(6),   MOCK_REVENUE),
-      ]);
-      setKpis(k as KPIs);
-      setUpcoming(u as any[]);
-      setAlerts(a as any[]);
-      setRevenue(r as any[]);
+      try {
+        const [k, u, a, r] = await Promise.all([
+          fetch(`/api/v1/dashboard/kpis?period=${period}`).then(res => res.json()).catch(() => null),
+          fetch("/api/v1/dashboard/upcoming?days=14").then(res => res.json()).catch(() => []),
+          fetch("/api/v1/dashboard/alerts").then(res => res.json()).catch(() => []),
+          fetch("/api/v1/dashboard/revenue?months=6").then(res => res.json()).catch(() => []),
+        ]);
+        setKpis(k as KPIs);
+        setUpcoming(Array.isArray(u) ? u : []);
+        setAlerts(Array.isArray(a) ? a : []);
+        setRevenue(Array.isArray(r) ? r : []);
+      } catch {
+        setKpis(null);
+        setUpcoming([]);
+        setAlerts([]);
+        setRevenue([]);
+      }
       setLoading(false);
     };
     load();
@@ -121,21 +128,21 @@ export function DashboardContent() {
         },
         {
           label: "Revenus du mois",
-          value: formatCurrency(kpis.total_revenue),
+          value: formatCurrency((kpis as any).total_revenue ?? (kpis as any).revenue ?? 0),
           icon: TrendingUp,
           trend: "+12.5%",
           up: true,
         },
         {
           label: "Prix moyen / nuit",
-          value: formatCurrency(kpis.adr),
+          value: formatCurrency((kpis as any).adr ?? (kpis as any).avg_price_per_night ?? 0),
           icon: TrendingUp,
           trend: "+5.8%",
           up: true,
         },
         {
           label: "RevPAR",
-          value: formatCurrency(kpis.revpar),
+          value: formatCurrency((kpis as any).revpar ?? (kpis as any).rev_par ?? 0),
           icon: TrendingUp,
           trend: "-1.2%",
           up: false,
@@ -171,19 +178,19 @@ export function DashboardContent() {
   return (
     <div>
       {/* Period selector */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-8">
         <div>
-          <p className="text-sm text-[#717171]">{kpis?.period || "Chargement des données..."}</p>
+          <p className="text-sm text-neutral-600">{kpis?.period || "Chargement des données..."}</p>
         </div>
-        <div className="flex items-center gap-1 bg-white border border-[#DDDDDD] rounded-xl p-1">
+        <div className="flex items-center gap-1 bg-white border border-neutral-200 rounded-lg p-1 shadow-sm">
           {(["month", "quarter", "year"] as const).map((p) => (
             <button
               key={p}
               onClick={() => setPeriod(p)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                 period === p
-                  ? "bg-[#222222] text-white"
-                  : "text-[#717171] hover:text-[#222222]"
+                  ? "bg-neutral-900 text-white shadow-sm"
+                  : "text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50"
               }`}
             >
               {PERIOD_LABELS[p]}
@@ -194,14 +201,14 @@ export function DashboardContent() {
 
       {/* Alerts */}
       {alerts.length > 0 && (
-        <div className="mb-6 space-y-2">
+        <div className="mb-8 space-y-2">
           {alerts.map((a, i) => (
             <div
               key={i}
-              className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm border ${
+              className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm border transition-colors duration-200 ${
                 a.severity === "critical"
-                  ? "bg-red-50 border-red-200 text-red-800"
-                  : "bg-amber-50 border-amber-200 text-amber-800"
+                  ? "bg-red-50 border-red-200 text-red-700"
+                  : "bg-amber-50 border-amber-200 text-amber-700"
               }`}
             >
               <AlertTriangle size={16} className="flex-shrink-0" />
@@ -215,18 +222,18 @@ export function DashboardContent() {
 
       {/* KPI Cards */}
       {loading ? (
-        <div className="grid grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-3 gap-4 mb-8">
           {[...Array(6)].map((_, i) => (
-            <div key={i} className="bg-white rounded-2xl border border-[#DDDDDD] p-6 h-28 animate-pulse bg-[#F7F7F7]" />
+            <div key={i} className="bg-white rounded-xl border border-neutral-200 p-6 h-28 animate-pulse bg-neutral-50" />
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-3 gap-4 mb-8">
           {kpiCards.map((c, i) => (
-            <div key={i} className="bg-white rounded-2xl border border-[#DDDDDD] p-6 shadow-sm hover:shadow-md transition-shadow">
+            <div key={i} className="bg-white rounded-xl border border-neutral-200 p-6 shadow-sm hover:shadow-md hover:border-neutral-300 transition-all duration-200">
               <div className="flex items-start justify-between mb-4">
-                <div className="w-12 h-12 bg-[#FF5A5F]/10 rounded-xl flex items-center justify-center">
-                  <c.icon size={22} className="text-[#FF5A5F]" />
+                <div className="w-12 h-12 bg-primary-50 rounded-lg flex items-center justify-center">
+                  <c.icon size={22} className="text-primary-500" />
                 </div>
                 <div
                   className={`flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full ${
@@ -237,8 +244,8 @@ export function DashboardContent() {
                   {c.trend}
                 </div>
               </div>
-              <div className="text-3xl font-bold text-[#222222] mb-1">{c.value}</div>
-              <div className="text-sm text-[#717171]">{c.label}</div>
+              <div className="text-3xl font-bold text-neutral-900 mb-1">{c.value}</div>
+              <div className="text-sm text-neutral-600">{c.label}</div>
             </div>
           ))}
         </div>
@@ -247,15 +254,15 @@ export function DashboardContent() {
       {/* Charts row */}
       <div className="grid grid-cols-2 gap-6">
         {/* Revenue chart */}
-        <div className="bg-white rounded-2xl border border-[#DDDDDD] p-6 shadow-sm">
-          <div className="flex items-center justify-between mb-5">
-            <h2 className="font-semibold text-[#222222]">Revenus sur 6 mois</h2>
-            <span className="text-xs text-[#717171]">En euros</span>
+        <div className="bg-white rounded-xl border border-neutral-200 p-6 shadow-sm">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="font-semibold text-neutral-900 text-base">Revenus sur 6 mois</h2>
+            <span className="text-xs text-neutral-600 bg-neutral-50 px-2.5 py-1 rounded-lg">En euros</span>
           </div>
           {loading ? (
             <div className="space-y-3">
               {[...Array(6)].map((_, i) => (
-                <div key={i} className="h-5 bg-[#F7F7F7] rounded-full animate-pulse" />
+                <div key={i} className="h-5 bg-neutral-100 rounded-full animate-pulse" />
               ))}
             </div>
           ) : revenue.length > 0 ? (
@@ -265,14 +272,14 @@ export function DashboardContent() {
                 const pct = max > 0 ? (r.revenue / max) * 100 : 0;
                 return (
                   <div key={i} className="flex items-center gap-3">
-                    <span className="text-xs text-[#717171] w-14 flex-shrink-0 font-medium">{r.month}</span>
-                    <div className="flex-1 bg-[#F7F7F7] rounded-full h-2.5">
+                    <span className="text-xs text-neutral-600 w-14 flex-shrink-0 font-medium">{r.month}</span>
+                    <div className="flex-1 bg-neutral-100 rounded-full h-2.5">
                       <div
-                        className="bg-[#FF5A5F] h-2.5 rounded-full transition-all duration-500"
+                        className="bg-primary-500 h-2.5 rounded-full transition-all duration-500"
                         style={{ width: `${pct}%` }}
                       />
                     </div>
-                    <span className="text-xs font-semibold text-[#222222] w-20 text-right">
+                    <span className="text-xs font-semibold text-neutral-900 w-20 text-right">
                       {formatCurrency(r.revenue)}
                     </span>
                   </div>
@@ -280,27 +287,27 @@ export function DashboardContent() {
               })}
             </div>
           ) : (
-            <div className="flex items-center justify-center h-32 text-[#717171] text-sm">
+            <div className="flex items-center justify-center h-32 text-neutral-500 text-sm">
               Aucune donnée disponible
             </div>
           )}
         </div>
 
         {/* Upcoming arrivals */}
-        <div className="bg-white rounded-2xl border border-[#DDDDDD] p-6 shadow-sm">
-          <div className="flex items-center justify-between mb-5">
-            <h2 className="font-semibold text-[#222222]">Arrivées à venir</h2>
-            <span className="text-xs text-[#717171] bg-[#F7F7F7] px-2.5 py-1 rounded-full">14 jours</span>
+        <div className="bg-white rounded-xl border border-neutral-200 p-6 shadow-sm">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="font-semibold text-neutral-900 text-base">Arrivées à venir</h2>
+            <span className="text-xs text-neutral-600 bg-neutral-50 px-2.5 py-1 rounded-lg">14 jours</span>
           </div>
           {loading ? (
             <div className="space-y-3">
               {[...Array(4)].map((_, i) => (
-                <div key={i} className="h-12 bg-[#F7F7F7] rounded-xl animate-pulse" />
+                <div key={i} className="h-12 bg-neutral-100 rounded-lg animate-pulse" />
               ))}
             </div>
           ) : upcoming.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-32 text-[#717171]">
-              <Calendar size={32} className="mb-2 text-[#DDDDDD]" />
+            <div className="flex flex-col items-center justify-center h-32 text-neutral-500">
+              <Calendar size={32} className="mb-2 text-neutral-300" />
               <p className="text-sm">Aucune arrivée prévue</p>
             </div>
           ) : (
@@ -308,25 +315,25 @@ export function DashboardContent() {
               {upcoming.slice(0, 6).map((r) => (
                 <div
                   key={r.reservation_id}
-                  className="flex items-center gap-3 p-3 rounded-xl hover:bg-[#F7F7F7] transition-colors"
+                  className="flex items-center gap-3 p-3 rounded-lg hover:bg-neutral-50 transition-colors duration-150"
                 >
-                  <div className="w-8 h-8 bg-[#FF5A5F]/10 rounded-full flex items-center justify-center flex-shrink-0">
-                    <span className="text-[#FF5A5F] text-xs font-bold">
+                  <div className="w-8 h-8 bg-primary-50 rounded-full flex items-center justify-center flex-shrink-0">
+                    <span className="text-primary-600 text-xs font-bold">
                       {(r.guest_name || "G")[0].toUpperCase()}
                     </span>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm font-semibold text-[#222222] truncate">
+                    <div className="text-sm font-semibold text-neutral-900 truncate">
                       {r.guest_name || "Voyageur"} — {r.property_name}
                     </div>
-                    <div className="text-xs text-[#717171]">
+                    <div className="text-xs text-neutral-600">
                       {formatDateShort(r.check_in)} → {formatDateShort(r.check_out)} · {r.nights} nuit
                       {r.nights > 1 ? "s" : ""}
                     </div>
                   </div>
                   <span
                     className={`text-xs px-2.5 py-1 rounded-full font-medium flex-shrink-0 ${
-                      SOURCE_BADGE[r.source] || "bg-[#F7F7F7] text-[#717171]"
+                      SOURCE_BADGE[r.source] || "bg-neutral-100 text-neutral-600"
                     }`}
                   >
                     {sourceLabel(r.source)}

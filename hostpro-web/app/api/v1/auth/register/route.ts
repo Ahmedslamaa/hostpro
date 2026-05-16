@@ -4,7 +4,8 @@ import { hashPassword, createTokenPair } from "@/lib/auth-server";
 
 export async function POST(req: NextRequest) {
   try {
-    const { email, password, full_name, company_name } = await req.json();
+    const { email, password, full_name, company_name, tenant_name } = await req.json();
+    const tenantDisplayName = company_name ?? tenant_name;
 
     if (!email || !password) {
       return NextResponse.json({ error: "Email et mot de passe requis" }, { status: 400 });
@@ -20,11 +21,11 @@ export async function POST(req: NextRequest) {
 
     // Créer le tenant + user en transaction
     const result = await db.$transaction(async (tx) => {
-      const slug = (company_name ?? email.split("@")[0])
+      const slug = (tenantDisplayName ?? email.split("@")[0])
         .toLowerCase().replace(/[^a-z0-9]/g, "-").slice(0, 32) + "-" + Date.now().toString(36);
 
       const tenant = await tx.tenant.create({
-        data: { name: company_name ?? full_name ?? email, slug, plan: "starter" },
+        data: { name: tenantDisplayName ?? full_name ?? email, slug, plan: "starter" },
       });
 
       const user = await tx.user.create({

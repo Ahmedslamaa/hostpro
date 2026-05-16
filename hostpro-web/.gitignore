@@ -36,3 +36,10 @@ Thumbs.db
 # ── Build artifacts ──────────────────────────────────────────────────────────
 deploy.zip
 .vercel
+
+# ── Electron & Build artifacts (too large for GitHub) ──────────────────────
+dist/
+electron/
+*.exe
+*.asar
+hostpro-installer.bat

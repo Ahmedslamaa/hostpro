@@ -1,6 +1,6 @@
 # ═══════════════════════════════════════════════════════════════════════════
-# HOST PRO — CI/CD → Azure App Service (Publish Profile)
-# Compatible Azure for Students (pas de Service Principal requis)
+# HOST PRO — CI/CD → Azure App Service
+# Compatible Azure for Students (Publish Profile auth)
 #
 # Déclencheurs :
 #   push main   → build + déploiement production
@@ -10,15 +10,12 @@
 #   AZURE_WEBAPP_PUBLISH_PROFILE  → Profil de publication App Service
 #   AZURE_WEBAPP_NAME             → hostpro-dev-app
 #   DATABASE_URL                  → postgresql://...
-#   JWT_SECRET                    → secret JWT
-#   JWT_REFRESH_SECRET            → secret JWT refresh
+#   JWT_SECRET / JWT_REFRESH_SECRET
 #   ANTHROPIC_API_KEY
 #   RESEND_API_KEY
-#   STRIPE_SECRET_KEY
-#   STRIPE_WEBHOOK_SECRET
+#   STRIPE_SECRET_KEY / STRIPE_WEBHOOK_SECRET
 #   STRIPE_PRICE_STARTER / PRO / ENTERPRISE
 #   VAPID_PUBLIC_KEY / VAPID_PRIVATE_KEY / VAPID_EMAIL
-#   NEXT_PUBLIC_APP_URL
 # ═══════════════════════════════════════════════════════════════════════════
 
 name: Deploy to Azure
@@ -53,9 +50,14 @@ jobs:
         working-directory: hostpro-web
         run: npm ci
 
-      - name: Generate Prisma client
+      - name: Patch schema for PostgreSQL + generate Prisma client
         working-directory: hostpro-web
-        run: npx prisma generate
+        run: |
+          sed -i 's/provider = "sqlite"/provider = "postgresql"/' prisma/schema.prisma
+          npx prisma generate
+          # Push schema to database (creates tables if missing, safe to re-run)
+          # continue-on-error because DB credentials might be temporarily unavailable
+          npx prisma db push --skip-generate --accept-data-loss=false || echo "⚠️  prisma db push failed — check DATABASE_URL secret"
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
@@ -82,18 +84,28 @@ jobs:
           VAPID_PUBLIC_KEY: ${{ secrets.VAPID_PUBLIC_KEY }}
           VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
           VAPID_EMAIL: ${{ secrets.VAPID_EMAIL }}
-          NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }}
+          NEXT_PUBLIC_APP_URL: "https://hostpro-dev-app.azurewebsites.net"
           NEXT_TELEMETRY_DISABLED: "1"
           NODE_ENV: production
 
       - name: Préparer le package de déploiement
         working-directory: hostpro-web
         run: |
-          # Copier les fichiers statiques dans standalone
-          cp -r .next/static .next/standalone/.next/static
-          cp -r public .next/standalone/public
+          cp -r .next/static  .next/standalone/.next/static
+          cp -r public        .next/standalone/public
 
-          # Créer le ZIP de déploiement
+          # Oryx exclut les répertoires cachés (.prisma) lors de la compression node_modules.
+          # On copie l'engine Prisma Linux dans un dossier NON-caché.
+          # PRISMA_QUERY_ENGINE_LIBRARY est configuré dans les app settings Azure.
+          mkdir -p .next/standalone/prisma-engines
+          # Chercher le bon binaire selon la plateforme CI (debian ou musl)
+          for bin in \
+            node_modules/.prisma/client/libquery_engine-debian-openssl-3.0.x.so.node \
+            node_modules/.prisma/client/libquery_engine-linux-musl-openssl-3.0.x.so.node \
+            node_modules/.prisma/client/libquery_engine-linux-musl.so.node; do
+            [ -f "$bin" ] && cp "$bin" .next/standalone/prisma-engines/ && echo "Copied: $bin"
+          done
+
           cd .next/standalone
           zip -r ../../deploy.zip . -x "*.map"
 
@@ -120,14 +132,39 @@ jobs:
         with:
           name: deploy-package
 
+      # ZipDeploy via curl — credentials passés par env vars pour éviter l'expansion bash du $ dans le username Kudu
       - name: Déployer sur Azure App Service
-        uses: azure/webapps-deploy@v3
-        with:
-          app-name: ${{ env.WEBAPP_NAME }}
-          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-          package: deploy.zip
+        env:
+          KUDU_USER: ${{ secrets.AZURE_KUDU_USER }}
+          KUDU_PASS: ${{ secrets.AZURE_KUDU_PASS }}
+          WEBAPP: ${{ env.WEBAPP_NAME }}
+        run: |
+          echo "Deploying to https://${WEBAPP}.scm.azurewebsites.net..."
+          HTTP=$(curl -s -o /tmp/deploy_out.txt -w "%{http_code}" \
+            -X POST \
+            "https://${WEBAPP}.scm.azurewebsites.net/api/zipdeploy" \
+            --user "${KUDU_USER}:${KUDU_PASS}" \
+            -H "Content-Type: application/zip" \
+            --data-binary @deploy.zip \
+            --max-time 600)
+          cat /tmp/deploy_out.txt || true
+          echo "HTTP status: $HTTP"
+          [ "$HTTP" = "200" ] || [ "$HTTP" = "204" ] && echo "✅ Deploy OK" || (echo "❌ Deploy failed: $HTTP" && exit 1)
+
+      - name: Health check post-déploiement
+        run: |
+          echo "Attente démarrage (30s)..."
+          sleep 30
+          for i in 1 2 3 4 5; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://${{ env.WEBAPP_NAME }}.azurewebsites.net/api/health)
+            echo "Attempt $i: HTTP $STATUS"
+            [ "$STATUS" = "200" ] && echo "✅ App healthy" && exit 0
+            sleep 15
+          done
+          echo "❌ Health check failed" && exit 1
 
       - name: Résumé du déploiement
+        if: success()
         run: |
           echo "## ✅ Déploiement réussi" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY

@@ -18,15 +18,11 @@ export function LoginContent() {
     setError("");
     try {
       const res = await authApi.login(form);
-      const { access_token, refresh_token, user } = res.data;
-      const tenantId = user.tenants?.[0]?.id || "";
-      setAuth(user, access_token, refresh_token, tenantId);
-      const me = await authApi.me();
-      const firstTenant = me.data.tenants?.[0]?.id || "";
-      if (firstTenant) localStorage.setItem("tenant_id", firstTenant);
+      const { access_token, refresh_token, user, tenant_id } = res.data;
+      setAuth(user, access_token, refresh_token, tenant_id || "");
       router.replace("/dashboard");
     } catch (err: any) {
-      setError(err.response?.data?.detail || "Identifiants incorrects");
+      setError(err.response?.data?.error || err.response?.data?.detail || "Identifiants incorrects");
     } finally {
       setLoading(false);
     }
@@ -35,7 +31,7 @@ export function LoginContent() {
   return (
     <div className="min-h-screen bg-white flex">
       {/* Left branding panel — hidden on mobile */}
-      <div className="hidden lg:flex lg:w-1/2 bg-[#FF5A5F] flex-col items-center justify-center p-16 relative overflow-hidden">
+      <div className="hidden lg:flex lg:w-1/2 bg-primary-500 flex-col items-center justify-center p-16 relative overflow-hidden">
         {/* Background decoration */}
         <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-32 translate-x-32" />
         <div className="absolute bottom-0 left-0 w-96 h-96 bg-white/5 rounded-full translate-y-48 -translate-x-48" />
@@ -43,7 +39,7 @@ export function LoginContent() {
         <div className="relative z-10 max-w-md">
           {/* Logo */}
           <div className="mb-12">
-            <LogoMark variant="dark" size="xl" className="mb-3" />
+            <LogoMark variant="dark" size="lg" className="mb-3" />
             <div className="w-12 h-1 bg-white/40 rounded-full" />
           </div>
 
@@ -80,8 +76,8 @@ export function LoginContent() {
           </div>
 
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-[#222222]">Bienvenue</h1>
-            <p className="text-[#717171] mt-2">Connectez-vous à votre espace de gestion</p>
+            <h1 className="text-3xl font-bold text-neutral-900">Bienvenue</h1>
+            <p className="text-neutral-500 mt-2">Connectez-vous à votre espace de gestion</p>
           </div>
 
           {error && (
@@ -92,13 +88,13 @@ export function LoginContent() {
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="text-[#222222] text-sm font-semibold mb-2 block">
+              <label className="text-neutral-900 text-sm font-semibold mb-2 block">
                 Adresse email
               </label>
               <input
                 type="email"
                 required
-                className="border border-[#DDDDDD] rounded-xl px-4 py-3 text-[#222222] placeholder-[#717171] focus:outline-none focus:border-[#222222] focus:ring-2 focus:ring-[#222222]/10 w-full transition-all"
+                className="border border-neutral-200 rounded-xl px-4 py-3 text-neutral-900 placeholder-neutral-500 focus:outline-none focus:border-neutral-900 focus:ring-2 focus:ring-neutral-900/10 w-full transition-all"
                 placeholder="vous@exemple.fr"
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
@@ -106,13 +102,13 @@ export function LoginContent() {
             </div>
 
             <div>
-              <label className="text-[#222222] text-sm font-semibold mb-2 block">
+              <label className="text-neutral-900 text-sm font-semibold mb-2 block">
                 Mot de passe
               </label>
               <input
                 type="password"
                 required
-                className="border border-[#DDDDDD] rounded-xl px-4 py-3 text-[#222222] placeholder-[#717171] focus:outline-none focus:border-[#222222] focus:ring-2 focus:ring-[#222222]/10 w-full transition-all"
+                className="border border-neutral-200 rounded-xl px-4 py-3 text-neutral-900 placeholder-neutral-500 focus:outline-none focus:border-neutral-900 focus:ring-2 focus:ring-neutral-900/10 w-full transition-all"
                 placeholder="••••••••"
                 value={form.password}
                 onChange={(e) => setForm({ ...form, password: e.target.value })}
@@ -120,7 +116,7 @@ export function LoginContent() {
             </div>
 
             <div className="flex justify-end">
-              <a href="#" className="text-[#FF5A5F] text-sm font-medium hover:underline">
+              <a href="#" className="text-primary-500 text-sm font-medium hover:underline">
                 Mot de passe oublié ?
               </a>
             </div>
@@ -128,21 +124,21 @@ export function LoginContent() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-[#FF5A5F] hover:bg-[#E00B41] text-white font-semibold px-6 py-3 rounded-xl transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+              className="w-full bg-primary-500 hover:bg-primary-600 text-white font-semibold px-6 py-3 rounded-xl transition-all disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {loading ? "Connexion en cours..." : "Se connecter"}
             </button>
           </form>
 
           <div className="flex items-center gap-4 my-6">
-            <div className="flex-1 h-px bg-[#DDDDDD]" />
-            <span className="text-[#717171] text-sm">ou</span>
-            <div className="flex-1 h-px bg-[#DDDDDD]" />
+            <div className="flex-1 h-px bg-neutral-200" />
+            <span className="text-neutral-500 text-sm">ou</span>
+            <div className="flex-1 h-px bg-neutral-200" />
           </div>
 
-          <p className="text-center text-sm text-[#717171]">
+          <p className="text-center text-sm text-neutral-500">
             Pas encore de compte ?{" "}
-            <a href="/register" className="text-[#222222] font-semibold hover:underline">
+            <a href="/register" className="text-neutral-900 font-semibold hover:underline">
               Créer un compte gratuit
             </a>
           </p>
@@ -151,3 +147,4 @@ export function LoginContent() {
     </div>
   );
 }
+

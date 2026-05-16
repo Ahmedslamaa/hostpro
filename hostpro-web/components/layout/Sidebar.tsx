@@ -9,6 +9,7 @@ import type { PlanFeatures } from "@/lib/plans";
 import { getPlan } from "@/lib/plans";
 import { UpgradeModal } from "@/components/ui/UpgradeModal";
 import { LogoMark } from "@/components/ui/LogoMark";
+import { colors, spacing } from "@/lib/design-system";
 import {
   LayoutDashboard, Home, CalendarDays, Calendar,
   MessageSquare, Shield, Users, Settings, LogOut,
@@ -72,12 +73,12 @@ const nav: { group: string; items: NavItem[] }[] = [
   },
 ];
 
-// Badge couleur selon le plan
+// Badge color by plan
 const PLAN_COLORS: Record<string, string> = {
-  trial:      "bg-[#717171] text-white",
-  starter:    "bg-[#0070f3] text-white",
-  pro:        "bg-[#FF5A5F] text-white",
-  enterprise: "bg-[#222222] text-white",
+  trial:      "bg-neutral-600 text-white",
+  starter:    "bg-secondary-500 text-white",
+  pro:        "bg-primary-500 text-white",
+  enterprise: "bg-neutral-900 text-white",
 };
 
 export function Sidebar() {
@@ -102,29 +103,31 @@ export function Sidebar() {
 
   return (
     <>
-      <aside className="w-60 min-h-screen bg-white border-r border-[#DDDDDD] flex flex-col fixed left-0 top-0 h-screen z-30">
+      <aside className="w-60 min-h-screen bg-white border-r border-neutral-200 flex flex-col fixed left-0 top-0 h-screen z-30">
 
-        {/* Logo */}
-        <div className="px-6 py-5 border-b border-[#DDDDDD]">
-          <LogoMark variant="light" size="md" />
-          <div className="text-xs text-[#717171] mt-1">Gestion locative IA</div>
+        {/* Logo - Clickable for navigation to dashboard */}
+        <div className="group px-6 py-5 border-b border-neutral-200 hover:bg-neutral-50 transition-colors duration-200">
+          <LogoMark as="link" href="/dashboard" variant="light" size="md" />
+          <div className="text-xs text-neutral-500 mt-2 group-hover:text-neutral-600 transition-colors duration-200">
+            Gestion locative IA
+          </div>
         </div>
 
         {/* Plan badge */}
         <div className="px-4 pt-3 pb-1">
           <div className={cn(
-            "flex items-center justify-between px-3 py-2 rounded-xl text-xs",
-            isTrialing() ? "bg-amber-50 border border-amber-200" : "bg-[#F7F7F7]"
+            "flex items-center justify-between px-3 py-2 rounded-lg text-xs",
+            isTrialing() ? "bg-yellow-50 border border-yellow-200" : "bg-neutral-100"
           )}>
             <div className="flex items-center gap-2">
-              <span className={cn("font-bold px-1.5 py-0.5 rounded-md text-[10px]", PLAN_COLORS[plan] ?? PLAN_COLORS.trial)}>
+              <span className={cn("font-bold px-1.5 py-0.5 rounded-md text-xs", PLAN_COLORS[plan] ?? PLAN_COLORS.trial)}>
                 {planDef.name.toUpperCase()}
               </span>
-              {isTrialing() && <span className="text-amber-700 font-medium">Essai</span>}
+              {isTrialing() && <span className="text-yellow-700 font-medium text-xs">Essai</span>}
             </div>
             <button
               onClick={() => router.push("/settings/billing")}
-              className="text-[#FF5A5F] font-semibold hover:underline"
+              className="text-primary-500 font-semibold hover:text-primary-600 transition-colors duration-200 text-xs"
             >
               Gérer
             </button>
@@ -132,13 +135,13 @@ export function Sidebar() {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 px-3 py-2 overflow-y-auto">
+        <nav className="flex-1 px-3 py-3 overflow-y-auto scrollbar-thin scrollbar-thumb-neutral-300 scrollbar-track-transparent">
           {nav.map(({ group, items }) => (
-            <div key={group} className="mb-4">
-              <div className="px-3 mb-1 text-[10px] font-bold uppercase tracking-widest text-[#BBBBBB]">
+            <div key={group} className="mb-6">
+              <div className="px-3 mb-2 text-xs font-bold uppercase tracking-wider text-neutral-400">
                 {group}
               </div>
-              <div className="space-y-0.5">
+              <div className="space-y-1">
                 {items.map(({ href, label, icon: Icon, exact, badge, feature }) => {
                   const isActive  = exact ? pathname === href : (pathname === href || pathname.startsWith(href + "/"));
                   const isLocked  = !!feature && !can(feature);
@@ -148,11 +151,11 @@ export function Sidebar() {
                       <button
                         key={href}
                         onClick={() => setUpgradeModal({ open: true, feature })}
-                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-[#BBBBBB] hover:bg-[#F7F7F7] hover:text-[#717171] transition-all"
+                        className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-neutral-400 hover:bg-neutral-100 hover:text-neutral-500 transition-all duration-200"
                       >
                         <Icon size={16} className="flex-shrink-0" />
                         <span className="flex-1 truncate text-left">{label}</span>
-                        <Lock size={12} className="flex-shrink-0 text-[#BBBBBB]" />
+                        <Lock size={12} className="flex-shrink-0 text-neutral-300" />
                       </button>
                     );
                   }
@@ -162,16 +165,16 @@ export function Sidebar() {
                       key={href}
                       href={href}
                       className={cn(
-                        "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all",
+                        "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200",
                         isActive
-                          ? "bg-[#FF5A5F]/10 text-[#FF5A5F] font-semibold"
-                          : "text-[#717171] hover:bg-[#F7F7F7] hover:text-[#222222]"
+                          ? "bg-primary-100 text-primary-600 font-semibold"
+                          : "text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900"
                       )}
                     >
                       <Icon size={16} className="flex-shrink-0" />
                       <span className="flex-1 truncate">{label}</span>
                       {badge && (
-                        <span className="text-[9px] font-black bg-[#FF5A5F] text-white px-1.5 py-0.5 rounded-full">
+                        <span className="text-xs font-bold bg-primary-500 text-white px-2 py-0.5 rounded-full">
                           {badge}
                         </span>
                       )}
@@ -184,21 +187,21 @@ export function Sidebar() {
         </nav>
 
         {/* User section */}
-        <div className="border-t border-[#DDDDDD] p-3">
-          <div className="flex items-center gap-3 px-3 py-2 mb-1 rounded-xl hover:bg-[#F7F7F7] transition-colors">
-            <div className="w-8 h-8 bg-[#FF5A5F]/10 border border-[#FF5A5F]/20 rounded-full flex items-center justify-center flex-shrink-0">
-              <span className="text-[#FF5A5F] text-xs font-bold">
+        <div className="border-t border-neutral-200 p-3 space-y-2">
+          <div className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-neutral-100 transition-colors duration-200 cursor-default">
+            <div className="w-8 h-8 bg-primary-100 border border-primary-200 rounded-full flex items-center justify-center flex-shrink-0">
+              <span className="text-primary-600 text-xs font-bold">
                 {initials(user?.full_name, user?.email)}
               </span>
             </div>
             <div className="flex-1 min-w-0">
-              <div className="text-[#222222] text-sm font-semibold truncate">{user?.full_name || "Utilisateur"}</div>
-              <div className="text-[#717171] text-xs truncate">{user?.email}</div>
+              <div className="text-neutral-900 text-sm font-semibold truncate">{user?.full_name || "Utilisateur"}</div>
+              <div className="text-neutral-500 text-xs truncate">{user?.email}</div>
             </div>
           </div>
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-[#717171] hover:bg-[#F7F7F7] hover:text-[#222222] transition-all"
+            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900 transition-all duration-200"
           >
             <LogOut size={16} />
             Déconnexion

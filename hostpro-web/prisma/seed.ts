@@ -221,7 +221,7 @@ async function main() {
       guest_name: "Marie Dupont",
       guest_email: "marie.dupont@email.fr",
       property_id: "prop-villa-azur",
-      platform: "airbnb",
+      platform_thread_ids: JSON.stringify({ airbnb: "external-thread-123" }),
       status: "open",
     },
   }).catch(() => null);
@@ -229,8 +229,8 @@ async function main() {
   if (thread) {
     await db.message.createMany({
       data: [
-        { thread_id: thread.id, sender: "guest", content: "Bonjour, est-ce que la piscine est disponible tout le séjour ?" },
-        { thread_id: thread.id, sender: "host", content: "Bonjour Marie ! Oui, la piscine est disponible 24h/24 pendant tout votre séjour. À bientôt !" },
+        { thread_id: thread.id, sender: "guest", sender_name: "Marie Dupont", platform: "airbnb", body: "Bonjour, est-ce que la piscine est disponible tout le séjour ?" },
+        { thread_id: thread.id, sender: "host", sender_name: "Property Owner", platform: "airbnb", body: "Bonjour Marie ! Oui, la piscine est disponible 24h/24 pendant tout votre séjour. À bientôt !" },
       ],
     }).catch(() => null);
   }

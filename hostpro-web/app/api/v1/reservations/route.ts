@@ -21,7 +21,19 @@ export async function GET(req: NextRequest) {
     orderBy: { check_in: "desc" },
   });
 
-  return NextResponse.json(reservations);
+  // Normalize for UI compatibility
+  const normalized = reservations.map((r) => ({
+    ...r,
+    // UI aliases
+    reservation_code: r.reference,
+    total_price: r.total_amount,
+    guests: (r.adults ?? 1) + (r.children ?? 0),
+    property_name: r.property?.name ?? "",
+    property_city: r.property?.city ?? "",
+    property: undefined, // flatten
+  }));
+
+  return NextResponse.json(normalized);
 }
 
 export async function POST(req: NextRequest) {

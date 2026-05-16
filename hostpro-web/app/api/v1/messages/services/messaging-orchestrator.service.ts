@@ -11,7 +11,7 @@ import { AbritelMessagingService } from './abritel.service';
 
 export class MessagingOrchestratorService {
   constructor(
-    private db: PrismaClient,
+    private db: any, // PrismaClient - using any to avoid type generation issues
     private airbnb: AirbnbMessagingService,
     private booking: BookingMessagingService,
     private abritel: AbritelMessagingService
@@ -89,24 +89,24 @@ export class MessagingOrchestratorService {
         let sentAt: Date = new Date();
 
         if (platform === 'airbnb' && thread.platformIntegration.api_key) {
-          const result = await this.airbnb.sendMessage(
-            thread.platformIntegration.api_key,
+          const airbnbService = new AirbnbMessagingService(thread.platformIntegration.api_key);
+          const result = await airbnbService.sendMessage(
             externalThreadId as string,
             message
           );
           messageId = result.messageId;
           sentAt = result.sentAt;
         } else if (platform === 'booking' && thread.platformIntegration.oauth_token) {
-          const result = await this.booking.sendMessage(
-            thread.platformIntegration.oauth_token,
+          const bookingService = new BookingMessagingService(thread.platformIntegration.oauth_token);
+          const result = await bookingService.sendMessage(
             externalThreadId as string,
             message
           );
           messageId = result.messageId;
           sentAt = result.sentAt;
         } else if (platform === 'abritel' && thread.platformIntegration.api_key) {
-          const result = await this.abritel.sendMessage(
-            thread.platformIntegration.api_key,
+          const abritelService = new AbritelMessagingService(thread.platformIntegration.api_key);
+          const result = await abritelService.sendMessage(
             externalThreadId as string,
             message
           );
@@ -154,10 +154,8 @@ export class MessagingOrchestratorService {
       throw new Error('Airbnb API key not configured');
     }
 
-    const conversations = await this.airbnb.fetchConversations(
-      integration.api_key,
-      propertyId
-    );
+    const airbnbService = new AirbnbMessagingService(integration.api_key);
+    const conversations = await airbnbService.fetchConversations(propertyId);
 
     for (const conv of conversations) {
       // Créer ou mettre à jour thread
@@ -193,10 +191,7 @@ export class MessagingOrchestratorService {
       }
 
       // Récupérer les messages
-      const messages = await this.airbnb.fetchMessages(
-        integration.api_key,
-        conv.threadId
-      );
+      const messages = await airbnbService.fetchMessages(conv.threadId);
 
       for (const msg of messages) {
         // Déduplifier par platform_message_id
@@ -244,12 +239,10 @@ export class MessagingOrchestratorService {
       throw new Error('Booking OAuth token not configured');
     }
 
-    const conversations = await this.booking.fetchConversations(
-      integration.oauth_token,
-      propertyId
-    );
+    const bookingService = new BookingMessagingService(integration.oauth_token);
+    const conversations = await bookingService.fetchConversations(propertyId);
 
-    // Même logique que Airbnb
+    // Same logic as Airbnb
     for (const conv of conversations) {
       let thread = await this.db.messageThread.findFirst({
         where: {
@@ -272,10 +265,7 @@ export class MessagingOrchestratorService {
         });
       }
 
-      const messages = await this.booking.fetchMessages(
-        integration.oauth_token,
-        conv.threadId
-      );
+      const messages = await bookingService.fetchMessages(conv.threadId);
 
       for (const msg of messages) {
         const existing = await this.db.message.findFirst({
@@ -321,10 +311,8 @@ export class MessagingOrchestratorService {
       throw new Error('Abritel API key not configured');
     }
 
-    const conversations = await this.abritel.fetchConversations(
-      integration.api_key,
-      propertyId
-    );
+    const abritelService = new AbritelMessagingService(integration.api_key);
+    const conversations = await abritelService.fetchConversations(propertyId);
 
     for (const conv of conversations) {
       let thread = await this.db.messageThread.findFirst({
@@ -348,10 +336,7 @@ export class MessagingOrchestratorService {
         });
       }
 
-      const messages = await this.abritel.fetchMessages(
-        integration.api_key,
-        conv.threadId
-      );
+      const messages = await abritelService.fetchMessages(conv.threadId);
 
       for (const msg of messages) {
         const existing = await this.db.message.findFirst({

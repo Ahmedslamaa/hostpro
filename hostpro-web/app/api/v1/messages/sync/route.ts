@@ -1,6 +1,6 @@
 /**
  * POST /api/v1/messages/sync
- * Déclencher la synchronisation des messages
+ * Declencher la synchronisation des messages
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -31,15 +31,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Créer les services
+    // Create services
     const airbnb = new AirbnbMessagingService('');
     const booking = new BookingMessagingService('');
     const abritel = new AbritelMessagingService('');
 
-    // Créer l'orchestrator
+    // Create orchestrator
     const orchestrator = new MessagingOrchestratorService(db, airbnb, booking, abritel);
 
-    // Déclencher la synchronisation
+    // Trigger sync
     const result = await orchestrator.syncPropertyMessages(tenantId, propertyId);
 
     return NextResponse.json({

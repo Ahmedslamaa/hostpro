@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /**
  * POST /api/v1/notifications/subscribe
  * Register device for push notifications
@@ -7,6 +8,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 
 const db = new PrismaClient();
+=======
+import { NextRequest, NextResponse } from "next/server";
+import { db } from "@/lib/db";
+import { getAuthFromRequest } from "@/lib/auth-server";
+>>>>>>> 37e76865155c39a4fea0b6b9d939bb34cc7b078e
 
 export async function POST(req: NextRequest) {
   try {
@@ -58,4 +64,15 @@ export async function POST(req: NextRequest) {
   } finally {
     await db.$disconnect();
   }
+<<<<<<< HEAD
+=======
+
+  await db.pushSubscription.upsert({
+    where: { endpoint },
+    update: { p256dh: keys.p256dh, auth: keys.auth },
+    create: { user_id: auth.sub, endpoint, p256dh: keys.p256dh, auth: keys.auth },
+  });
+
+  return NextResponse.json({ success: true });
+>>>>>>> 37e76865155c39a4fea0b6b9d939bb34cc7b078e
 }

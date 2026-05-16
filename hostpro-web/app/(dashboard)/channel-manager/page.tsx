@@ -116,7 +116,7 @@ function AvailabilityMatrix({ properties, reservations }: { properties: Property
       <div className="bg-white border border-[#DDDDDD] rounded-2xl p-12 text-center">
         <Calendar size={32} className="text-[#DDDDDD] mx-auto mb-3" />
         <p className="font-semibold text-[#222222]">Aucune propriété</p>
-        <p className="text-sm text-[#717171] mt-1">Ajoutez un bien depuis <strong>Propriétés → Ajouter un bien</strong></p>
+        <p className="text-sm text-[#717171] mt-1">Ajoutez un bien depuis <strong>Propriétés  Ajouter un bien</strong></p>
       </div>
     );
   }
@@ -137,7 +137,7 @@ function AvailabilityMatrix({ properties, reservations }: { properties: Property
             <ChevronRight size={14} />
           </button>
           <span className="text-sm font-semibold text-[#222222] ml-2">
-            {days[0].toLocaleDateString("fr-FR", { day: "numeric", month: "long" })} → {days[days.length-1].toLocaleDateString("fr-FR", { day: "numeric", month: "long" })}
+            {days[0].toLocaleDateString("fr-FR", { day: "numeric", month: "long" })}  {days[days.length-1].toLocaleDateString("fr-FR", { day: "numeric", month: "long" })}
           </span>
         </div>
         <div className="flex items-center gap-2">
@@ -325,7 +325,7 @@ function ConnectTab({ properties, feeds, onFeedAdded, onFeedDeleted, onSync }: {
               placeholder="https://www.airbnb.fr/calendar/ical/XXXXXXX.ics?s=..."
               className="w-full border border-[#DDDDDD] rounded-xl px-3 py-2 text-sm outline-none focus:border-[#FF5A5F]" />
             <p className="text-xs text-blue-600 mt-1.5">
-              Airbnb → Calendrier → Exporter le calendrier → Copier le lien iCal
+              Airbnb  Calendrier  Exporter le calendrier  Copier le lien iCal
             </p>
           </div>
           <div>
@@ -372,7 +372,7 @@ function ConnectTab({ properties, feeds, onFeedAdded, onFeedDeleted, onSync }: {
                     <div className="flex items-center justify-between gap-2">
                       <div>
                         <span className="font-bold text-[#222222] text-sm">{meta.name}</span>
-                        <span className="text-xs text-[#717171] ml-2">→ {feed.property.name}</span>
+                        <span className="text-xs text-[#717171] ml-2"> {feed.property.name}</span>
                         <span className={`ml-2 text-xs font-semibold px-2 py-0.5 rounded-full ${feed.direction === "import" ? "bg-blue-50 text-blue-600" : feed.direction === "export" ? "bg-green-50 text-green-600" : "bg-purple-50 text-purple-600"}`}>
                           {feed.direction === "import" ? "↓ Import" : feed.direction === "export" ? "↑ Export" : "↕ Bidirectionnel"}
                         </span>
@@ -394,7 +394,7 @@ function ConnectTab({ properties, feeds, onFeedAdded, onFeedDeleted, onSync }: {
                       <span className="text-xs text-[#717171]">Dernière sync : <strong>{formatSince(feed.last_sync)}</strong></span>
                       {result && (
                         <span className="text-xs text-green-700 bg-green-50 px-2 py-0.5 rounded-full font-semibold">
-                          ✓ {result.imported} importées · {result.skipped} doublons
+                           {result.imported} importées · {result.skipped} doublons
                         </span>
                       )}
                     </div>
@@ -410,10 +410,10 @@ function ConnectTab({ properties, feeds, onFeedAdded, onFeedDeleted, onSync }: {
       <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5">
         <p className="font-bold text-amber-800 text-sm mb-2">Comment trouver votre URL iCal Airbnb ?</p>
         <ol className="space-y-1.5 text-sm text-amber-700">
-          <li>1. Airbnb → <strong>Tableau de bord propriétaire</strong> → Calendrier</li>
+          <li>1. Airbnb  <strong>Tableau de bord propriétaire</strong>  Calendrier</li>
           <li>2. Cliquez sur <strong>Disponibilités</strong> en haut à droite</li>
           <li>3. Faites défiler jusqu'à <strong>Synchroniser les calendriers</strong></li>
-          <li>4. Cliquez sur <strong>Exporter le calendrier</strong> → Copiez le lien</li>
+          <li>4. Cliquez sur <strong>Exporter le calendrier</strong>  Copiez le lien</li>
         </ol>
       </div>
     </div>
@@ -650,7 +650,7 @@ export default function ChannelManagerPage() {
         <div className="flex items-center gap-3">
           {lastSync !== "—" && (
             <span className="text-xs text-[#717171] bg-[#F7F7F7] border border-[#DDDDDD] rounded-xl px-3 py-2">
-              ✓ Synchronisé à {lastSync}
+               Synchronisé à {lastSync}
             </span>
           )}
           <button onClick={handleSyncAll} disabled={syncing || feeds.length === 0}

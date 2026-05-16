@@ -1,0 +1,16 @@
+<svg viewBox="0 0 1050 400" xmlns="http://www.w3.org/2000/svg">
+  <!-- Main rounded rectangle -->
+  <rect x="50" y="50" width="950" height="300" rx="40" fill="none" stroke="#FF6B6B" stroke-width="8"/>
+
+  <!-- Left section (HOST) - Coral/Red background -->
+  <path d="M 90 90 Q 90 50 130 50 L 550 50 L 550 350 L 130 350 Q 90 350 90 310 Z" fill="#FF6B6B"/>
+
+  <!-- Right section (PRO) - White background -->
+  <path d="M 550 50 L 910 50 Q 950 50 950 90 L 950 310 Q 950 350 910 350 L 550 350 Z" fill="white"/>
+
+  <!-- HOST text - White -->
+  <text x="280" y="260" font-size="180" font-weight="900" font-family="Arial, sans-serif" fill="white" text-anchor="middle">HOST</text>
+
+  <!-- PRO text - Coral -->
+  <text x="730" y="260" font-size="180" font-weight="900" font-family="Arial, sans-serif" fill="#FF6B6B" text-anchor="middle">PRO</text>
+</svg>

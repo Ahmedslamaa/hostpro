@@ -39,8 +39,8 @@ const PLATFORMS = [
     description: "Synchronisez vos réservations et calendriers Airbnb.",
     popular: true,
     instructions: [
-      "Allez dans Airbnb → votre annonce → Calendrier",
-      'Cliquez sur "Disponibilité" → "Connecter des calendriers"',
+      "Allez dans Airbnb  votre annonce  Calendrier",
+      'Cliquez sur "Disponibilité"  "Connecter des calendriers"',
       'Copiez l\'URL sous "Exporter le calendrier"',
     ],
   },
@@ -55,7 +55,7 @@ const PLATFORMS = [
     popular: true,
     instructions: [
       "Connectez-vous à votre Extranet Booking.com",
-      'Allez dans Calendrier → "Synchronisation iCal"',
+      'Allez dans Calendrier  "Synchronisation iCal"',
       'Copiez le lien "Exporter le calendrier"',
     ],
   },
@@ -70,7 +70,7 @@ const PLATFORMS = [
     popular: true,
     instructions: [
       "Connectez-vous à votre espace propriétaire Abritel",
-      'Allez dans Calendrier → "Synchronisation"',
+      'Allez dans Calendrier  "Synchronisation"',
       "Copiez l'URL iCal Export",
     ],
   },

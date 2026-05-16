@@ -95,7 +95,7 @@ export default function OnboardingPage() {
           onClick={() => router.replace("/dashboard")}
           className="text-sm text-[#717171] hover:text-[#222222] transition-colors"
         >
-          Passer →
+          Passer 
         </button>
       </div>
 
@@ -110,7 +110,7 @@ export default function OnboardingPage() {
                 <Sparkles size={36} className="text-[#FF5A5F]" />
               </div>
               <h1 className="text-3xl font-black text-[#222222] mb-3">
-                Bienvenue, {firstName} ! 🎉
+                Bienvenue, {firstName} ! 
               </h1>
               <p className="text-[#717171] text-lg mb-2">
                 Votre essai gratuit de <span className="font-bold text-[#222222]">14 jours</span> commence maintenant.
@@ -287,7 +287,7 @@ export default function OnboardingPage() {
                       <div className="flex-1">
                         <div className="font-semibold text-sm text-[#222222]">{p.name}</div>
                         <div className="text-xs text-[#717171] mt-0.5">
-                          {isConnected ? "✓ Calendriers synchronisés" : "Synchronisation des calendriers et réservations"}
+                          {isConnected ? " Calendriers synchronisés" : "Synchronisation des calendriers et réservations"}
                         </div>
                       </div>
                       <button
@@ -349,7 +349,7 @@ export default function OnboardingPage() {
                 <div className="w-24 h-24 bg-green-50 border-2 border-green-200 rounded-3xl flex items-center justify-center">
                   <CheckCircle size={44} className="text-green-500" />
                 </div>
-                <div className="absolute -top-2 -right-2 text-2xl">🎉</div>
+                <div className="absolute -top-2 -right-2 text-2xl"></div>
               </div>
               <h1 className="text-3xl font-black text-[#222222] mb-3">Tout est prêt !</h1>
               <p className="text-[#717171] text-lg mb-2">

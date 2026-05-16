@@ -58,7 +58,7 @@ export default function LandingPage() {
         <div className="hero-cta flex flex-col sm:flex-row gap-4 justify-center mb-6">
           <Link href="/register"
             className="hp-btn-press hp-pulse-btn bg-primary-500 hover:bg-primary-600 text-white font-semibold px-8 py-4 rounded-xl text-base transition-colors">
-            Commencer gratuitement →
+            Commencer gratuitement 
           </Link>
           <a href="#fonctionnalites"
             className="hp-btn-press border border-neutral-200 text-neutral-900 font-semibold px-8 py-4 rounded-xl text-base hover:bg-neutral-100 transition-colors">
@@ -142,9 +142,9 @@ export default function LandingPage() {
             {[
               { icon: "🤖", title: "IA Francophone", desc: "Réponses automatiques personnalisées, optimisation dynamique des prix et prédictions d'occupation." },
               { icon: "⚖️", title: "Conformité loi Le Meur", desc: "Numéros d'enregistrement, déclarations en mairie, taxe de séjour et plafonds gérés automatiquement." },
-              { icon: "🔄", title: "Sync Multi-plateformes", desc: "Calendriers, tarifs et disponibilités synchronisés en temps réel via APIs officielles certifiées." },
-              { icon: "⚙️", title: "Automatisation totale", desc: "Check-in/out automatisés, coordination des équipes, planification de la maintenance." },
-              { icon: "📊", title: "Reporting & Analytics", desc: "Tableaux de bord en temps réel, revenus par bien, taux d'occupation, exports comptables." },
+              { icon: "", title: "Sync Multi-plateformes", desc: "Calendriers, tarifs et disponibilités synchronisés en temps réel via APIs officielles certifiées." },
+              { icon: "", title: "Automatisation totale", desc: "Check-in/out automatisés, coordination des équipes, planification de la maintenance." },
+              { icon: "", title: "Reporting & Analytics", desc: "Tableaux de bord en temps réel, revenus par bien, taux d'occupation, exports comptables." },
               { icon: "💬", title: "Messagerie Unifiée", desc: "Inbox centralisé pour toutes vos plateformes, templates intelligents et historique complet." },
             ].map((f, i) => (
               <div key={i} className="hp-card bg-white border border-neutral-200 rounded-2xl p-6">
@@ -185,7 +185,7 @@ export default function LandingPage() {
               <div className="px-3 py-3 border-b border-neutral-200 mb-2">
                 <LogoMark variant="light" size="sm" />
               </div>
-              {[["📊","Dashboard",true],["🏠","Propriétés",false],["📅","Calendrier",false],["💬","Messages",false],["⚖️","Conformité",false],["👥","Équipe",false]].map(([icon, label, active], i) => (
+              {[["","Dashboard",true],["","Propriétés",false],["","Calendrier",false],["💬","Messages",false],["⚖️","Conformité",false],["👥","Équipe",false]].map(([icon, label, active], i) => (
                 <div key={i} className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium mb-0.5 cursor-pointer ${active ? "bg-primary-500/10 text-primary-500" : "text-neutral-500 hover:bg-neutral-100"}`}>
                   <span>{icon}</span> {label}
                 </div>
@@ -193,7 +193,7 @@ export default function LandingPage() {
             </div>
             <div className="flex-1 bg-neutral-100 p-5">
               <div className="flex items-center justify-between mb-4">
-                <div className="font-bold text-neutral-900 text-sm">Bonjour, Marie-Christine 👋</div>
+                <div className="font-bold text-neutral-900 text-sm">Bonjour, Marie-Christine </div>
                 <div className="text-xs text-neutral-500 bg-white border border-neutral-200 rounded-lg px-3 py-1.5">Mai 2026 ▾</div>
               </div>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
@@ -271,7 +271,7 @@ export default function LandingPage() {
                 <ul className="space-y-2.5 mb-8">
                   {plan.feats.map((f) => (
                     <li key={f} className="flex items-center gap-2 text-sm text-neutral-900">
-                      <span className="text-primary-500 font-bold">✓</span> {f}
+                      <span className="text-primary-500 font-bold"></span> {f}
                     </li>
                   ))}
                   {plan.no.map((f) => (
@@ -363,12 +363,12 @@ export default function LandingPage() {
             </p>
             <Link href="/register"
               className="hp-btn-press inline-block bg-white text-primary-500 font-bold px-8 py-4 rounded-xl text-base hover:bg-neutral-100 transition-all shadow-lg shadow-black/10">
-              Démarrer mon essai gratuit →
+              Démarrer mon essai gratuit 
             </Link>
             <div className="flex flex-wrap justify-center gap-6 mt-8">
               {["14 jours gratuits","Sans carte bancaire","Config en 10 min","Support en français"].map((f) => (
                 <div key={f} className="flex items-center gap-1.5 text-white/80 text-sm">
-                  <span className="font-bold text-white">✓</span> {f}
+                  <span className="font-bold text-white"></span> {f}
                 </div>
               ))}
             </div>

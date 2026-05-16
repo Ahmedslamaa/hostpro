@@ -58,7 +58,7 @@ export function LoginContent() {
             ].map((item, i) => (
               <div key={i} className="flex items-start gap-3">
                 <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <span className="text-white text-xs font-bold">✓</span>
+                  <span className="text-white text-xs font-bold"></span>
                 </div>
                 <span className="text-white/90 text-sm leading-relaxed">{item}</span>
               </div>

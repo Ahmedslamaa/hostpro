@@ -169,7 +169,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       onClick={() => { router.push("/compliance"); setNotifOpen(false); }}
                       className="text-xs text-primary-500 font-medium hover:text-primary-600 transition-colors"
                     >
-                      Voir toutes les alertes →
+                      Voir toutes les alertes 
                     </button>
                   </div>
                 </div>

@@ -66,7 +66,7 @@ export function sendWelcomeEmail(to: string, name: string): Promise<SendResult> 
         <p style="color:#6b7280;font-size:13px;">En cas de problème, contactez-nous à support@hostpro.fr</p>
       </div>
     </div>`;
-  return sendEmail(to, "Bienvenue sur HostPro 🏠", html);
+  return sendEmail(to, "Bienvenue sur HostPro ", html);
 }
 
 export function sendPasswordResetEmail(

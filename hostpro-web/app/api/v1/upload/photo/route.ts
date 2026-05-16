@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Fichier trop volumineux (max 5 Mo)" }, { status: 400 });
     }
 
-    // Sauvegarder sur disque (en prod → Azure Blob Storage)
+    // Sauvegarder sur disque (en prod  Azure Blob Storage)
     await mkdir(UPLOAD_DIR, { recursive: true });
     const ext = file.name.split(".").pop() ?? "jpg";
     const filename = `${property_id}-${Date.now()}.${ext}`;

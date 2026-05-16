@@ -202,7 +202,7 @@ export function PropertyDetailContent({ id }: { id: string }) {
                   <div key={r.id} className="flex items-center justify-between py-2 border-b border-[#F7F7F7] last:border-0">
                     <div>
                       <p className="text-sm font-semibold text-[#222222]">{r.guest_name}</p>
-                      <p className="text-xs text-[#717171]">{r.check_in} → {r.check_out}</p>
+                      <p className="text-xs text-[#717171]">{r.check_in}  {r.check_out}</p>
                     </div>
                     <span className={`text-xs px-2 py-1 rounded-full font-semibold ${
                       r.status === "confirmed" ? "bg-green-100 text-green-700" :

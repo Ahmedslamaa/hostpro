@@ -1,11 +1,10 @@
 import React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 /**
- * HostPro logotype — "HOST" + "PRO" in coral rectangle.
- * variant="light"  → HOST (dark) + PRO (coral bg, white text)   [on white/grey backgrounds]
- * variant="dark"   → HOST (white) + PRO (white bg, coral text)  [on dark/coral backgrounds]
+ * HostPro logotype — Professional logo with HOST + PRO design
  */
 interface LogoMarkProps {
   variant?: "light" | "dark";
@@ -17,10 +16,10 @@ interface LogoMarkProps {
 }
 
 const SIZES = {
-  sm: { wrap: "text-base", pro: "text-xs px-2 py-1 rounded-md" },
-  md: { wrap: "text-xl", pro: "text-sm px-2.5 py-1.5 rounded-lg" },
-  lg: { wrap: "text-3xl", pro: "text-base px-3.5 py-2 rounded-lg" },
-  xl: { wrap: "text-4xl", pro: "text-lg px-4 py-2.5 rounded-xl" },
+  sm: { width: 120, height: 45 },
+  md: { width: 160, height: 60 },
+  lg: { width: 200, height: 75 },
+  xl: { width: 240, height: 90 },
 };
 
 const LogoMark = React.forwardRef<HTMLDivElement | HTMLAnchorElement, LogoMarkProps>(
@@ -40,30 +39,18 @@ const LogoMark = React.forwardRef<HTMLDivElement | HTMLAnchorElement, LogoMarkPr
     const logoContent = (
       <div
         className={cn(
-          "font-black tracking-tighter flex items-center gap-2 leading-none select-none",
-          s.wrap,
+          "select-none inline-block",
           className
         )}
       >
-        <span
-          className={cn(
-            "transition-colors duration-200",
-            variant === "light" ? "text-neutral-900" : "text-white"
-          )}
-        >
-          HOST
-        </span>
-        <span
-          className={cn(
-            "tracking-wider leading-none font-black transition-all duration-200",
-            s.pro,
-            variant === "light"
-              ? "bg-primary-500 text-white hover:bg-primary-600"
-              : "bg-white text-primary-500 hover:bg-neutral-50"
-          )}
-        >
-          PRO
-        </span>
+        <Image
+          src="/hostpro-logo.svg"
+          alt="HOST PRO"
+          width={s.width}
+          height={s.height}
+          priority
+          className="w-full h-auto"
+        />
       </div>
     );
 

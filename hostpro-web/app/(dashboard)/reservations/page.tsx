@@ -244,7 +244,7 @@ export default function ReservationsPage() {
 
                       {/* Dates */}
                       <td className="px-5 py-4 text-neutral-500 whitespace-nowrap">
-                        {formatDate(r.check_in)} → {formatDate(r.check_out)}
+                        {formatDate(r.check_in)}  {formatDate(r.check_out)}
                       </td>
 
                       {/* Durée */}

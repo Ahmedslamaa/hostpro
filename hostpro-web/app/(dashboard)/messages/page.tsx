@@ -90,14 +90,14 @@ const MOCK: Conversation[] = [
   },
   {
     id: "c3", guestName: "Anna Kowalski", property: "Villa Azur",
-    channel: "whatsapp", lastMessage: "Parfait merci beaucoup ! 😊",
+    channel: "whatsapp", lastMessage: "Parfait merci beaucoup ! ",
     lastTs: new Date(Date.now() - 35 * 60000), unread: 0, status: "resolved",
     tags: ["wifi"], botEnabled: true,
     checkIn: "20 mai", checkOut: "25 mai",
     messages: [
       { id: "m1", body: "Bonjour, quel est le mot de passe wifi ?", sender: "guest", timestamp: new Date(Date.now() - 42 * 60000) },
       { id: "m2", body: "Bonjour Anna ! Le mot de passe WiFi est : VillaAzur2024 🔑\nN'hésitez pas si vous avez besoin d'autre chose !", sender: "bot", timestamp: new Date(Date.now() - 40 * 60000), status: "read" },
-      { id: "m3", body: "Parfait merci beaucoup ! 😊", sender: "guest", timestamp: new Date(Date.now() - 35 * 60000) },
+      { id: "m3", body: "Parfait merci beaucoup ! ", sender: "guest", timestamp: new Date(Date.now() - 35 * 60000) },
     ],
   },
   {
@@ -127,19 +127,19 @@ const MOCK: Conversation[] = [
 ];
 
 const TEMPLATES = [
-  { label: "Bienvenue", body: "Bonjour ! Merci pour votre réservation 🏠 Votre séjour est confirmé. N'hésitez pas si vous avez des questions !" },
+  { label: "Bienvenue", body: "Bonjour ! Merci pour votre réservation  Votre séjour est confirmé. N'hésitez pas si vous avez des questions !" },
   { label: "Code d'accès", body: "Voici votre code d'accès : 🔑 Code : XXXX\nLa boîte à clés se trouve à l'entrée principale." },
-  { label: "Check-in", body: "Informations pour votre arrivée :\n🏠 L'adresse est indiquée dans la réservation\n🔑 Code d'accès : XXXX\n📶 WiFi : HostPro_Guest / Password2024\n🅿️ Parking inclus" },
+  { label: "Check-in", body: "Informations pour votre arrivée :\n L'adresse est indiquée dans la réservation\n🔑 Code d'accès : XXXX\n📶 WiFi : HostPro_Guest / Password2024\n🅿️ Parking inclus" },
   { label: "Recommandations", body: "Nos coups de cœur :\n🍽️ Restaurant : Le Café du Port\n☕ Bar : La Terrasse Bleue\n🛍️ Marché : Tous les mardis matin" },
   { label: "Avant départ", body: "Votre séjour se termine demain. Merci de laisser les clés dans la boîte et de vérifier que les fenêtres sont fermées. Bon retour !" },
-  { label: "Demande d'avis", body: "Nous espérons que votre séjour s'est très bien passé ! 😊 Si vous avez été satisfait, nous serions ravis de recevoir votre avis. Merci !" },
+  { label: "Demande d'avis", body: "Nous espérons que votre séjour s'est très bien passé !  Si vous avez été satisfait, nous serions ravis de recevoir votre avis. Merci !" },
 ];
 
 const AI_SUGGESTIONS: Record<string, string[]> = {
   parking: ["Oui, la propriété dispose d'un parking privé sécurisé, entièrement inclus dans votre réservation. 🚗 Code portail : 1234", "Le parking est gratuit et sécurisé sur place. Vous trouverez l'accès via le portail automatique."],
   "check-in": ["Le check-in est disponible à partir de 15h. Si vous arrivez plus tard, la boîte à clés est accessible 24h/24.", "Parfait ! Check-in à 15h. Je vous enverrai le code d'accès la veille de votre arrivée."],
-  restaurants: ["Avec plaisir ! Nos coups de cœur :\n🍽️ La Palme d'Or (gastronomique)\n🍕 Chez Panisse (méditerranéen)\n🥐 Boulangerie du Port (petit-déj) 😊", "Bien sûr ! Restaurant recommandé :\n- Le Jardin des Saveurs (à 300m)\n- Casa del Mare (vue mer, 5 min)\n- La Bonne Table (traditionnel)"],
-  wifi: ["Le mot de passe WiFi est : HostPro_2024 📶\nN'hésitez pas si vous avez besoin d'autre chose !", "Connexion WiFi :\nRéseau : HostPro_Guest\nMot de passe : Welcome2024\nBonne connexion ! 😊"],
+  restaurants: ["Avec plaisir ! Nos coups de cœur :\n🍽️ La Palme d'Or (gastronomique)\n🍕 Chez Panisse (méditerranéen)\n🥐 Boulangerie du Port (petit-déj) ", "Bien sûr ! Restaurant recommandé :\n- Le Jardin des Saveurs (à 300m)\n- Casa del Mare (vue mer, 5 min)\n- La Bonne Table (traditionnel)"],
+  wifi: ["Le mot de passe WiFi est : HostPro_2024 📶\nN'hésitez pas si vous avez besoin d'autre chose !", "Connexion WiFi :\nRéseau : HostPro_Guest\nMot de passe : Welcome2024\nBonne connexion ! "],
 };
 
 // ── Channel config ─────────────────────────────────────────────────────────────
@@ -318,7 +318,7 @@ export default function MessagesPage() {
 
   const getAI = () => {
     const last = sel?.messages.filter(m => m.sender === "guest").pop();
-    if (!last) return ["Bonjour ! Comment puis-je vous aider ? 😊", "Merci pour votre message, je reviens vers vous rapidement."];
+    if (!last) return ["Bonjour ! Comment puis-je vous aider ? ", "Merci pour votre message, je reviens vers vous rapidement."];
     for (const [kw, sugg] of Object.entries(AI_SUGGESTIONS)) {
       if (last.body.toLowerCase().includes(kw)) return sugg;
 >>>>>>> 37e76865155c39a4fea0b6b9d939bb34cc7b078e
@@ -521,7 +521,7 @@ export default function MessagesPage() {
               </div>
               <div className="flex items-center gap-3 text-xs text-neutral-500 mt-0.5">
                 <span className="flex items-center gap-1"><Home size={10} />{sel.property}</span>
-                {sel.checkIn && <span>📅 {sel.checkIn} → {sel.checkOut}</span>}
+                {sel.checkIn && <span> {sel.checkIn}  {sel.checkOut}</span>}
                 {sel.reservationId && <span className="font-mono text-neutral-300">{sel.reservationId}</span>}
               </div>
             </div>

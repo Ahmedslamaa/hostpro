@@ -35,10 +35,7 @@ function EmptyDashboard() {
   const router = useRouter();
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
-      <div className="w-20 h-20 bg-primary-50 border-2 border-primary-100 rounded-3xl flex items-center justify-center mb-6">
-        <Sparkles size={36} className="text-primary-500" />
-      </div>
-      <h2 className="text-3xl font-black text-neutral-900 mb-2">Bienvenue sur HOSTPRO !</h2>
+      <h2 className="text-3xl font-bold text-neutral-900 mb-3">Bienvenue sur HOST PRO</h2>
       <p className="text-neutral-600 mb-10 max-w-md text-base">
         Votre tableau de bord est vide pour l'instant. Commencez par ajouter votre première propriété pour débloquer toutes les fonctionnalités.
       </p>
@@ -327,7 +324,7 @@ export function DashboardContent() {
                       {r.guest_name || "Voyageur"} — {r.property_name}
                     </div>
                     <div className="text-xs text-neutral-600">
-                      {formatDateShort(r.check_in)} → {formatDateShort(r.check_out)} · {r.nights} nuit
+                      {formatDateShort(r.check_in)}  {formatDateShort(r.check_out)} · {r.nights} nuit
                       {r.nights > 1 ? "s" : ""}
                     </div>
                   </div>

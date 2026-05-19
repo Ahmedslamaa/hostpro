@@ -95,29 +95,92 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const markAllRead = () =>
     setReadNotifs(new Set<string>(alerts.map((_, i) => String(i))));
 
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQ, setSearchQ] = useState("");
+
+  // Command palette keyboard shortcut
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") { e.preventDefault(); setSearchOpen(true); }
+      if (e.key === "Escape") { setSearchOpen(false); setSearchQ(""); }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  const PAGE_ICONS: Record<string, string> = {
+    "/dashboard": "◐", "/properties": "◇", "/reservations": "◑",
+    "/calendar": "◉", "/messages": "💬", "/analytics": "◎",
+    "/automation": "⚡", "/assistant": "✦", "/pricing": "◈",
+    "/team": "◬", "/settings": "⚙",
+  };
+  const pageIcon = PAGE_ICONS[pathname] || PAGE_ICONS[Object.keys(PAGE_ICONS).find(k => k !== "/" && pathname.startsWith(k + "/")) || ""] || "◐";
+
+  const searchItems = Object.entries(PAGE_TITLES).map(([href, label]) => ({ href, label }));
+  const filteredItems = searchItems.filter(i => i.label.toLowerCase().includes(searchQ.toLowerCase()));
+
   return (
-    <div className="flex min-h-screen bg-neutral-50 dark:bg-neutral-900">
+    <div style={{ display: "flex", minHeight: "100vh", background: "#E0E0E0" }}>
       <Sidebar />
-      <div className="flex-1 lg:ml-60 flex flex-col min-h-screen">
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: "100vh", minWidth: 0 }}>
 
         {/* ── Top header ──────────────────────────────────────────── */}
-        <header className="bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700 px-4 lg:px-8 py-5 flex items-center justify-between sticky top-0 z-30 shadow-sm">
-          <button onClick={() => {}} className="lg:hidden"><MobileMenu /></button>
-          <h1 className="text-2xl font-bold text-neutral-900 dark:text-white">{pageTitle}</h1>
+        <header style={{
+          padding: "14px 24px",
+          borderBottom: "1px solid rgba(0,0,0,0.06)",
+          background: "rgba(255,255,255,0.75)",
+          backdropFilter: "blur(10px)",
+          WebkitBackdropFilter: "blur(10px)",
+          display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16,
+          position: "sticky", top: 0, zIndex: 30,
+        }}>
+          {/* Left: page identity */}
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <div style={{
+              width: 32, height: 32, borderRadius: 10,
+              background: "rgba(224,32,96,0.08)",
+              color: "#E02060",
+              display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15,
+            }}>{pageIcon}</div>
+            <div>
+              <div style={{ fontFamily: "'JetBrains Mono', ui-monospace, monospace", fontSize: 9, color: "#6B5A60", letterSpacing: "0.15em" }}>HOST PRO</div>
+              <div style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontWeight: 700, fontSize: 17, letterSpacing: "-0.02em", color: "#1A0E12" }}>{pageTitle}</div>
+            </div>
+          </div>
 
-          <div className="flex items-center gap-2">
+          {/* Center: search bar */}
+          <button
+            onClick={() => setSearchOpen(true)}
+            style={{
+              display: "flex", alignItems: "center", gap: 10,
+              background: "white", borderRadius: 10, padding: "8px 14px",
+              border: "1px solid rgba(0,0,0,0.08)", fontSize: 13, color: "#6B5A60",
+              flex: 1, maxWidth: 380, cursor: "pointer",
+              fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+            }}>
+            <span>⌕</span>
+            <span style={{ flex: 1, textAlign: "left" }}>Rechercher logement, réservation…</span>
+            <span style={{ fontFamily: "'JetBrains Mono', ui-monospace, monospace", fontSize: 9, padding: "2px 6px", background: "rgba(0,0,0,0.05)", borderRadius: 4 }}>⌘K</span>
+          </button>
 
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
             {/* ── Notifications bell ── */}
             <div ref={notifRef} className="relative">
               <button
                 onClick={() => { setNotifOpen((v) => !v); setProfileOpen(false); }}
-                className="w-10 h-10 rounded-lg border border-neutral-200 flex items-center justify-center text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900 transition-all duration-200 relative"
+                style={{
+                  width: 36, height: 36, borderRadius: 10,
+                  background: "transparent", border: "1px solid rgba(0,0,0,0.08)",
+                  cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+                  color: "#6B5A60", position: "relative",
+                }}
               >
-                <Bell size={18} />
+                <Bell size={16} />
                 {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-primary-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1 leading-none">
-                    {unreadCount}
-                  </span>
+                  <span style={{
+                    position: "absolute", top: 4, right: 4,
+                    width: 7, height: 7, borderRadius: 99, background: "#E02060",
+                  }} />
                 )}
               </button>
 
@@ -176,51 +239,61 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               )}
             </div>
 
+            {/* ── + Action button ── */}
+            <button
+              onClick={() => router.push("/reservations/new")}
+              style={{
+                background: "#1A0E12", color: "#F4F2F0",
+                border: "none", borderRadius: 10, padding: "9px 14px",
+                fontSize: 12, fontWeight: 600, cursor: "pointer",
+                fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+              }}
+            >+ Action</button>
+
             {/* ── Profile menu ── */}
             <div ref={profileRef} className="relative">
               <button
                 onClick={() => { setProfileOpen((v) => !v); setNotifOpen(false); }}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-neutral-100 transition-colors duration-200 group"
+                style={{
+                  display: "flex", alignItems: "center", gap: 8,
+                  padding: "7px 10px", borderRadius: 10,
+                  background: "transparent", border: "1px solid rgba(0,0,0,0.08)",
+                  cursor: "pointer",
+                }}
               >
-                <div className="w-8 h-8 bg-primary-100 border border-primary-200 rounded-full flex items-center justify-center">
-                  <span className="text-primary-600 text-xs font-bold">
-                    {initials(user?.full_name, user?.email)}
-                  </span>
+                <div style={{
+                  width: 28, height: 28, borderRadius: 99,
+                  background: "linear-gradient(140deg, #E04060, #C00040)",
+                  color: "white", display: "flex", alignItems: "center", justifyContent: "center",
+                  fontWeight: 700, fontSize: 11,
+                }}>
+                  {initials(user?.full_name, user?.email)}
                 </div>
-                <ChevronDown size={14} className={`text-neutral-600 transition-transform duration-200 ${profileOpen ? "rotate-180" : ""}`} />
+                <ChevronDown size={12} color="#6B5A60" style={{ transition: "transform 0.2s", transform: profileOpen ? "rotate(180deg)" : "rotate(0)" }} />
               </button>
 
               {profileOpen && (
                 <div className="absolute right-0 top-12 w-56 bg-white border border-neutral-200 rounded-xl shadow-lg overflow-hidden z-50">
-                  <div className="px-4 py-3 border-b border-neutral-200 bg-neutral-50">
-                    <p className="text-sm font-semibold text-neutral-900 truncate">{user?.full_name || "Utilisateur"}</p>
-                    <p className="text-xs text-neutral-600 truncate">{user?.email}</p>
+                  <div className="px-4 py-3 border-b border-neutral-200" style={{ background: "#F4F2F0" }}>
+                    <p className="text-sm font-semibold truncate" style={{ color: "#1A0E12" }}>{user?.full_name || "Utilisateur"}</p>
+                    <p className="text-xs truncate" style={{ color: "#6B5A60", fontFamily: "'JetBrains Mono', ui-monospace, monospace" }}>{user?.email}</p>
                   </div>
 
                   <div className="py-1">
-                    <button
-                      onClick={() => { router.push("/settings"); setProfileOpen(false); }}
-                      className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-neutral-900 hover:bg-neutral-50 transition-colors duration-150"
-                    >
-                      <User size={14} className="text-neutral-600" />
-                      Mon profil
+                    <button onClick={() => { router.push("/settings"); setProfileOpen(false); }}
+                      className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-neutral-50 transition-colors duration-150" style={{ color: "#1A0E12" }}>
+                      <User size={14} color="#6B5A60" /> Mon profil
                     </button>
-                    <button
-                      onClick={() => { router.push("/settings/billing"); setProfileOpen(false); }}
-                      className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-neutral-900 hover:bg-neutral-50 transition-colors duration-150"
-                    >
-                      <Settings size={14} className="text-neutral-600" />
-                      Paramètres
+                    <button onClick={() => { router.push("/settings/billing"); setProfileOpen(false); }}
+                      className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-neutral-50 transition-colors duration-150" style={{ color: "#1A0E12" }}>
+                      <Settings size={14} color="#6B5A60" /> Paramètres
                     </button>
                   </div>
 
                   <div className="border-t border-neutral-200 py-1">
-                    <button
-                      onClick={handleLogout}
-                      className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-danger hover:bg-red-50 transition-colors duration-150 font-medium"
-                    >
-                      <LogOut size={14} />
-                      Déconnexion
+                    <button onClick={handleLogout}
+                      className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-red-50 transition-colors duration-150 font-medium" style={{ color: "#C00040" }}>
+                      <LogOut size={14} /> Déconnexion
                     </button>
                   </div>
                 </div>
@@ -230,10 +303,56 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </header>
 
         {/* ── Page content ── */}
-        <main className="flex-1 p-8 overflow-auto">
+        <main className="flex-1 overflow-auto" style={{ padding: "0" }}>
           {children}
         </main>
       </div>
+
+      {/* ── Command palette ── */}
+      {searchOpen && (
+        <div
+          onClick={() => { setSearchOpen(false); setSearchQ(""); }}
+          style={{
+            position: "fixed", inset: 0, background: "rgba(26,14,18,0.45)",
+            backdropFilter: "blur(4px)", zIndex: 50,
+            display: "flex", alignItems: "flex-start", justifyContent: "center", paddingTop: 80,
+          }}
+        >
+          <div onClick={(e) => e.stopPropagation()} style={{
+            background: "white", width: 520, borderRadius: 16,
+            boxShadow: "0 30px 60px -20px rgba(0,0,0,0.4)",
+            overflow: "hidden",
+          }}>
+            <input
+              autoFocus
+              value={searchQ}
+              onChange={(e) => setSearchQ(e.target.value)}
+              placeholder="Que cherchez-vous ?"
+              style={{
+                width: "100%", padding: "16px 20px",
+                border: "none", outline: "none", fontSize: 14,
+                borderBottom: "1px solid rgba(0,0,0,0.06)",
+                fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+              }}
+            />
+            <div style={{ padding: 8, maxHeight: 320, overflow: "auto" }}>
+              {filteredItems.map((it) => (
+                <div
+                  key={it.href}
+                  onClick={() => { router.push(it.href); setSearchOpen(false); setSearchQ(""); }}
+                  style={{ padding: "10px 12px", borderRadius: 8, cursor: "pointer", display: "flex", alignItems: "center", gap: 10, fontSize: 13 }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(0,0,0,0.04)")}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                >
+                  <span style={{ width: 22, color: "#6B5A60" }}>{PAGE_ICONS[it.href] || "◇"}</span>
+                  <span style={{ flex: 1, color: "#1A0E12", fontWeight: 500 }}>{it.label}</span>
+                  <span style={{ fontFamily: "'JetBrains Mono', ui-monospace, monospace", fontSize: 9, color: "#6B5A60" }}>Enter</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Global toasts ── */}
       <ToastContainer />

@@ -88,6 +88,7 @@ export function Sidebar() {
   const { can, plan, isTrialing, limit } = useSubscriptionStore();
 
   const [upgradeModal, setUpgradeModal] = useState<{ open: boolean; feature?: keyof PlanFeatures }>({ open: false });
+  const [collapsed, setCollapsed] = useState(false);
 
   const handleLogout = () => {
     logout();
@@ -104,57 +105,94 @@ export function Sidebar() {
   return (
     <>
       {/* ── Sidebar — Host Pro design system ── */}
-      <aside className="w-60 min-h-screen bg-white flex flex-col fixed left-0 top-0 h-screen z-30"
-        style={{ borderRight: "1px solid rgba(0,0,0,0.06)" }}>
+      <aside
+        className="bg-white flex flex-col"
+        style={{
+          borderRight: "1px solid rgba(0,0,0,0.06)",
+          width: collapsed ? 72 : 240,
+          minWidth: collapsed ? 72 : 240,
+          transition: "width 0.2s cubic-bezier(0.16,1,0.3,1), min-width 0.2s cubic-bezier(0.16,1,0.3,1)",
+          overflow: "hidden",
+          position: "sticky",
+          top: 0,
+          height: "100vh",
+          flexShrink: 0,
+          zIndex: 30,
+        }}>
 
-        {/* Logo */}
-        <div className="px-6 py-5" style={{ borderBottom: "1px solid rgba(0,0,0,0.06)" }}>
-          <LogoMark as="link" href="/dashboard" variant="light" size="md" />
-          <div className="text-xs mt-1.5 hp-font-mono" style={{ color: "#6B5A60", letterSpacing: "0.05em" }}>
-            Gestion locative IA
-          </div>
+        {/* Logo + collapse toggle */}
+        <div style={{
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          padding: collapsed ? "18px 10px" : "18px 14px",
+          borderBottom: "1px solid rgba(0,0,0,0.06)",
+          minHeight: 70,
+        }}>
+          {!collapsed && (
+            <div>
+              <LogoMark as="link" href="/dashboard" variant="light" size="md" />
+              <div className="hp-font-mono" style={{ fontSize: 9, color: "#6B5A60", letterSpacing: "0.12em", marginTop: 2 }}>
+                Gestion locative IA
+              </div>
+            </div>
+          )}
+          <button
+            onClick={() => setCollapsed((c) => !c)}
+            style={{
+              width: 28, height: 28, borderRadius: 8,
+              background: "rgba(0,0,0,0.04)", border: "none",
+              cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+              color: "#6B5A60", fontSize: 13, flexShrink: 0,
+              marginLeft: collapsed ? "auto" : 0,
+            }}
+            title={collapsed ? "Développer" : "Réduire"}
+          >
+            {collapsed ? "→" : "←"}
+          </button>
         </div>
 
         {/* Plan badge */}
-        <div className="px-4 pt-3 pb-1">
-          <div className={cn(
-            "flex items-center justify-between px-3 py-2 rounded-xl text-xs",
-            isTrialing()
-              ? "border"
-              : ""
-          )}
-            style={isTrialing()
-              ? { background: "rgba(224,192,128,0.15)", borderColor: "rgba(192,160,96,0.3)" }
-              : { background: "rgba(26,14,18,0.04)" }
-            }
-          >
-            <div className="flex items-center gap-2">
-              <span className="font-bold px-2 py-0.5 rounded-lg text-xs text-white"
-                style={{ background: "#E02060" }}>
-                {planDef.name.toUpperCase()}
-              </span>
-              {isTrialing() && (
-                <span className="font-medium text-xs" style={{ color: "#C0A060" }}>Essai</span>
-              )}
-            </div>
-            <button
-              onClick={() => router.push("/settings/billing")}
-              className="font-semibold text-xs transition-opacity hover:opacity-70"
-              style={{ color: "#E02060" }}
+        {!collapsed && (
+          <div className="px-3 pt-3 pb-1">
+            <div className={cn(
+              "flex items-center justify-between px-3 py-2 rounded-xl text-xs",
+              isTrialing() ? "border" : ""
+            )}
+              style={isTrialing()
+                ? { background: "rgba(224,192,128,0.15)", borderColor: "rgba(192,160,96,0.3)" }
+                : { background: "rgba(26,14,18,0.04)" }
+              }
             >
-              Gérer
-            </button>
+              <div className="flex items-center gap-2">
+                <span className="font-bold px-2 py-0.5 rounded-lg text-xs text-white"
+                  style={{ background: "#E02060" }}>
+                  {planDef.name.toUpperCase()}
+                </span>
+                {isTrialing() && (
+                  <span className="font-medium text-xs" style={{ color: "#C0A060" }}>Essai</span>
+                )}
+              </div>
+              <button
+                onClick={() => router.push("/settings/billing")}
+                className="font-semibold text-xs transition-opacity hover:opacity-70"
+                style={{ color: "#E02060" }}
+              >
+                Gérer
+              </button>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Navigation */}
-        <nav className="flex-1 px-3 py-3 overflow-y-auto scrollbar-thin scrollbar-thumb-neutral-200 scrollbar-track-transparent">
+        <nav className="flex-1 py-3 overflow-y-auto scrollbar-thin scrollbar-thumb-neutral-200 scrollbar-track-transparent"
+          style={{ padding: collapsed ? "12px 10px" : "12px 12px" }}>
           {nav.map(({ group, items }) => (
             <div key={group} className="mb-5">
-              <div className="px-3 mb-1.5 text-xs font-bold uppercase tracking-widest hp-font-mono"
-                style={{ color: "#6B5A60", letterSpacing: "0.1em", fontSize: 10 }}>
-                {group}
-              </div>
+              {!collapsed && (
+                <div className="px-3 mb-1.5 hp-font-mono"
+                  style={{ color: "#6B5A60", letterSpacing: "0.1em", fontSize: 10, fontWeight: 700, textTransform: "uppercase" }}>
+                  {group}
+                </div>
+              )}
               <div className="space-y-0.5">
                 {items.map(({ href, label, icon: Icon, exact, badge, feature }) => {
                   const isActive = exact ? pathname === href : (pathname === href || pathname.startsWith(href + "/"));
@@ -165,12 +203,18 @@ export function Sidebar() {
                       <button
                         key={href}
                         onClick={() => setUpgradeModal({ open: true, feature })}
-                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-150"
-                        style={{ color: "#6B5A60" }}
+                        title={collapsed ? label : undefined}
+                        className="w-full flex items-center rounded-xl text-sm font-medium transition-all duration-150"
+                        style={{
+                          color: "#6B5A60",
+                          gap: collapsed ? 0 : 10,
+                          padding: collapsed ? 10 : "9px 12px",
+                          justifyContent: collapsed ? "center" : "flex-start",
+                        }}
                       >
                         <Icon size={15} className="flex-shrink-0 opacity-50" />
-                        <span className="flex-1 truncate text-left">{label}</span>
-                        <Lock size={11} className="flex-shrink-0 opacity-30" />
+                        {!collapsed && <span className="flex-1 truncate text-left">{label}</span>}
+                        {!collapsed && <Lock size={11} className="flex-shrink-0 opacity-30" />}
                       </button>
                     );
                   }
@@ -179,20 +223,23 @@ export function Sidebar() {
                     <Link
                       key={href}
                       href={href}
-                      className={cn(
-                        "flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-150",
-                      )}
-                      style={isActive
-                        ? { background: "rgba(224,32,96,0.08)", color: "#C00040", fontWeight: 600 }
-                        : { color: "#1A0E12" }
-                      }
+                      title={collapsed ? label : undefined}
+                      className={cn("flex items-center rounded-xl text-sm font-medium transition-all duration-150")}
+                      style={{
+                        gap: collapsed ? 0 : 10,
+                        padding: collapsed ? 10 : "9px 12px",
+                        justifyContent: collapsed ? "center" : "flex-start",
+                        ...(isActive
+                          ? { background: "rgba(224,32,96,0.08)", color: "#C00040", fontWeight: 600 }
+                          : { color: "#1A0E12" }),
+                      }}
                       onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = "rgba(26,14,18,0.04)"; }}
-                      onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+                      onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = isActive ? "rgba(224,32,96,0.08)" : "transparent"; }}
                     >
                       <Icon size={15} className="flex-shrink-0"
                         style={{ color: isActive ? "#E02060" : "#6B5A60" }} />
-                      <span className="flex-1 truncate">{label}</span>
-                      {badge && (
+                      {!collapsed && <span className="flex-1 truncate">{label}</span>}
+                      {!collapsed && badge && (
                         <span className="text-xs font-bold px-2 py-0.5 rounded-full text-white"
                           style={{ background: "#E02060", fontSize: 10 }}>
                           {badge}
@@ -207,24 +254,37 @@ export function Sidebar() {
         </nav>
 
         {/* User section */}
-        <div className="p-3 space-y-1" style={{ borderTop: "1px solid rgba(0,0,0,0.06)" }}>
-          <div className="flex items-center gap-3 px-3 py-2 rounded-xl cursor-default"
-            style={{ background: "rgba(26,14,18,0.03)" }}>
-            <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-white text-xs font-bold"
-              style={{ background: "linear-gradient(140deg, #E04060, #C00040)" }}>
-              {initials(user?.full_name, user?.email)}
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="text-sm font-semibold truncate" style={{ color: "#1A0E12" }}>{user?.full_name || "Utilisateur"}</div>
-              <div className="text-xs truncate hp-font-mono" style={{ color: "#6B5A60" }}>{user?.email}</div>
-            </div>
-          </div>
+        <div style={{ padding: collapsed ? "10px" : "12px", borderTop: "1px solid rgba(0,0,0,0.06)", display: "flex", flexDirection: "column", gap: 6 }}>
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900 transition-all duration-200"
+            title={collapsed ? "Déconnexion" : undefined}
+            style={{
+              display: "flex", alignItems: "center",
+              gap: collapsed ? 0 : 10,
+              padding: collapsed ? 9 : "9px 10px",
+              border: "1px solid rgba(0,0,0,0.06)",
+              borderRadius: 10, background: "transparent", cursor: "pointer",
+              fontFamily: "inherit", fontSize: 12, fontWeight: 500,
+              color: "#1A0E12",
+              justifyContent: collapsed ? "center" : "flex-start",
+            }}
           >
-            <LogOut size={16} />
-            Déconnexion
+            <div style={{
+              width: 28, height: 28, borderRadius: 99,
+              background: "linear-gradient(140deg, #E04060, #C00040)",
+              color: "white", display: "flex", alignItems: "center", justifyContent: "center",
+              fontWeight: 700, fontSize: 11, flexShrink: 0,
+            }}>
+              {initials(user?.full_name, user?.email)}
+            </div>
+            {!collapsed && (
+              <div style={{ textAlign: "left", flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 12, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "#1A0E12" }}>
+                  {user?.full_name || "Utilisateur"}
+                </div>
+                <div className="hp-font-mono" style={{ fontSize: 9, color: "#6B5A60" }}>Se déconnecter ↗</div>
+              </div>
+            )}
           </button>
         </div>
       </aside>

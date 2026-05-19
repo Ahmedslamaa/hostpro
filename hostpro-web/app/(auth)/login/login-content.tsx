@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { authApi } from "@/lib/api";
 import { useAuthStore } from "@/stores/authStore";
 import { LogoMark } from "@/components/ui/LogoMark";
@@ -28,123 +29,208 @@ export function LoginContent() {
     }
   };
 
+  const FloatCard = ({
+    top, left, tilt, width, children,
+  }: {
+    top: string; left: string; tilt: number; width: number; children: React.ReactNode;
+  }) => (
+    <div style={{
+      position: "absolute", top, left, width,
+      background: "#FFFFFF", borderRadius: 14, padding: "12px 14px",
+      transform: `rotate(${tilt}deg)`,
+      boxShadow: "0 16px 30px -12px rgba(0,0,0,0.25)",
+      border: "1px solid rgba(0,0,0,0.04)",
+    }}>{children}</div>
+  );
+
   return (
-    <div className="min-h-screen bg-white flex">
-      {/* Left branding panel — hidden on mobile */}
-      <div className="hidden lg:flex lg:w-1/2 bg-primary-500 flex-col items-center justify-center p-16 relative overflow-hidden">
-        {/* Background decoration */}
-        <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-32 translate-x-32" />
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-white/5 rounded-full translate-y-48 -translate-x-48" />
+    <div style={{
+      width: "100%", minHeight: "100vh",
+      display: "grid", gridTemplateColumns: "1fr 1fr",
+      background: "#F4F2F0",
+      fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+      color: "#1A0E12",
+      overflow: "hidden",
+    }}>
+      {/* ── Left — Form ── */}
+      <div style={{ padding: "48px 64px", display: "flex", flexDirection: "column" }}>
+        <LogoMark as="link" href="/" variant="light" size="md" />
 
-        <div className="relative z-10 max-w-md">
-          {/* Logo */}
-          <div className="mb-12">
-            <LogoMark variant="dark" size="lg" className="mb-3" />
-            <div className="w-12 h-1 bg-white/40 rounded-full" />
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", maxWidth: 420 }}>
+          <div style={{ fontFamily: "'JetBrains Mono', ui-monospace, monospace", fontSize: 11, color: "#C00040", letterSpacing: "0.15em", marginBottom: 10 }}>
+            RAVIE DE VOUS REVOIR
           </div>
-
-          <h2 className="text-white text-3xl font-bold leading-tight mb-4">
-            La gestion locative saisonnière <em className="not-italic text-white/80">made simple</em>
-          </h2>
-          <p className="text-white/70 text-lg mb-10">
-            La plateforme tout-en-un pour les professionnels de la location courte durée.
+          <h1 style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontWeight: 800, fontSize: 44, margin: "0 0 8px", letterSpacing: "-0.03em", lineHeight: 1 }}>
+            Reprenons là où vous en êtes.
+          </h1>
+          <p style={{ color: "#6B5A60", fontSize: 15, marginBottom: 28 }}>
+            Connectez-vous pour orchestrer vos logements, réservations et messages.
           </p>
 
-          <div className="space-y-4">
-            {[
-              "Synchronisation automatique Airbnb, Booking.com & Abritel",
-              "Conformité loi Le Meur avec alertes nuitées en temps réel",
-              "Gestion d'équipe, tâches et messagerie centralisée",
-            ].map((item, i) => (
-              <div key={i} className="flex items-start gap-3">
-                <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <span className="text-white text-xs font-bold"></span>
-                </div>
-                <span className="text-white/90 text-sm leading-relaxed">{item}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Right login form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 lg:p-12">
-        <div className="w-full max-w-md">
-          {/* Mobile logo */}
-          <div className="lg:hidden mb-10 flex justify-center">
-            <LogoMark variant="light" size="lg" />
-          </div>
-
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-neutral-900">Bienvenue</h1>
-            <p className="text-neutral-500 mt-2">Connectez-vous à votre espace de gestion</p>
-          </div>
-
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 mb-6 text-sm">
-              {error}
-            </div>
+            <div style={{
+              background: "rgba(192,0,64,0.06)", border: "1px solid rgba(192,0,64,0.2)",
+              color: "#C00040", borderRadius: 10, padding: "10px 14px",
+              fontSize: 13, marginBottom: 16,
+            }}>{error}</div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            {/* Email */}
             <div>
-              <label className="text-neutral-900 text-sm font-semibold mb-2 block">
-                Adresse email
-              </label>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                <label style={{ fontFamily: "'JetBrains Mono', ui-monospace, monospace", fontSize: 10, color: "#6B5A60", letterSpacing: "0.1em" }}>
+                  EMAIL
+                </label>
+              </div>
               <input
-                type="email"
-                required
-                className="border border-neutral-200 rounded-xl px-4 py-3 text-neutral-900 placeholder-neutral-500 focus:outline-none focus:border-neutral-900 focus:ring-2 focus:ring-neutral-900/10 w-full transition-all"
-                placeholder="vous@exemple.fr"
+                type="email" required
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
+                placeholder="vous@exemple.fr"
+                style={{
+                  width: "100%", padding: "12px 14px",
+                  border: "1px solid rgba(0,0,0,0.12)", borderRadius: 10,
+                  background: "white", fontFamily: "inherit", fontSize: 14, outline: "none",
+                  transition: "border-color 0.15s",
+                }}
+                onFocus={(e) => (e.target.style.borderColor = "#E02060")}
+                onBlur={(e) => (e.target.style.borderColor = "rgba(0,0,0,0.12)")}
               />
             </div>
 
+            {/* Password */}
             <div>
-              <label className="text-neutral-900 text-sm font-semibold mb-2 block">
-                Mot de passe
-              </label>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                <label style={{ fontFamily: "'JetBrains Mono', ui-monospace, monospace", fontSize: 10, color: "#6B5A60", letterSpacing: "0.1em" }}>
+                  MOT DE PASSE
+                </label>
+                <a href="#" style={{ fontSize: 11, color: "#C00040", cursor: "pointer", fontWeight: 600, textDecoration: "none" }}>
+                  Mot de passe oublié ?
+                </a>
+              </div>
               <input
-                type="password"
-                required
-                className="border border-neutral-200 rounded-xl px-4 py-3 text-neutral-900 placeholder-neutral-500 focus:outline-none focus:border-neutral-900 focus:ring-2 focus:ring-neutral-900/10 w-full transition-all"
-                placeholder="••••••••"
+                type="password" required
                 value={form.password}
                 onChange={(e) => setForm({ ...form, password: e.target.value })}
+                placeholder="••••••••"
+                style={{
+                  width: "100%", padding: "12px 14px",
+                  border: "1px solid rgba(0,0,0,0.12)", borderRadius: 10,
+                  background: "white", fontFamily: "inherit", fontSize: 14, outline: "none",
+                  transition: "border-color 0.15s",
+                }}
+                onFocus={(e) => (e.target.style.borderColor = "#E02060")}
+                onBlur={(e) => (e.target.style.borderColor = "rgba(0,0,0,0.12)")}
               />
-            </div>
-
-            <div className="flex justify-end">
-              <a href="#" className="text-primary-500 text-sm font-medium hover:underline">
-                Mot de passe oublié ?
-              </a>
             </div>
 
             <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-primary-500 hover:bg-primary-600 text-white font-semibold px-6 py-3 rounded-xl transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+              type="submit" disabled={loading}
+              style={{
+                marginTop: 8,
+                background: "#1A0E12", color: "#F4F2F0",
+                border: "none", borderRadius: 12, padding: "14px 18px",
+                fontSize: 14, fontWeight: 700, cursor: loading ? "not-allowed" : "pointer",
+                fontFamily: "inherit",
+                opacity: loading ? 0.6 : 1,
+                display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                transition: "opacity 0.15s",
+              }}
             >
-              {loading ? "Connexion en cours..." : "Se connecter"}
+              {loading ? "Connexion…" : "Se connecter"}
+              {!loading && <span style={{ color: "#C0A060" }}>→</span>}
             </button>
           </form>
 
-          <div className="flex items-center gap-4 my-6">
-            <div className="flex-1 h-px bg-neutral-200" />
-            <span className="text-neutral-500 text-sm">ou</span>
-            <div className="flex-1 h-px bg-neutral-200" />
+          {/* Divider */}
+          <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "22px 0" }}>
+            <div style={{ flex: 1, height: 1, background: "rgba(0,0,0,0.1)" }} />
+            <span style={{ fontFamily: "'JetBrains Mono', ui-monospace, monospace", fontSize: 10, color: "#6B5A60" }}>OU</span>
+            <div style={{ flex: 1, height: 1, background: "rgba(0,0,0,0.1)" }} />
           </div>
 
-          <p className="text-center text-sm text-neutral-500">
-            Pas encore de compte ?{" "}
-            <a href="/register" className="text-neutral-900 font-semibold hover:underline">
-              Créer un compte gratuit
-            </a>
+          {/* SSO buttons */}
+          <div style={{ display: "flex", gap: 10 }}>
+            {["Google", "Apple", "SSO"].map((label) => (
+              <button key={label} style={{
+                flex: 1, padding: "11px 14px",
+                background: "white", border: "1px solid rgba(0,0,0,0.1)",
+                borderRadius: 10, fontFamily: "inherit", fontSize: 13, fontWeight: 600,
+                cursor: "pointer", color: "#1A0E12",
+              }}>{label}</button>
+            ))}
+          </div>
+
+          <div style={{ marginTop: 28, fontSize: 13, color: "#6B5A60" }}>
+            Nouveau ici ?{" "}
+            <Link href="/register" style={{ color: "#C00040", fontWeight: 600, textDecoration: "underline" }}>
+              Créer un compte
+            </Link>
+          </div>
+        </div>
+
+        <div style={{ fontFamily: "'JetBrains Mono', ui-monospace, monospace", fontSize: 10, color: "#6B5A60", letterSpacing: "0.1em" }}>
+          © 2026 HOST PRO · CGU · CONFIDENTIALITÉ · HÉBERGÉ EN UE 🇪🇺
+        </div>
+      </div>
+
+      {/* ── Right — Visual ── */}
+      <div style={{
+        background: "linear-gradient(155deg, #1A0E12 0%, #3A0F1F 50%, #C00040 110%)",
+        position: "relative", overflow: "hidden",
+        padding: 48, display: "flex", flexDirection: "column", justifyContent: "flex-end",
+        color: "#F4F2F0",
+      }}>
+        {/* Gold radial glow */}
+        <div style={{
+          position: "absolute", inset: 0,
+          background: "radial-gradient(circle at 70% 25%, rgba(224,192,128,0.35), transparent 55%)",
+          pointerEvents: "none",
+        }} />
+
+        {/* Floating card 1 — Occupation */}
+        <FloatCard top="14%" left="12%" tilt={-3} width={240}>
+          <div style={{ fontFamily: "'JetBrains Mono', ui-monospace, monospace", fontSize: 9, color: "#6B5A60" }}>OCCUPATION · MAI</div>
+          <div style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontWeight: 800, fontSize: 30, letterSpacing: "-0.02em", color: "#1A0E12" }}>87%</div>
+          <div style={{ display: "flex", alignItems: "flex-end", gap: 3, height: 26, marginTop: 4 }}>
+            {[40,55,62,50,70,68,82,76,88,84,90,87].map((v,i) => (
+              <div key={i} style={{ flex: 1, height: `${v}%`, background: "#E02060", opacity: 0.4 + i*0.05, borderRadius: 2 }} />
+            ))}
+          </div>
+        </FloatCard>
+
+        {/* Floating card 2 — AI Insight */}
+        <FloatCard top="38%" left="48%" tilt={3} width={220}>
+          <div style={{ fontFamily: "'JetBrains Mono', ui-monospace, monospace", fontSize: 9, color: "#C00040" }}>✦ AI INSIGHT</div>
+          <div style={{ fontSize: 12, color: "#1A0E12", marginTop: 4, lineHeight: 1.35 }}>
+            Réapprovisionner gel douche avant mercredi.
+          </div>
+        </FloatCard>
+
+        {/* Floating card 3 — Arrival */}
+        <FloatCard top="56%" left="10%" tilt={-2} width={200}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{ width: 32, height: 32, borderRadius: 8, background: "linear-gradient(140deg, #E0E0A0, #C0A060)" }} />
+            <div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: "#1A0E12" }}>Hugo Delcourt</div>
+              <div style={{ fontFamily: "'JetBrains Mono', ui-monospace, monospace", fontSize: 9, color: "#6B5A60" }}>arrive · 16:00</div>
+            </div>
+          </div>
+        </FloatCard>
+
+        {/* Bottom copy */}
+        <div style={{ position: "relative", zIndex: 1 }}>
+          <div style={{ fontFamily: "'JetBrains Mono', ui-monospace, monospace", fontSize: 11, color: "#C0A060", letterSpacing: "0.2em" }}>★ HOSPITALITY · OS</div>
+          <h2 style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontWeight: 800, fontSize: 44, margin: "10px 0 12px", letterSpacing: "-0.03em", lineHeight: 1 }}>
+            Tous vos outils,<br />
+            <span style={{ color: "#C0A060" }}>une seule connexion</span>.
+          </h2>
+          <p style={{ fontSize: 14, color: "rgba(244,242,240,0.8)", maxWidth: 420, margin: 0, lineHeight: 1.5 }}>
+            Plus de tableurs, plus de SMS. 4 800 hôtes ont gagné 11h par semaine.
           </p>
         </div>
       </div>
     </div>
   );
 }
-

@@ -196,19 +196,15 @@ export default function LandingPage() {
             HOST PRO S'INTÈGRE AUX APPLICATIONS
           </div>
           <div style={{ width: 1, height: 20, background: "rgba(0,0,0,0.12)", flexShrink: 0 }} />
-          {[
-            { name: "Airbnb",   color: "#FF5A5F" },
-            { name: "Booking",  color: "#003580" },
-            { name: "Vrbo",     color: "#1155CC" },
-          ].map((app, i) => (
-            <div key={app.name} style={{ display: "flex", alignItems: "center", gap: 16 }}>
+          {["Airbnb", "Booking", "Vrbo"].map((name, i) => (
+            <div key={name} style={{ display: "flex", alignItems: "center", gap: 16 }}>
               {i > 0 && <div style={{ width: 4, height: 4, borderRadius: 99, background: "rgba(0,0,0,0.2)" }} />}
               <span style={{
                 fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
                 fontWeight: 800, fontSize: 15,
-                color: app.color,
+                color: INK,
                 letterSpacing: "-0.02em",
-              }}>{app.name}</span>
+              }}>{name}</span>
             </div>
           ))}
         </div>

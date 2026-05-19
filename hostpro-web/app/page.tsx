@@ -185,12 +185,33 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── TRUST LOGOS ── */}
-      <section style={{ padding: "12px 56px 56px", display: "flex", alignItems: "center", gap: 36, opacity: 0.7, maxWidth: 1280, margin: "0 auto" }}>
-        <div style={{ fontFamily: "'JetBrains Mono', ui-monospace, monospace", fontSize: 11, color: INK_SOFT, whiteSpace: "nowrap" }}>UTILISÉ PAR DES HÔTES PROS</div>
-        {["Maisons d'Ouest", "Studio Lumière", "Le Refuge", "Casa Norte", "Nuits Soyeuses"].map((n) => (
-          <div key={n} style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontSize: 22, color: INK, fontStyle: "italic" }}>{n}</div>
-        ))}
+      {/* ── INTEGRATIONS STRIP ── */}
+      <section style={{ padding: "12px 56px 56px", maxWidth: 1280, margin: "0 auto" }}>
+        <div style={{
+          display: "flex", alignItems: "center", gap: 24,
+          background: "rgba(26,14,18,0.04)", borderRadius: 16,
+          padding: "14px 24px",
+        }}>
+          <div style={{ fontFamily: "'JetBrains Mono', ui-monospace, monospace", fontSize: 11, color: INK_SOFT, whiteSpace: "nowrap", letterSpacing: "0.1em" }}>
+            HOST PRO S'INTÈGRE AUX APPLICATIONS
+          </div>
+          <div style={{ width: 1, height: 20, background: "rgba(0,0,0,0.12)", flexShrink: 0 }} />
+          {[
+            { name: "Airbnb",   color: "#FF5A5F" },
+            { name: "Booking",  color: "#003580" },
+            { name: "Vrbo",     color: "#1155CC" },
+          ].map((app, i) => (
+            <div key={app.name} style={{ display: "flex", alignItems: "center", gap: 16 }}>
+              {i > 0 && <div style={{ width: 4, height: 4, borderRadius: 99, background: "rgba(0,0,0,0.2)" }} />}
+              <span style={{
+                fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+                fontWeight: 800, fontSize: 15,
+                color: app.color,
+                letterSpacing: "-0.02em",
+              }}>{app.name}</span>
+            </div>
+          ))}
+        </div>
       </section>
 
       {/* ── FEATURES ── */}

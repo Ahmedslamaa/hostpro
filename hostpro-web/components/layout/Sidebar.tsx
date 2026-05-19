@@ -103,12 +103,14 @@ export function Sidebar() {
 
   return (
     <>
-      <aside className="w-60 min-h-screen bg-white border-r border-neutral-200 flex flex-col fixed left-0 top-0 h-screen z-30">
+      {/* ── Sidebar — Host Pro design system ── */}
+      <aside className="w-60 min-h-screen bg-white flex flex-col fixed left-0 top-0 h-screen z-30"
+        style={{ borderRight: "1px solid rgba(0,0,0,0.06)" }}>
 
-        {/* Logo - Clickable for navigation to dashboard */}
-        <div className="group px-6 py-5 border-b border-neutral-200 hover:bg-neutral-50 transition-colors duration-200">
+        {/* Logo */}
+        <div className="px-6 py-5" style={{ borderBottom: "1px solid rgba(0,0,0,0.06)" }}>
           <LogoMark as="link" href="/dashboard" variant="light" size="md" />
-          <div className="text-xs text-neutral-500 mt-2 group-hover:text-neutral-600 transition-colors duration-200">
+          <div className="text-xs mt-1.5 hp-font-mono" style={{ color: "#6B5A60", letterSpacing: "0.05em" }}>
             Gestion locative IA
           </div>
         </div>
@@ -116,18 +118,29 @@ export function Sidebar() {
         {/* Plan badge */}
         <div className="px-4 pt-3 pb-1">
           <div className={cn(
-            "flex items-center justify-between px-3 py-2 rounded-lg text-xs",
-            isTrialing() ? "bg-yellow-50 border border-yellow-200" : "bg-neutral-100"
-          )}>
+            "flex items-center justify-between px-3 py-2 rounded-xl text-xs",
+            isTrialing()
+              ? "border"
+              : ""
+          )}
+            style={isTrialing()
+              ? { background: "rgba(224,192,128,0.15)", borderColor: "rgba(192,160,96,0.3)" }
+              : { background: "rgba(26,14,18,0.04)" }
+            }
+          >
             <div className="flex items-center gap-2">
-              <span className={cn("font-bold px-1.5 py-0.5 rounded-md text-xs", PLAN_COLORS[plan] ?? PLAN_COLORS.trial)}>
+              <span className="font-bold px-2 py-0.5 rounded-lg text-xs text-white"
+                style={{ background: "#E02060" }}>
                 {planDef.name.toUpperCase()}
               </span>
-              {isTrialing() && <span className="text-yellow-700 font-medium text-xs">Essai</span>}
+              {isTrialing() && (
+                <span className="font-medium text-xs" style={{ color: "#C0A060" }}>Essai</span>
+              )}
             </div>
             <button
               onClick={() => router.push("/settings/billing")}
-              className="text-primary-500 font-semibold hover:text-primary-600 transition-colors duration-200 text-xs"
+              className="font-semibold text-xs transition-opacity hover:opacity-70"
+              style={{ color: "#E02060" }}
             >
               Gérer
             </button>
@@ -135,27 +148,29 @@ export function Sidebar() {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 px-3 py-3 overflow-y-auto scrollbar-thin scrollbar-thumb-neutral-300 scrollbar-track-transparent">
+        <nav className="flex-1 px-3 py-3 overflow-y-auto scrollbar-thin scrollbar-thumb-neutral-200 scrollbar-track-transparent">
           {nav.map(({ group, items }) => (
-            <div key={group} className="mb-6">
-              <div className="px-3 mb-2 text-xs font-bold uppercase tracking-wider text-neutral-400">
+            <div key={group} className="mb-5">
+              <div className="px-3 mb-1.5 text-xs font-bold uppercase tracking-widest hp-font-mono"
+                style={{ color: "#6B5A60", letterSpacing: "0.1em", fontSize: 10 }}>
                 {group}
               </div>
-              <div className="space-y-1">
+              <div className="space-y-0.5">
                 {items.map(({ href, label, icon: Icon, exact, badge, feature }) => {
-                  const isActive  = exact ? pathname === href : (pathname === href || pathname.startsWith(href + "/"));
-                  const isLocked  = !!feature && !can(feature);
+                  const isActive = exact ? pathname === href : (pathname === href || pathname.startsWith(href + "/"));
+                  const isLocked = !!feature && !can(feature);
 
                   if (isLocked) {
                     return (
                       <button
                         key={href}
                         onClick={() => setUpgradeModal({ open: true, feature })}
-                        className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-neutral-400 hover:bg-neutral-100 hover:text-neutral-500 transition-all duration-200"
+                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-150"
+                        style={{ color: "#6B5A60" }}
                       >
-                        <Icon size={16} className="flex-shrink-0" />
+                        <Icon size={15} className="flex-shrink-0 opacity-50" />
                         <span className="flex-1 truncate text-left">{label}</span>
-                        <Lock size={12} className="flex-shrink-0 text-neutral-300" />
+                        <Lock size={11} className="flex-shrink-0 opacity-30" />
                       </button>
                     );
                   }
@@ -165,16 +180,21 @@ export function Sidebar() {
                       key={href}
                       href={href}
                       className={cn(
-                        "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200",
-                        isActive
-                          ? "bg-primary-100 text-primary-600 font-semibold"
-                          : "text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900"
+                        "flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-150",
                       )}
+                      style={isActive
+                        ? { background: "rgba(224,32,96,0.08)", color: "#C00040", fontWeight: 600 }
+                        : { color: "#1A0E12" }
+                      }
+                      onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = "rgba(26,14,18,0.04)"; }}
+                      onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = "transparent"; }}
                     >
-                      <Icon size={16} className="flex-shrink-0" />
+                      <Icon size={15} className="flex-shrink-0"
+                        style={{ color: isActive ? "#E02060" : "#6B5A60" }} />
                       <span className="flex-1 truncate">{label}</span>
                       {badge && (
-                        <span className="text-xs font-bold bg-primary-500 text-white px-2 py-0.5 rounded-full">
+                        <span className="text-xs font-bold px-2 py-0.5 rounded-full text-white"
+                          style={{ background: "#E02060", fontSize: 10 }}>
                           {badge}
                         </span>
                       )}
@@ -187,16 +207,16 @@ export function Sidebar() {
         </nav>
 
         {/* User section */}
-        <div className="border-t border-neutral-200 p-3 space-y-2">
-          <div className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-neutral-100 transition-colors duration-200 cursor-default">
-            <div className="w-8 h-8 bg-primary-100 border border-primary-200 rounded-full flex items-center justify-center flex-shrink-0">
-              <span className="text-primary-600 text-xs font-bold">
-                {initials(user?.full_name, user?.email)}
-              </span>
+        <div className="p-3 space-y-1" style={{ borderTop: "1px solid rgba(0,0,0,0.06)" }}>
+          <div className="flex items-center gap-3 px-3 py-2 rounded-xl cursor-default"
+            style={{ background: "rgba(26,14,18,0.03)" }}>
+            <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-white text-xs font-bold"
+              style={{ background: "linear-gradient(140deg, #E04060, #C00040)" }}>
+              {initials(user?.full_name, user?.email)}
             </div>
             <div className="flex-1 min-w-0">
-              <div className="text-neutral-900 text-sm font-semibold truncate">{user?.full_name || "Utilisateur"}</div>
-              <div className="text-neutral-500 text-xs truncate">{user?.email}</div>
+              <div className="text-sm font-semibold truncate" style={{ color: "#1A0E12" }}>{user?.full_name || "Utilisateur"}</div>
+              <div className="text-xs truncate hp-font-mono" style={{ color: "#6B5A60" }}>{user?.email}</div>
             </div>
           </div>
           <button

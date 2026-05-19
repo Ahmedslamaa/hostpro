@@ -28,40 +28,48 @@
   }
 }
 
-/* ── Airbnb design tokens (legacy) ── */
+/* ── Design tokens (shadcn/radix HSL) — updated for Host Pro palette ── */
 :root {
-  --primary: #FF5A5F;
-  --primary-hover: #E00B41;
-  --text-dark: #222222;
-  --text-secondary: #717171;
-  --bg-light: #F7F7F7;
+  /* Host Pro primary = rose #E02060  → hsl(340 100% 50%) */
+  --primary: #E02060;
+  --primary-hover: #C00040;
+  --text-dark: #1A0E12;
+  --text-secondary: #6B5A60;
+  --bg-light: #F4F2F0;
 
-  /* shadcn/radix compatibility — keep as HSL tuples */
+  /* shadcn/radix compatibility — HSL tuples */
   --background: 0 0% 100%;
-  --foreground: 0 0% 13%;
+  --foreground: 340 30% 9%;          /* #1A0E12 */
   --card: 0 0% 100%;
-  --card-foreground: 0 0% 13%;
-  --border: 0 0% 87%;
-  --input: 0 0% 87%;
-  --ring: 0 0% 13%;
+  --card-foreground: 340 30% 9%;
+  --border: 30 10% 88%;
+  --input: 30 10% 88%;
+  --ring: 340 100% 40%;              /* rose focus ring */
   --primary-foreground: 0 0% 100%;
-  --secondary: 0 0% 97%;
-  --secondary-foreground: 0 0% 13%;
-  --muted: 0 0% 97%;
-  --muted-foreground: 0 0% 44%;
-  --accent: 0 0% 97%;
-  --accent-foreground: 0 0% 13%;
-  --destructive: 0 84% 60%;
+  --secondary: 40 20% 96%;           /* warm paper */
+  --secondary-foreground: 340 30% 9%;
+  --muted: 40 20% 96%;
+  --muted-foreground: 340 10% 42%;   /* ink-soft */
+  --accent: 40 60% 75%;              /* gold */
+  --accent-foreground: 340 30% 9%;
+  --destructive: 340 100% 40%;
   --destructive-foreground: 0 0% 100%;
   --radius: 0.75rem;
 }
 
 body {
-  color: #222222;
+  color: #1A0E12;
   background: #FFFFFF;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+/* Host Pro typography helpers */
+.hp-font-display { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; font-weight: 700; letter-spacing: -0.02em; }
+.hp-font-body    { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; font-weight: 400; }
+.hp-font-serif   { font-family: 'Instrument Serif', Georgia, serif; font-style: italic; }
+.hp-font-mono    { font-family: 'JetBrains Mono', ui-monospace, monospace; }
 
 * { box-sizing: border-box; }
 

@@ -23,6 +23,11 @@ const weekData = [
   { day: "Jeu", rate: 75 }, { day: "Ven", rate: 92 }, { day: "Sam", rate: 98 }, { day: "Dim", rate: 88 },
 ];
 
+const INK = "#1A0E12";
+const INK_SOFT = "#6B5A60";
+const ROSE = "#E02060";
+const PAPER = "#F4F2F0";
+
 export default function PricingPage() {
   const [aiEnabled, setAiEnabled] = useState(true);
   const [selectedProp, setSelectedProp] = useState(properties[0]);
@@ -33,31 +38,45 @@ export default function PricingPage() {
     setTimeout(() => setApplyingAll(false), 1800);
   };
 
+  const monoLabel: React.CSSProperties = {
+    fontFamily: "'JetBrains Mono', ui-monospace, monospace",
+    fontSize: 10, color: INK_SOFT, letterSpacing: "0.15em", textTransform: "uppercase" as const,
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-black text-neutral-900">Tarification Dynamique</h1>
-          <p className="text-sm text-neutral-500 mt-0.5">IA + données marché en temps réel · Côte d'Azur</p>
+          <h1 style={{ fontSize: 22, fontWeight: 800, color: INK, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>Tarification Dynamique</h1>
+          <p style={{ fontSize: 13, color: INK_SOFT, marginTop: 2 }}>IA + données marché en temps réel · Côte d'Azur</p>
         </div>
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 bg-neutral-100 border border-neutral-200 rounded-xl px-4 py-2">
-            <div className={`w-2 h-2 rounded-full ${aiEnabled ? "bg-green-500" : "bg-gray-400"}`} />
-            <span className="text-sm font-medium text-neutral-900">IA Pricing</span>
+          <div className="flex items-center gap-2" style={{ background: PAPER, border: "1px solid rgba(0,0,0,0.08)", borderRadius: 12, padding: "8px 14px" }}>
+            <div style={{ width: 8, height: 8, borderRadius: "50%", background: aiEnabled ? "#1B7A4A" : "#9ca3af" }} />
+            <span style={{ fontSize: 13, fontWeight: 600, color: INK }}>IA Pricing</span>
             <button
               onClick={() => setAiEnabled(!aiEnabled)}
-              className={`relative w-10 h-5 rounded-full transition-colors ${aiEnabled ? "bg-primary-500" : "bg-[#DDDDDD]"}`}
+              style={{ position: "relative", width: 40, height: 20, borderRadius: 99, border: "none", cursor: "pointer", background: aiEnabled ? ROSE : "rgba(0,0,0,0.15)" }}
             >
-              <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${aiEnabled ? "translate-x-5" : "translate-x-0.5"}`} />
+              <div style={{
+                position: "absolute", top: 2, width: 16, height: 16, background: "white", borderRadius: "50%",
+                boxShadow: "0 1px 3px rgba(0,0,0,0.2)", transition: "transform 0.2s",
+                transform: aiEnabled ? "translateX(22px)" : "translateX(2px)",
+              }} />
             </button>
           </div>
           <button
             onClick={handleApplyAll}
             disabled={applyingAll}
-            className="flex items-center gap-2 bg-primary-500 hover:bg-primary-600 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition-colors"
+            style={{
+              display: "flex", alignItems: "center", gap: 8,
+              background: ROSE, color: "white", fontSize: 13, fontWeight: 700,
+              padding: "10px 18px", borderRadius: 12, border: "none", cursor: "pointer",
+              opacity: applyingAll ? 0.7 : 1,
+            }}
           >
-            <Zap size={15} />
+            <Zap size={14} />
             {applyingAll ? "Application..." : "Appliquer les prix IA"}
           </button>
         </div>
@@ -66,36 +85,36 @@ export default function PricingPage() {
       {/* KPI Row */}
       <div className="grid grid-cols-4 gap-4">
         {[
-          { label: "Revenu potentiel", value: "+18 400 €", sub: "ce mois avec IA", icon: TrendingUp, color: "text-green-600", bg: "bg-green-50" },
-          { label: "Prix moyen actuel", value: "228 €", sub: "par nuit / tous biens", icon: Calendar, color: "text-blue-600", bg: "bg-blue-50" },
-          { label: "Prix moyen IA", value: "257 €", sub: "+12.7% recommandé", icon: Zap, color: "text-primary-600", bg: "bg-primary-500/10" },
-          { label: "Opportunités", value: "3 biens", sub: "prix sous-optimaux", icon: Info, color: "text-amber-600", bg: "bg-amber-50" },
+          { label: "Revenu potentiel", value: "+18 400 €", sub: "ce mois avec IA", icon: TrendingUp, color: "#1B7A4A", bg: "rgba(27,122,74,0.1)" },
+          { label: "Prix moyen actuel", value: "228 €", sub: "par nuit / tous biens", icon: Calendar, color: "#1d4ed8", bg: "rgba(59,130,246,0.1)" },
+          { label: "Prix moyen IA", value: "257 €", sub: "+12.7% recommandé", icon: Zap, color: "#C00040", bg: "rgba(224,32,96,0.08)" },
+          { label: "Opportunités", value: "3 biens", sub: "prix sous-optimaux", icon: Info, color: "#C0A060", bg: "rgba(192,160,96,0.15)" },
         ].map((k, i) => (
-          <div key={i} className="bg-white border border-neutral-200 rounded-2xl p-5">
+          <div key={i} style={{ background: "white", border: "1px solid rgba(0,0,0,0.05)", borderRadius: 18, padding: 20, boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
             <div className="flex items-center justify-between mb-3">
-              <span className="text-xs text-neutral-500 font-medium">{k.label}</span>
-              <div className={`w-8 h-8 ${k.bg} rounded-lg flex items-center justify-center`}>
-                <k.icon size={16} className={k.color} />
+              <span style={{ fontSize: 11, color: INK_SOFT, fontWeight: 600 }}>{k.label}</span>
+              <div style={{ width: 32, height: 32, background: k.bg, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <k.icon size={15} style={{ color: k.color }} />
               </div>
             </div>
-            <div className={`text-2xl font-black ${k.color} mb-0.5`}>{k.value}</div>
-            <div className="text-xs text-neutral-500">{k.sub}</div>
+            <div style={{ fontSize: 22, fontWeight: 800, color: k.color, marginBottom: 2, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>{k.value}</div>
+            <div style={{ fontSize: 11, color: INK_SOFT }}>{k.sub}</div>
           </div>
         ))}
       </div>
 
       <div className="grid grid-cols-3 gap-6">
         {/* Properties pricing table */}
-        <div className="col-span-2 bg-white border border-neutral-200 rounded-2xl overflow-hidden">
-          <div className="px-6 py-4 border-b border-neutral-200 flex items-center justify-between">
-            <h2 className="font-bold text-neutral-900">Prix par propriété</h2>
-            <span className="text-xs text-neutral-500">Basé sur événements + saisonnalité + concurrence</span>
+        <div className="col-span-2" style={{ background: "white", border: "1px solid rgba(0,0,0,0.05)", borderRadius: 18, overflow: "hidden", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
+          <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: "1px solid rgba(0,0,0,0.05)" }}>
+            <h2 style={{ fontWeight: 700, color: INK, fontSize: 14 }}>Prix par propriété</h2>
+            <span style={{ fontSize: 11, color: INK_SOFT }}>Basé sur événements + saisonnalité + concurrence</span>
           </div>
           <table className="w-full">
             <thead>
-              <tr className="border-b border-[#F7F7F7]">
+              <tr style={{ borderBottom: "1px solid rgba(0,0,0,0.04)" }}>
                 {["Propriété", "Prix base", "Prix actuel", "Prix IA", "Occupation", "Tendance", "Action"].map(h => (
-                  <th key={h} className="text-left px-5 py-3 text-xs font-semibold text-neutral-500 uppercase tracking-wide">{h}</th>
+                  <th key={h} className="text-left px-5 py-3" style={monoLabel}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -104,33 +123,40 @@ export default function PricingPage() {
                 <tr
                   key={p.id}
                   onClick={() => setSelectedProp(p)}
-                  className={`border-b border-[#F7F7F7] hover:bg-neutral-100/50 cursor-pointer transition-colors ${selectedProp.id === p.id ? "bg-primary-500/5" : ""}`}
+                  style={{
+                    borderBottom: "1px solid rgba(0,0,0,0.03)",
+                    cursor: "pointer",
+                    background: selectedProp.id === p.id ? "rgba(224,32,96,0.03)" : "transparent",
+                  }}
                 >
                   <td className="px-5 py-3.5">
-                    <div className="font-semibold text-sm text-neutral-900">{p.name}</div>
-                    <div className="text-xs text-neutral-500">{p.city}</div>
+                    <div style={{ fontWeight: 700, fontSize: 13, color: INK }}>{p.name}</div>
+                    <div style={{ fontSize: 11, color: INK_SOFT }}>{p.city}</div>
                   </td>
-                  <td className="px-5 py-3.5 text-sm text-neutral-500">{p.basePrice} €</td>
-                  <td className="px-5 py-3.5 text-sm font-semibold text-neutral-900">{p.currentPrice} €</td>
+                  <td className="px-5 py-3.5" style={{ fontSize: 13, color: INK_SOFT }}>{p.basePrice} €</td>
+                  <td className="px-5 py-3.5" style={{ fontSize: 13, fontWeight: 700, color: INK }}>{p.currentPrice} €</td>
                   <td className="px-5 py-3.5">
-                    <span className="text-sm font-black text-primary-600">{p.aiPrice} €</span>
+                    <span style={{ fontSize: 13, fontWeight: 800, color: ROSE }}>{p.aiPrice} €</span>
                   </td>
                   <td className="px-5 py-3.5">
                     <div className="flex items-center gap-2">
-                      <div className="w-16 h-1.5 bg-neutral-100 rounded-full overflow-hidden">
-                        <div className="h-full bg-primary-500 rounded-full" style={{ width: `${p.occupancy}%` }} />
+                      <div style={{ width: 60, height: 6, background: "rgba(26,14,18,0.08)", borderRadius: 99, overflow: "hidden" }}>
+                        <div style={{ height: "100%", background: ROSE, borderRadius: 99, width: `${p.occupancy}%` }} />
                       </div>
-                      <span className="text-xs font-semibold text-neutral-900">{p.occupancy}%</span>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: INK }}>{p.occupancy}%</span>
                     </div>
                   </td>
                   <td className="px-5 py-3.5">
-                    <span className={`inline-flex items-center gap-1 text-xs font-semibold ${p.trend === "up" ? "text-green-600" : "text-red-500"}`}>
-                      {p.trend === "up" ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+                    <span style={{
+                      display: "inline-flex", alignItems: "center", gap: 4, fontSize: 12, fontWeight: 700,
+                      color: p.trend === "up" ? "#1B7A4A" : "#C00040",
+                    }}>
+                      {p.trend === "up" ? <ChevronUp size={11} /> : <ChevronDown size={11} />}
                       {p.change > 0 ? "+" : ""}{p.change}%
                     </span>
                   </td>
                   <td className="px-5 py-3.5">
-                    <button className="text-xs font-semibold text-primary-600 hover:underline">Appliquer</button>
+                    <button style={{ fontSize: 11, fontWeight: 700, color: ROSE, background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}>Appliquer</button>
                   </td>
                 </tr>
               ))}
@@ -141,61 +167,66 @@ export default function PricingPage() {
         {/* Right panel */}
         <div className="space-y-4">
           {/* Events */}
-          <div className="bg-white border border-neutral-200 rounded-2xl p-5">
-            <h3 className="font-bold text-sm text-neutral-900 mb-4 flex items-center gap-2">
-              <Calendar size={15} className="text-primary-600" />
+          <div style={{ background: "white", border: "1px solid rgba(0,0,0,0.05)", borderRadius: 18, padding: 20, boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
+            <h3 className="flex items-center gap-2 mb-4" style={{ fontWeight: 700, fontSize: 13, color: INK }}>
+              <Calendar size={14} style={{ color: ROSE }} />
               Événements à venir
             </h3>
             <div className="space-y-2.5">
               {events.map((e, i) => (
                 <div key={i} className="flex items-center justify-between">
                   <div>
-                    <div className="text-xs font-semibold text-neutral-900">{e.name}</div>
-                    <div className="text-xs text-neutral-500">{e.date}</div>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: INK }}>{e.name}</div>
+                    <div style={{ fontSize: 10, color: INK_SOFT }}>{e.date}</div>
                   </div>
-                  <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${e.color}`}>{e.impact}</span>
+                  <span style={{
+                    fontSize: 10, fontWeight: 800, padding: "3px 8px", borderRadius: 99,
+                    background: "rgba(27,122,74,0.1)", color: "#1B7A4A",
+                  }}>{e.impact}</span>
                 </div>
               ))}
             </div>
           </div>
 
           {/* Weekly demand */}
-          <div className="bg-white border border-neutral-200 rounded-2xl p-5">
-            <h3 className="font-bold text-sm text-neutral-900 mb-4">Demande par jour</h3>
+          <div style={{ background: "white", border: "1px solid rgba(0,0,0,0.05)", borderRadius: 18, padding: 20, boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
+            <h3 style={{ fontWeight: 700, fontSize: 13, color: INK, marginBottom: 16 }}>Demande par jour</h3>
             <div className="flex items-end gap-1.5 h-20">
               {weekData.map((d) => (
                 <div key={d.day} className="flex-1 flex flex-col items-center gap-1">
                   <div
-                    className="w-full rounded-t-md bg-primary-500/20 hover:bg-primary-500/40 transition-colors"
-                    style={{ height: `${d.rate * 0.7}px` }}
+                    style={{
+                      width: "100%", borderTopLeftRadius: 4, borderTopRightRadius: 4,
+                      background: "rgba(224,32,96,0.2)", height: `${d.rate * 0.7}px`,
+                    }}
                   />
-                  <span className="text-xs text-neutral-500">{d.day}</span>
+                  <span style={{ fontSize: 10, color: INK_SOFT }}>{d.day}</span>
                 </div>
               ))}
             </div>
           </div>
 
           {/* Selected property detail */}
-          <div className="bg-primary-500/5 border border-primary-500/20 rounded-2xl p-5">
-            <h3 className="font-bold text-sm text-primary-600 mb-3 flex items-center gap-2">
-              <Zap size={14} />
+          <div style={{ background: "rgba(224,32,96,0.04)", border: "1px solid rgba(224,32,96,0.15)", borderRadius: 18, padding: 20 }}>
+            <h3 className="flex items-center gap-2 mb-3" style={{ fontWeight: 700, fontSize: 13, color: ROSE }}>
+              <Zap size={13} />
               {selectedProp.name} — Recommandation IA
             </h3>
             <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-neutral-500">Prix actuel</span>
-                <span className="font-semibold">{selectedProp.currentPrice} €/nuit</span>
+              <div className="flex justify-between" style={{ fontSize: 13 }}>
+                <span style={{ color: INK_SOFT }}>Prix actuel</span>
+                <span style={{ fontWeight: 700, color: INK }}>{selectedProp.currentPrice} €/nuit</span>
               </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-neutral-500">Prix IA optimal</span>
-                <span className="font-black text-primary-600">{selectedProp.aiPrice} €/nuit</span>
+              <div className="flex justify-between" style={{ fontSize: 13 }}>
+                <span style={{ color: INK_SOFT }}>Prix IA optimal</span>
+                <span style={{ fontWeight: 800, color: ROSE }}>{selectedProp.aiPrice} €/nuit</span>
               </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-neutral-500">Gain estimé/mois</span>
-                <span className="font-semibold text-green-600">+{Math.round((selectedProp.aiPrice - selectedProp.currentPrice) * 15)} €</span>
+              <div className="flex justify-between" style={{ fontSize: 13 }}>
+                <span style={{ color: INK_SOFT }}>Gain estimé/mois</span>
+                <span style={{ fontWeight: 700, color: "#1B7A4A" }}>+{Math.round((selectedProp.aiPrice - selectedProp.currentPrice) * 15)} €</span>
               </div>
-              <div className="mt-3 pt-3 border-t border-primary-500/20">
-                <p className="text-xs text-neutral-500 leading-relaxed">
+              <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid rgba(224,32,96,0.15)" }}>
+                <p style={{ fontSize: 11, color: INK_SOFT, lineHeight: 1.5 }}>
                   Basé sur Festival de Cannes (+85%), saisonnalité haute et taux d'occupation à {selectedProp.occupancy}%.
                 </p>
               </div>

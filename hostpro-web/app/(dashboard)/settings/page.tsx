@@ -5,6 +5,17 @@ import { useAuthStore } from "@/stores/authStore";
 import { Property } from "@/types";
 import { Plus, Save, Lock, User, Link, MessageSquare } from "lucide-react";
 
+const INK = "#1A0E12";
+const INK_SOFT = "#6B5A60";
+const ROSE = "#E02060";
+const PAPER = "#F4F2F0";
+
+const inputStyle: React.CSSProperties = {
+  border: "1px solid rgba(0,0,0,0.12)", borderRadius: 10,
+  padding: "12px 14px", background: "white",
+  fontFamily: "inherit", fontSize: 13, color: INK, outline: "none", width: "100%",
+};
+
 export default function SettingsPage() {
   const { user, setAuth, accessToken, refreshToken, tenantId } = useAuthStore();
   const [tab, setTab] = useState("profile");
@@ -120,24 +131,25 @@ export default function SettingsPage() {
     { value: "templates", label: "Modèles messages", icon: MessageSquare },
   ];
 
-  const inputClass =
-    "border border-[#DDDDDD] rounded-xl px-4 py-3 text-[#222222] placeholder-[#717171] focus:outline-none focus:border-[#222222] focus:ring-2 focus:ring-[#222222]/10 w-full text-sm transition-all";
-
   return (
     <div>
       {/* Tab bar */}
-      <div className="flex items-center gap-1 mb-6 bg-white border border-[#DDDDDD] rounded-xl p-1 w-fit">
+      <div className="flex items-center gap-1 mb-6 w-fit" style={{
+        background: "white", border: "1px solid rgba(0,0,0,0.08)", borderRadius: 14, padding: 4,
+      }}>
         {TABS.map(({ value, label, icon: Icon }) => (
           <button
             key={value}
             onClick={() => setTab(value)}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
-              tab === value
-                ? "bg-[#222222] text-white"
-                : "text-[#717171] hover:text-[#222222]"
-            }`}
+            style={{
+              display: "flex", alignItems: "center", gap: 8,
+              padding: "9px 16px", borderRadius: 10, fontSize: 13, fontWeight: 600,
+              border: "none", cursor: "pointer",
+              background: tab === value ? INK : "transparent",
+              color: tab === value ? "#F4F2F0" : INK_SOFT,
+            }}
           >
-            <Icon size={15} />
+            <Icon size={14} />
             {label}
           </button>
         ))}
@@ -147,124 +159,127 @@ export default function SettingsPage() {
       {tab === "profile" && (
         <div className="max-w-2xl space-y-6">
           {/* Avatar placeholder */}
-          <div className="bg-white rounded-2xl border border-[#DDDDDD] p-6 shadow-sm">
-            <h2 className="font-bold text-[#222222] mb-5">Photo de profil</h2>
+          <div style={{ background: "white", borderRadius: 18, border: "1px solid rgba(0,0,0,0.05)", padding: 22, boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
+            <h2 style={{ fontWeight: 800, color: INK, marginBottom: 20, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>Photo de profil</h2>
             <div className="flex items-center gap-5">
-              <div className="w-20 h-20 bg-[#FF5A5F]/10 rounded-full flex items-center justify-center border-2 border-[#FF5A5F]/20">
-                <span className="text-[#FF5A5F] text-2xl font-bold">
+              <div style={{
+                width: 80, height: 80,
+                background: "linear-gradient(135deg, rgba(224,32,96,0.15), rgba(224,32,96,0.05))",
+                borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center",
+                border: "2px solid rgba(224,32,96,0.2)",
+              }}>
+                <span style={{ color: ROSE, fontSize: 28, fontWeight: 800 }}>
                   {(user?.full_name || user?.email || "U")[0].toUpperCase()}
                 </span>
               </div>
               <div>
-                <button className="border border-[#DDDDDD] text-[#222222] font-semibold px-4 py-2 rounded-xl hover:bg-[#F7F7F7] transition-all text-sm">
+                <button style={{
+                  border: "1px solid rgba(0,0,0,0.1)", color: INK, fontWeight: 600,
+                  padding: "8px 16px", borderRadius: 10, background: "white", cursor: "pointer", fontSize: 13,
+                }}>
                   Changer la photo
                 </button>
-                <p className="text-xs text-[#717171] mt-1.5">JPG, PNG ou GIF. Max 2MB.</p>
+                <p style={{ fontSize: 11, color: INK_SOFT, marginTop: 6 }}>JPG, PNG ou GIF. Max 2MB.</p>
               </div>
             </div>
           </div>
 
           {/* Profile form */}
-          <div className="bg-white rounded-2xl border border-[#DDDDDD] p-6 shadow-sm">
+          <div style={{ background: "white", borderRadius: 18, border: "1px solid rgba(0,0,0,0.05)", padding: 22, boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
             <div className="flex items-center gap-3 mb-5">
-              <div className="w-9 h-9 bg-[#FF5A5F]/10 rounded-xl flex items-center justify-center">
-                <User size={16} className="text-[#FF5A5F]" />
+              <div style={{ width: 36, height: 36, background: "rgba(224,32,96,0.08)", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <User size={15} style={{ color: ROSE }} />
               </div>
-              <h2 className="font-bold text-[#222222]">Informations personnelles</h2>
+              <h2 style={{ fontWeight: 800, color: INK, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>Informations personnelles</h2>
             </div>
 
             <form onSubmit={saveProfile} className="space-y-4">
               {profileSaved && (
-                <div className="bg-green-50 border border-green-200 text-green-700 rounded-xl px-4 py-3 text-sm">
+                <div style={{ background: "rgba(27,122,74,0.08)", border: "1px solid rgba(27,122,74,0.2)", color: "#1B7A4A", borderRadius: 10, padding: "12px 16px", fontSize: 13 }}>
                   Profil mis à jour avec succès
                 </div>
               )}
               <div>
-                <label className="text-[#222222] text-sm font-semibold mb-2 block">Nom complet</label>
+                <label style={{ color: INK, fontSize: 13, fontWeight: 700, marginBottom: 6, display: "block" }}>Nom complet</label>
                 <input
                   type="text"
-                  className={inputClass}
+                  style={inputStyle}
                   value={profileForm.full_name}
                   onChange={(e) => setProfileForm({ ...profileForm, full_name: e.target.value })}
                 />
               </div>
               <div>
-                <label className="text-[#222222] text-sm font-semibold mb-2 block">Email</label>
+                <label style={{ color: INK, fontSize: 13, fontWeight: 700, marginBottom: 6, display: "block" }}>Email</label>
                 <input
                   type="email"
                   disabled
-                  className="border border-[#DDDDDD] rounded-xl px-4 py-3 text-[#717171] bg-[#F7F7F7] w-full text-sm cursor-not-allowed"
+                  style={{ ...inputStyle, color: INK_SOFT, background: PAPER, cursor: "not-allowed" }}
                   value={user?.email || ""}
                 />
-                <p className="text-xs text-[#717171] mt-1.5">L'email ne peut pas être modifié pour des raisons de sécurité</p>
+                <p style={{ fontSize: 11, color: INK_SOFT, marginTop: 6 }}>L'email ne peut pas être modifié pour des raisons de sécurité</p>
               </div>
               <button
                 type="submit"
                 disabled={saving}
-                className="flex items-center gap-2 bg-[#FF5A5F] hover:bg-[#E00B41] text-white font-semibold px-5 py-2.5 rounded-xl transition-all disabled:opacity-60 text-sm"
+                style={{
+                  display: "flex", alignItems: "center", gap: 8,
+                  background: ROSE, color: "white", fontWeight: 700,
+                  padding: "10px 18px", borderRadius: 12, border: "none", cursor: "pointer",
+                  fontSize: 13, opacity: saving ? 0.6 : 1,
+                }}
               >
-                <Save size={15} />
+                <Save size={14} />
                 {saving ? "Enregistrement..." : "Enregistrer les modifications"}
               </button>
             </form>
           </div>
 
           {/* Password form */}
-          <div className="bg-white rounded-2xl border border-[#DDDDDD] p-6 shadow-sm">
+          <div style={{ background: "white", borderRadius: 18, border: "1px solid rgba(0,0,0,0.05)", padding: 22, boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
             <div className="flex items-center gap-3 mb-5">
-              <div className="w-9 h-9 bg-[#FF5A5F]/10 rounded-xl flex items-center justify-center">
-                <Lock size={16} className="text-[#FF5A5F]" />
+              <div style={{ width: 36, height: 36, background: "rgba(224,32,96,0.08)", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <Lock size={15} style={{ color: ROSE }} />
               </div>
-              <h2 className="font-bold text-[#222222]">Changer le mot de passe</h2>
+              <h2 style={{ fontWeight: 800, color: INK, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>Changer le mot de passe</h2>
             </div>
 
             <form onSubmit={changePassword} className="space-y-4">
               {pwError && (
-                <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm">{pwError}</div>
+                <div style={{ background: "rgba(192,0,64,0.06)", border: "1px solid rgba(192,0,64,0.2)", color: "#C00040", borderRadius: 10, padding: "12px 16px", fontSize: 13 }}>{pwError}</div>
               )}
               {pwSuccess && (
-                <div className="bg-green-50 border border-green-200 text-green-700 rounded-xl px-4 py-3 text-sm">
+                <div style={{ background: "rgba(27,122,74,0.08)", border: "1px solid rgba(27,122,74,0.2)", color: "#1B7A4A", borderRadius: 10, padding: "12px 16px", fontSize: 13 }}>
                   Mot de passe modifié avec succès
                 </div>
               )}
-              <div>
-                <label className="text-[#222222] text-sm font-semibold mb-2 block">Mot de passe actuel</label>
-                <input
-                  type="password"
-                  required
-                  className={inputClass}
-                  value={pwForm.current_password}
-                  onChange={(e) => setPwForm({ ...pwForm, current_password: e.target.value })}
-                />
-              </div>
-              <div>
-                <label className="text-[#222222] text-sm font-semibold mb-2 block">Nouveau mot de passe</label>
-                <input
-                  type="password"
-                  required
-                  minLength={8}
-                  placeholder="8 caractères minimum"
-                  className={inputClass}
-                  value={pwForm.new_password}
-                  onChange={(e) => setPwForm({ ...pwForm, new_password: e.target.value })}
-                />
-              </div>
-              <div>
-                <label className="text-[#222222] text-sm font-semibold mb-2 block">Confirmer</label>
-                <input
-                  type="password"
-                  required
-                  className={inputClass}
-                  value={pwForm.confirm}
-                  onChange={(e) => setPwForm({ ...pwForm, confirm: e.target.value })}
-                />
-              </div>
+              {["Mot de passe actuel", "Nouveau mot de passe", "Confirmer"].map((label, i) => {
+                const keys = ["current_password", "new_password", "confirm"] as const;
+                return (
+                  <div key={i}>
+                    <label style={{ color: INK, fontSize: 13, fontWeight: 700, marginBottom: 6, display: "block" }}>{label}</label>
+                    <input
+                      type="password"
+                      required
+                      minLength={i === 1 ? 8 : undefined}
+                      placeholder={i === 1 ? "8 caractères minimum" : undefined}
+                      style={inputStyle}
+                      value={pwForm[keys[i]]}
+                      onChange={(e) => setPwForm({ ...pwForm, [keys[i]]: e.target.value })}
+                    />
+                  </div>
+                );
+              })}
               <button
                 type="submit"
                 disabled={saving}
-                className="flex items-center gap-2 bg-[#222222] hover:bg-[#333333] text-white font-semibold px-5 py-2.5 rounded-xl transition-all disabled:opacity-60 text-sm"
+                style={{
+                  display: "flex", alignItems: "center", gap: 8,
+                  background: INK, color: "#F4F2F0", fontWeight: 700,
+                  padding: "10px 18px", borderRadius: 12, border: "none", cursor: "pointer",
+                  fontSize: 13, opacity: saving ? 0.6 : 1,
+                }}
               >
-                <Lock size={15} />
+                <Lock size={14} />
                 {saving ? "Modification..." : "Modifier le mot de passe"}
               </button>
             </form>
@@ -275,21 +290,16 @@ export default function SettingsPage() {
       {/* Integrations tab */}
       {tab === "integrations" && (
         <div className="max-w-2xl space-y-6">
-          <div className="bg-white rounded-2xl border border-[#DDDDDD] p-6 shadow-sm">
-            <h2 className="font-bold text-[#222222] mb-2">Ajouter un flux iCal</h2>
-            <p className="text-sm text-[#717171] mb-5">
+          <div style={{ background: "white", borderRadius: 18, border: "1px solid rgba(0,0,0,0.05)", padding: 22, boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
+            <h2 style={{ fontWeight: 800, color: INK, marginBottom: 8, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>Ajouter un flux iCal</h2>
+            <p style={{ fontSize: 13, color: INK_SOFT, marginBottom: 20 }}>
               Synchronisez vos calendriers Airbnb, Booking.com et Abritel via iCal.
             </p>
             <form onSubmit={addFeed} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-[#222222] text-sm font-semibold mb-2 block">Propriété</label>
-                  <select
-                    required
-                    className={inputClass}
-                    value={feedForm.property_id}
-                    onChange={(e) => setFeedForm({ ...feedForm, property_id: e.target.value })}
-                  >
+                  <label style={{ color: INK, fontSize: 13, fontWeight: 700, marginBottom: 6, display: "block" }}>Propriété</label>
+                  <select required style={inputStyle} value={feedForm.property_id} onChange={(e) => setFeedForm({ ...feedForm, property_id: e.target.value })}>
                     <option value="">Sélectionner</option>
                     {properties.map((p) => (
                       <option key={p.id} value={p.id}>{p.name}</option>
@@ -297,12 +307,8 @@ export default function SettingsPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="text-[#222222] text-sm font-semibold mb-2 block">Plateforme</label>
-                  <select
-                    className={inputClass}
-                    value={feedForm.platform}
-                    onChange={(e) => setFeedForm({ ...feedForm, platform: e.target.value })}
-                  >
+                  <label style={{ color: INK, fontSize: 13, fontWeight: 700, marginBottom: 6, display: "block" }}>Plateforme</label>
+                  <select style={inputStyle} value={feedForm.platform} onChange={(e) => setFeedForm({ ...feedForm, platform: e.target.value })}>
                     <option value="">Autre</option>
                     <option value="airbnb">Airbnb</option>
                     <option value="booking">Booking.com</option>
@@ -311,11 +317,9 @@ export default function SettingsPage() {
                 </div>
               </div>
               <div>
-                <label className="text-[#222222] text-sm font-semibold mb-2 block">URL iCal</label>
+                <label style={{ color: INK, fontSize: 13, fontWeight: 700, marginBottom: 6, display: "block" }}>URL iCal</label>
                 <input
-                  required
-                  type="url"
-                  className={inputClass}
+                  required type="url" style={inputStyle}
                   placeholder="https://www.airbnb.com/calendar/ical/..."
                   value={feedForm.feed_url}
                   onChange={(e) => setFeedForm({ ...feedForm, feed_url: e.target.value })}
@@ -323,16 +327,23 @@ export default function SettingsPage() {
               </div>
               <button
                 type="submit"
-                className="flex items-center gap-2 bg-[#FF5A5F] hover:bg-[#E00B41] text-white font-semibold px-5 py-2.5 rounded-xl transition-all text-sm"
+                style={{
+                  display: "flex", alignItems: "center", gap: 8,
+                  background: ROSE, color: "white", fontWeight: 700,
+                  padding: "10px 18px", borderRadius: 12, border: "none", cursor: "pointer", fontSize: 13,
+                }}
               >
-                <Plus size={15} /> Ajouter le flux
+                <Plus size={14} /> Ajouter le flux
               </button>
             </form>
           </div>
 
-          <div className="bg-blue-50 border border-blue-200 rounded-2xl p-5">
-            <h3 className="font-semibold text-blue-900 mb-2">API natives OTA — disponibles en V1.5</h3>
-            <p className="text-sm text-blue-700">
+          <div style={{
+            background: "rgba(59,130,246,0.04)", border: "1px solid rgba(59,130,246,0.15)",
+            borderRadius: 18, padding: 20,
+          }}>
+            <h3 style={{ fontWeight: 700, color: "#1e3a8a", marginBottom: 8 }}>API natives OTA — disponibles en V1.5</h3>
+            <p style={{ fontSize: 13, color: "#1d4ed8" }}>
               Connexions directes Airbnb, Booking.com et Abritel planifiées pour la V1.5. En attendant,
               utilisez la synchronisation iCal (mise à jour toutes les heures).
             </p>
@@ -344,22 +355,24 @@ export default function SettingsPage() {
       {tab === "templates" && (
         <div className="max-w-2xl space-y-6">
           {templates.length > 0 && (
-            <div className="bg-white rounded-2xl border border-[#DDDDDD] shadow-sm overflow-hidden">
-              <div className="px-6 py-4 border-b border-[#DDDDDD] bg-[#F7F7F7]">
-                <span className="text-xs font-semibold text-[#717171] uppercase tracking-wide">Modèles existants</span>
+            <div style={{ background: "white", borderRadius: 18, border: "1px solid rgba(0,0,0,0.05)", overflow: "hidden", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
+              <div style={{ padding: "14px 22px", borderBottom: "1px solid rgba(0,0,0,0.05)", background: PAPER }}>
+                <span style={{ fontSize: 10, fontWeight: 700, color: INK_SOFT, letterSpacing: "0.15em", textTransform: "uppercase", fontFamily: "'JetBrains Mono', monospace" }}>Modèles existants</span>
               </div>
-              <div className="divide-y divide-[#DDDDDD]">
+              <div>
                 {templates.map((t) => (
-                  <div key={t.id} className="flex items-center justify-between px-6 py-4 hover:bg-[#F7F7F7] transition-colors">
+                  <div key={t.id} className="flex items-center justify-between px-6 py-4" style={{ borderBottom: "1px solid rgba(0,0,0,0.04)" }}>
                     <div>
-                      <div className="font-semibold text-[#222222]">{t.name}</div>
-                      <div className="text-xs text-[#717171] mt-0.5">{t.trigger} · {t.channel}</div>
+                      <div style={{ fontWeight: 700, color: INK, fontSize: 13 }}>{t.name}</div>
+                      <div style={{ fontSize: 11, color: INK_SOFT, marginTop: 2 }}>{t.trigger} · {t.channel}</div>
                     </div>
-                    <span
-                      className={`text-xs px-2.5 py-1 rounded-full font-semibold ${
-                        t.is_active ? "bg-green-100 text-green-700" : "bg-[#F7F7F7] text-[#717171]"
-                      }`}
-                    >
+                    <span style={{
+                      fontSize: 9, fontWeight: 800, letterSpacing: "0.1em",
+                      padding: "4px 8px", borderRadius: 99,
+                      ...(t.is_active
+                        ? { background: "rgba(27,122,74,0.1)", color: "#1B7A4A" }
+                        : { background: "rgba(26,14,18,0.06)", color: INK_SOFT }),
+                    }}>
                       {t.is_active ? "Actif" : "Inactif"}
                     </span>
                   </div>
@@ -368,27 +381,22 @@ export default function SettingsPage() {
             </div>
           )}
 
-          <div className="bg-white rounded-2xl border border-[#DDDDDD] p-6 shadow-sm">
-            <h2 className="font-bold text-[#222222] mb-5">Nouveau modèle de message</h2>
+          <div style={{ background: "white", borderRadius: 18, border: "1px solid rgba(0,0,0,0.05)", padding: 22, boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
+            <h2 style={{ fontWeight: 800, color: INK, marginBottom: 20, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>Nouveau modèle de message</h2>
             <form onSubmit={saveTemplate} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-[#222222] text-sm font-semibold mb-2 block">Nom</label>
+                  <label style={{ color: INK, fontSize: 13, fontWeight: 700, marginBottom: 6, display: "block" }}>Nom</label>
                   <input
-                    required
-                    className={inputClass}
+                    required style={inputStyle}
                     placeholder="Confirmation de réservation"
                     value={templateForm.name}
                     onChange={(e) => setTemplateForm({ ...templateForm, name: e.target.value })}
                   />
                 </div>
                 <div>
-                  <label className="text-[#222222] text-sm font-semibold mb-2 block">Déclencheur</label>
-                  <select
-                    className={inputClass}
-                    value={templateForm.trigger}
-                    onChange={(e) => setTemplateForm({ ...templateForm, trigger: e.target.value })}
-                  >
+                  <label style={{ color: INK, fontSize: 13, fontWeight: 700, marginBottom: 6, display: "block" }}>Déclencheur</label>
+                  <select style={inputStyle} value={templateForm.trigger} onChange={(e) => setTemplateForm({ ...templateForm, trigger: e.target.value })}>
                     {TRIGGERS.map(([v, l]) => (
                       <option key={v} value={v}>{l}</option>
                     ))}
@@ -396,23 +404,23 @@ export default function SettingsPage() {
                 </div>
               </div>
               <div>
-                <label className="text-[#222222] text-sm font-semibold mb-2 block">Sujet</label>
+                <label style={{ color: INK, fontSize: 13, fontWeight: 700, marginBottom: 6, display: "block" }}>Sujet</label>
                 <input
-                  className={inputClass}
+                  style={inputStyle}
                   placeholder="Votre réservation est confirmée !"
                   value={templateForm.subject}
                   onChange={(e) => setTemplateForm({ ...templateForm, subject: e.target.value })}
                 />
               </div>
               <div>
-                <label className="text-[#222222] text-sm font-semibold mb-2 block">Corps du message</label>
-                <p className="text-xs text-[#717171] mb-2">
+                <label style={{ color: INK, fontSize: 13, fontWeight: 700, marginBottom: 6, display: "block" }}>Corps du message</label>
+                <p style={{ fontSize: 11, color: INK_SOFT, marginBottom: 8 }}>
                   Variables disponibles : {`{{guest_name}}`}, {`{{property_name}}`}, {`{{check_in}}`}, {`{{check_out}}`}
                 </p>
                 <textarea
                   rows={5}
                   required
-                  className={inputClass + " resize-none"}
+                  style={{ ...inputStyle, resize: "none" }}
                   value={templateForm.body}
                   onChange={(e) => setTemplateForm({ ...templateForm, body: e.target.value })}
                 />
@@ -420,7 +428,11 @@ export default function SettingsPage() {
               <button
                 type="submit"
                 disabled={saving}
-                className="bg-[#FF5A5F] hover:bg-[#E00B41] text-white font-semibold px-5 py-2.5 rounded-xl transition-all disabled:opacity-60 text-sm"
+                style={{
+                  background: ROSE, color: "white", fontWeight: 700,
+                  padding: "10px 18px", borderRadius: 12, border: "none", cursor: "pointer",
+                  fontSize: 13, opacity: saving ? 0.6 : 1,
+                }}
               >
                 {saving ? "Enregistrement..." : "Créer le modèle"}
               </button>

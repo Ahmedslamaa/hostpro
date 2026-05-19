@@ -66,14 +66,21 @@ export default function CompliancePage() {
   const inputClass =
     "border border-neutral-200 rounded-xl px-3.5 py-2.5 text-sm text-neutral-900 placeholder-[#717171] focus:outline-none focus:border-neutral-900 focus:ring-2 focus:ring-neutral-900/10 w-full transition-all";
 
+  const INK = "#1A0E12";
+  const INK_SOFT = "#6B5A60";
+  const ROSE = "#E02060";
+  const PAPER = "#F4F2F0";
+
   return (
     <div>
       {/* Status banner */}
-      <div className={`flex items-center gap-3 px-5 py-3.5 rounded-2xl text-sm font-medium mb-6 ${
-        alertCount > 0
-          ? "bg-red-50 border border-red-200 text-red-700"
-          : "bg-green-50 border border-green-200 text-green-700"
-      }`}>
+      <div style={{
+        display: "flex", alignItems: "center", gap: 12,
+        padding: "14px 20px", borderRadius: 18, fontSize: 13, fontWeight: 600, marginBottom: 24,
+        ...(alertCount > 0
+          ? { background: "rgba(192,0,64,0.06)", border: "1px solid rgba(192,0,64,0.2)", color: "#C00040" }
+          : { background: "rgba(27,122,74,0.08)", border: "1px solid rgba(27,122,74,0.2)", color: "#1B7A4A" }),
+      }}>
         {alertCount > 0 ? <ShieldAlert size={18} /> : <ShieldCheck size={18} />}
         {alertCount > 0
           ? `${alertCount} alerte${alertCount > 1 ? "s" : ""} de conformité détectée${alertCount > 1 ? "s" : ""} — Action requise`
@@ -83,32 +90,36 @@ export default function CompliancePage() {
       {loading ? (
         <div className="space-y-4">
           {[...Array(3)].map((_, i) => (
-            <div key={i} className="h-48 bg-white rounded-2xl border border-neutral-200 animate-pulse shadow-sm" />
+            <div key={i} className="h-48 animate-pulse" style={{ background: "white", borderRadius: 18, border: "1px solid rgba(0,0,0,0.05)" }} />
           ))}
         </div>
       ) : records.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-neutral-200 flex flex-col items-center justify-center py-24 shadow-sm">
-          <ShieldCheck size={40} className="text-[#DDDDDD] mb-4" />
-          <h3 className="font-semibold text-neutral-900 mb-2">Aucune donnée de conformité</h3>
-          <p className="text-neutral-500 text-sm">Ajoutez des propriétés pour suivre leur conformité</p>
+        <div style={{
+          background: "white", borderRadius: 18, border: "1px solid rgba(0,0,0,0.05)",
+          display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+          padding: "96px 24px", boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+        }}>
+          <ShieldCheck size={40} style={{ color: "rgba(0,0,0,0.15)", marginBottom: 16 }} />
+          <h3 style={{ fontWeight: 700, color: INK, marginBottom: 8 }}>Aucune donnée de conformité</h3>
+          <p style={{ color: INK_SOFT, fontSize: 13 }}>Ajoutez des propriétés pour suivre leur conformité</p>
         </div>
       ) : (
         <div className="space-y-4">
           {records.map((r) => {
             const pct = Math.min(100, (r.nuitees_year / r.nuitees_limit) * 100);
-            const barColor =
-              r.nuitees_year >= r.nuitees_limit
-                ? "bg-red-500"
-                : r.nuitees_year >= r.nuitees_alert_at
-                ? "bg-amber-500"
-                : "bg-green-500";
+            const barColorHex =
+              r.nuitees_year >= r.nuitees_limit ? "#C00040"
+              : r.nuitees_year >= r.nuitees_alert_at ? "#C0A060"
+              : "#1B7A4A";
 
             return (
               <div
                 key={r.property_id}
-                className={`bg-white rounded-2xl border p-6 shadow-sm ${
-                  r.is_compliant ? "border-neutral-200" : "border-amber-200"
-                }`}
+                style={{
+                  background: "white", borderRadius: 18, padding: 22,
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+                  border: r.is_compliant ? "1px solid rgba(0,0,0,0.05)" : "1px solid rgba(192,160,96,0.3)",
+                }}
               >
                 {/* Header */}
                 <div className="flex items-start justify-between mb-5">
@@ -135,23 +146,23 @@ export default function CompliancePage() {
                     <div className="flex gap-2">
                       <button
                         onClick={() => setEditing(null)}
-                        className="flex items-center gap-1.5 border border-neutral-200 text-neutral-500 font-medium px-3 py-1.5 rounded-xl hover:bg-neutral-100 transition-all text-sm"
+                        style={{ display: "flex", alignItems: "center", gap: 6, border: "1px solid rgba(0,0,0,0.1)", color: INK_SOFT, fontWeight: 600, padding: "7px 14px", borderRadius: 10, background: "white", cursor: "pointer", fontSize: 12 }}
                       >
-                        <X size={14} /> Annuler
+                        <X size={13} /> Annuler
                       </button>
                       <button
                         onClick={saveEdit}
-                        className="flex items-center gap-1.5 bg-primary-500 hover:bg-primary-600 text-white font-semibold px-3 py-1.5 rounded-xl transition-all text-sm"
+                        style={{ display: "flex", alignItems: "center", gap: 6, background: ROSE, color: "white", fontWeight: 700, padding: "7px 14px", borderRadius: 10, border: "none", cursor: "pointer", fontSize: 12 }}
                       >
-                        <Save size={14} /> Enregistrer
+                        <Save size={13} /> Enregistrer
                       </button>
                     </div>
                   ) : (
                     <button
                       onClick={() => startEdit(r)}
-                      className="flex items-center gap-1.5 border border-neutral-200 text-neutral-900 font-medium px-3 py-1.5 rounded-xl hover:bg-neutral-100 transition-all text-sm"
+                      style={{ display: "flex", alignItems: "center", gap: 6, border: "1px solid rgba(0,0,0,0.1)", color: INK, fontWeight: 600, padding: "7px 14px", borderRadius: 10, background: "white", cursor: "pointer", fontSize: 12 }}
                     >
-                      <Pencil size={14} /> Gérer
+                      <Pencil size={13} /> Gérer
                     </button>
                   )}
                 </div>
@@ -195,20 +206,19 @@ export default function CompliancePage() {
                   <div className="grid grid-cols-4 gap-6">
                     {/* Nuitées progress */}
                     <div>
-                      <div className="text-xs font-semibold text-neutral-500 uppercase tracking-wide mb-3">
+                      <div style={{ fontSize: 10, fontWeight: 700, color: INK_SOFT, textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 12, fontFamily: "'JetBrains Mono', monospace" }}>
                         Nuitées {r.current_year || new Date().getFullYear()}
                       </div>
                       <div className="flex items-end gap-1 mb-2">
-                        <span className="text-3xl font-bold text-neutral-900">{r.nuitees_year}</span>
-                        <span className="text-neutral-500 text-sm mb-0.5">/ {r.nuitees_limit}</span>
+                        <span style={{ fontSize: 28, fontWeight: 800, color: INK, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>{r.nuitees_year}</span>
+                        <span style={{ color: INK_SOFT, fontSize: 13, marginBottom: 2 }}>/ {r.nuitees_limit}</span>
                       </div>
-                      <div className="h-2.5 bg-neutral-100 rounded-full overflow-hidden mb-1.5">
+                      <div style={{ height: 8, background: "rgba(26,14,18,0.08)", borderRadius: 99, overflow: "hidden", marginBottom: 6 }}>
                         <div
-                          className={`h-2.5 rounded-full transition-all ${barColor}`}
-                          style={{ width: `${pct}%` }}
+                          style={{ height: 8, borderRadius: 99, background: barColorHex, width: `${pct}%`, transition: "width 0.4s" }}
                         />
                       </div>
-                      <div className="text-xs text-neutral-500">{r.nuitees_limit - r.nuitees_year} nuitées restantes</div>
+                      <div style={{ fontSize: 11, color: INK_SOFT }}>{r.nuitees_limit - r.nuitees_year} nuitées restantes</div>
                     </div>
 
                     {/* Registration */}

@@ -4,11 +4,23 @@ import { teamApi } from "@/lib/api";
 import { useToastStore } from "@/stores/toastStore";
 import { Users, Plus, Mail, ShieldCheck, Eye, Crown, X, AlertCircle } from "lucide-react";
 
-const ROLE_CONFIG: Record<string, { label: string; className: string; icon: any }> = {
-  admin:   { label: "Administrateur", className: "bg-primary-500/10 text-primary-600",  icon: Crown },
-  manager: { label: "Manager",        className: "bg-blue-100 text-blue-700",        icon: ShieldCheck },
-  staff:   { label: "Staff",          className: "bg-amber-100 text-amber-700",      icon: Users },
-  viewer:  { label: "Lecteur",        className: "bg-neutral-100 text-neutral-500",     icon: Eye },
+const INK = "#1A0E12";
+const INK_SOFT = "#6B5A60";
+const ROSE = "#E02060";
+const PAPER = "#F4F2F0";
+
+const ROLE_CONFIG: Record<string, { label: string; style: React.CSSProperties; icon: any }> = {
+  admin:   { label: "Administrateur", style: { background: "rgba(224,32,96,0.08)", color: "#C00040" },        icon: Crown },
+  manager: { label: "Manager",        style: { background: "rgba(59,130,246,0.1)", color: "#1d4ed8" },        icon: ShieldCheck },
+  staff:   { label: "Staff",          style: { background: "rgba(192,160,96,0.15)", color: "#C0A060" },       icon: Users },
+  viewer:  { label: "Lecteur",        style: { background: "rgba(26,14,18,0.06)", color: INK_SOFT },          icon: Eye },
+};
+
+const inputStyle: React.CSSProperties = {
+  border: "1px solid rgba(0,0,0,0.12)",
+  borderRadius: 10, padding: "12px 14px",
+  background: "white", fontFamily: "inherit",
+  fontSize: 13, color: INK, outline: "none", width: "100%",
 };
 
 function getInitials(name: string | null, email: string): string {
@@ -61,46 +73,52 @@ export default function TeamPage() {
     }
   };
 
-  const inputClass = "border border-neutral-200 rounded-xl px-4 py-3 text-sm text-neutral-900 placeholder-[#717171] focus:outline-none focus:border-neutral-900 focus:ring-2 focus:ring-neutral-900/10 w-full transition-all";
-
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <p className="text-sm text-neutral-500">
+        <p style={{ fontSize: 13, color: INK_SOFT }}>
           {loading ? "Chargement…" : `${members.length} membre${members.length !== 1 ? "s" : ""} dans votre espace`}
         </p>
         <button
           onClick={() => setShowInvite(true)}
-          className="flex items-center gap-2 bg-primary-500 hover:bg-primary-600 text-white font-semibold px-5 py-2.5 rounded-xl transition-all text-sm"
+          style={{
+            display: "flex", alignItems: "center", gap: 8,
+            background: INK, color: "#F4F2F0",
+            borderRadius: 12, padding: "10px 18px",
+            fontWeight: 700, fontSize: 13, border: "none", cursor: "pointer",
+          }}
         >
-          <Plus size={16} /> Inviter un membre
+          <Plus size={15} /> Inviter un membre
         </button>
       </div>
 
       {/* Invite form */}
       {showInvite && (
-        <div className="bg-white rounded-2xl border border-neutral-200 p-6 shadow-sm">
+        <div style={{
+          background: "white", borderRadius: 18, border: "1px solid rgba(0,0,0,0.05)",
+          padding: 22, boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+        }}>
           <div className="flex items-center justify-between mb-5">
-            <h2 className="font-bold text-neutral-900">Inviter un nouveau membre</h2>
-            <button onClick={() => setShowInvite(false)} className="text-neutral-500 hover:text-neutral-900">
+            <h2 style={{ fontWeight: 800, color: INK, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>Inviter un nouveau membre</h2>
+            <button onClick={() => setShowInvite(false)} style={{ color: INK_SOFT, background: "none", border: "none", cursor: "pointer" }}>
               <X size={18} />
             </button>
           </div>
           <form onSubmit={handleInvite} className="grid grid-cols-3 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-neutral-500 mb-1.5">Email *</label>
-              <input required type="email" className={inputClass} placeholder="prenom@exemple.fr"
+              <label style={{ display: "block", fontSize: 10, fontWeight: 700, color: INK_SOFT, marginBottom: 6, letterSpacing: "0.15em", textTransform: "uppercase", fontFamily: "'JetBrains Mono', monospace" }}>Email *</label>
+              <input required type="email" style={inputStyle} placeholder="prenom@exemple.fr"
                 value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-neutral-500 mb-1.5">Nom complet</label>
-              <input type="text" className={inputClass} placeholder="Prénom Nom"
+              <label style={{ display: "block", fontSize: 10, fontWeight: 700, color: INK_SOFT, marginBottom: 6, letterSpacing: "0.15em", textTransform: "uppercase", fontFamily: "'JetBrains Mono', monospace" }}>Nom complet</label>
+              <input type="text" style={inputStyle} placeholder="Prénom Nom"
                 value={form.full_name} onChange={e => setForm({ ...form, full_name: e.target.value })} />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-neutral-500 mb-1.5">Rôle</label>
-              <select className={inputClass} value={form.role} onChange={e => setForm({ ...form, role: e.target.value })}>
+              <label style={{ display: "block", fontSize: 10, fontWeight: 700, color: INK_SOFT, marginBottom: 6, letterSpacing: "0.15em", textTransform: "uppercase", fontFamily: "'JetBrains Mono', monospace" }}>Rôle</label>
+              <select style={inputStyle} value={form.role} onChange={e => setForm({ ...form, role: e.target.value })}>
                 <option value="admin">Administrateur</option>
                 <option value="manager">Manager</option>
                 <option value="staff">Staff</option>
@@ -109,11 +127,18 @@ export default function TeamPage() {
             </div>
             <div className="col-span-3 flex justify-end gap-3 pt-2">
               <button type="button" onClick={() => setShowInvite(false)}
-                className="px-5 py-2.5 border border-neutral-200 rounded-xl text-sm text-neutral-500 hover:bg-neutral-100 transition-colors">
+                style={{
+                  padding: "10px 18px", border: "1px solid rgba(0,0,0,0.1)", borderRadius: 12,
+                  fontSize: 13, color: INK_SOFT, background: "white", cursor: "pointer", fontWeight: 600,
+                }}>
                 Annuler
               </button>
               <button type="submit" disabled={saving}
-                className="px-5 py-2.5 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-xl text-sm transition-colors disabled:opacity-50">
+                style={{
+                  padding: "10px 18px", background: ROSE, color: "white",
+                  border: "none", borderRadius: 12, fontSize: 13, fontWeight: 700,
+                  cursor: "pointer", opacity: saving ? 0.5 : 1,
+                }}>
                 {saving ? "Envoi…" : "Ajouter"}
               </button>
             </div>
@@ -124,13 +149,19 @@ export default function TeamPage() {
       {/* Members list */}
       {loading ? (
         <div className="space-y-3">
-          {[...Array(2)].map((_, i) => <div key={i} className="h-20 bg-white rounded-2xl border border-neutral-200 animate-pulse" />)}
+          {[...Array(2)].map((_, i) => (
+            <div key={i} className="h-20 animate-pulse" style={{ background: "white", borderRadius: 18, border: "1px solid rgba(0,0,0,0.05)" }} />
+          ))}
         </div>
       ) : members.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-neutral-200 flex flex-col items-center justify-center py-20 shadow-sm">
-          <Users size={40} className="text-[#DDDDDD] mb-4" />
-          <p className="font-semibold text-neutral-900 mb-1">Aucun membre d'équipe</p>
-          <p className="text-sm text-neutral-500">Invitez des collaborateurs pour gérer vos biens ensemble</p>
+        <div style={{
+          background: "white", borderRadius: 18, border: "1px solid rgba(0,0,0,0.05)",
+          display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+          padding: "80px 24px", boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+        }}>
+          <Users size={40} style={{ color: "rgba(0,0,0,0.15)", marginBottom: 16 }} />
+          <p style={{ fontWeight: 700, color: INK, marginBottom: 4 }}>Aucun membre d'équipe</p>
+          <p style={{ fontSize: 13, color: INK_SOFT }}>Invitez des collaborateurs pour gérer vos biens ensemble</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -138,36 +169,48 @@ export default function TeamPage() {
             const roleCfg = ROLE_CONFIG[m.role] ?? ROLE_CONFIG.viewer;
             const RoleIcon = roleCfg.icon;
             return (
-              <div key={m.id} className="bg-white rounded-2xl border border-neutral-200 p-5 shadow-sm flex items-center gap-4">
-                {/* Avatar */}
-                <div className="w-12 h-12 bg-primary-500/10 rounded-2xl flex items-center justify-center flex-shrink-0">
-                  <span className="text-primary-600 font-black text-sm">
+              <div key={m.id} style={{
+                background: "white", borderRadius: 18, border: "1px solid rgba(0,0,0,0.05)",
+                padding: 20, boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+                display: "flex", alignItems: "center", gap: 16,
+              }}>
+                {/* Avatar gradient rose */}
+                <div style={{
+                  width: 48, height: 48,
+                  background: "linear-gradient(135deg, rgba(224,32,96,0.15), rgba(224,32,96,0.05))",
+                  borderRadius: 14, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+                }}>
+                  <span style={{ color: ROSE, fontWeight: 800, fontSize: 14 }}>
                     {getInitials(m.full_name, m.email)}
                   </span>
                 </div>
 
                 {/* Info */}
-                <div className="flex-1 min-w-0">
+                <div style={{ flex: 1, minWidth: 0 }}>
                   <div className="flex items-center gap-2">
-                    <span className="font-semibold text-neutral-900 text-sm">{m.full_name ?? m.email}</span>
+                    <span style={{ fontWeight: 700, color: INK, fontSize: 13 }}>{m.full_name ?? m.email}</span>
                     {!m.is_active && (
-                      <span className="text-xs bg-neutral-100 text-neutral-500 px-2 py-0.5 rounded-full">Inactif</span>
+                      <span style={{ fontSize: 9, fontWeight: 800, background: "rgba(26,14,18,0.06)", color: INK_SOFT, padding: "3px 7px", borderRadius: 99 }}>Inactif</span>
                     )}
                   </div>
-                  <div className="flex items-center gap-1 text-xs text-neutral-500 mt-0.5">
-                    <Mail size={11} />
+                  <div className="flex items-center gap-1 mt-0.5" style={{ fontSize: 11, color: INK_SOFT }}>
+                    <Mail size={10} />
                     <span>{m.email}</span>
                   </div>
                 </div>
 
-                {/* Role */}
-                <span className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full flex-shrink-0 ${roleCfg.className}`}>
-                  <RoleIcon size={11} /> {roleCfg.label}
+                {/* Role badge */}
+                <span style={{
+                  display: "flex", alignItems: "center", gap: 6, fontSize: 10, fontWeight: 800,
+                  padding: "5px 12px", borderRadius: 99, flexShrink: 0, letterSpacing: "0.05em",
+                  ...roleCfg.style,
+                }}>
+                  <RoleIcon size={10} /> {roleCfg.label}
                 </span>
 
                 {/* Last login */}
-                <div className="text-right text-xs text-neutral-500 flex-shrink-0 w-32">
-                  <div className="font-medium text-neutral-900">Dernière connexion</div>
+                <div style={{ textAlign: "right", fontSize: 11, color: INK_SOFT, flexShrink: 0, width: 120 }}>
+                  <div style={{ fontWeight: 700, color: INK, fontSize: 12 }}>Dernière connexion</div>
                   <div>{timeSince(m.last_login_at)}</div>
                 </div>
               </div>
@@ -177,8 +220,12 @@ export default function TeamPage() {
       )}
 
       {/* Info */}
-      <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 text-sm text-blue-700 flex gap-3">
-        <AlertCircle size={16} className="flex-shrink-0 mt-0.5" />
+      <div style={{
+        background: "rgba(59,130,246,0.05)", border: "1px solid rgba(59,130,246,0.15)",
+        borderRadius: 18, padding: 16, fontSize: 13, color: "#1d4ed8",
+        display: "flex", gap: 12,
+      }}>
+        <AlertCircle size={15} style={{ flexShrink: 0, marginTop: 2 }} />
         <span>
           <strong>Rôles :</strong> L'administrateur gère tout · Le manager supervise biens et réservations · Le staff voit les tâches qui lui sont assignées · Le lecteur a accès en consultation uniquement.
         </span>

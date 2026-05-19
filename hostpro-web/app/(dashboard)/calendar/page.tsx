@@ -4,14 +4,19 @@ import { calendarApi } from "@/lib/api";
 import { CalendarEvent, Property } from "@/types";
 import { ChevronLeft, ChevronRight, Plus, X } from "lucide-react";
 
-const SOURCE_CONFIG: Record<string, { color: string; bg: string; label: string }> = {
-  manual: { color: "#222222", bg: "bg-neutral-900/10", label: "Direct/Manuel" },
-  airbnb: { color: "#FF5A5F", bg: "bg-primary-500/20", label: "Airbnb" },
-  booking: { color: "#003580", bg: "bg-blue-100", label: "Booking" },
-  abritel: { color: "#00adef", bg: "bg-cyan-100", label: "Abritel" },
-  ical: { color: "#6366f1", bg: "bg-indigo-100", label: "iCal" },
-  reservation: { color: "#FF5A5F", bg: "bg-primary-500/20", label: "Réservation" },
-  block: { color: "#717171", bg: "bg-[#717171]/10", label: "Blocage" },
+const INK = "#1A0E12";
+const INK_SOFT = "#6B5A60";
+const ROSE = "#E02060";
+const PAPER = "#F4F2F0";
+
+const SOURCE_CONFIG: Record<string, { color: string; label: string }> = {
+  manual:      { color: "#1A0E12", label: "Direct/Manuel" },
+  airbnb:      { color: "#E02060", label: "Airbnb" },
+  booking:     { color: "#003580", label: "Booking" },
+  abritel:     { color: "#00adef", label: "Abritel" },
+  ical:        { color: "#6366f1", label: "iCal" },
+  reservation: { color: "#E02060", label: "Réservation" },
+  block:       { color: "#6B5A60", label: "Blocage" },
 };
 
 function getDaysInMonth(year: number, month: number) {
@@ -19,7 +24,7 @@ function getDaysInMonth(year: number, month: number) {
 }
 
 function getFirstDayOfMonth(year: number, month: number) {
-  return (new Date(year, month, 1).getDay() + 6) % 7; // Mon=0
+  return (new Date(year, month, 1).getDay() + 6) % 7;
 }
 
 const MONTHS_FR = [
@@ -27,6 +32,12 @@ const MONTHS_FR = [
   "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre",
 ];
 const DAYS_FR = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
+
+const inputStyle: React.CSSProperties = {
+  border: "1px solid rgba(0,0,0,0.12)", borderRadius: 10,
+  padding: "10px 12px", fontSize: 13, color: INK,
+  background: "white", fontFamily: "inherit", outline: "none",
+};
 
 export default function CalendarPage() {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
@@ -82,35 +93,37 @@ export default function CalendarPage() {
 
   const goToday = () => setCurrentDate(new Date());
 
-  const inputClass =
-    "border border-neutral-200 rounded-xl px-3 py-2.5 text-sm text-neutral-900 placeholder-[#717171] focus:outline-none focus:border-neutral-900 focus:ring-2 focus:ring-neutral-900/10 transition-all";
-
   return (
     <div>
       {/* Controls */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
           {/* Month nav */}
-          <div className="flex items-center gap-1 bg-white border border-neutral-200 rounded-xl p-1">
+          <div className="flex items-center gap-1" style={{
+            background: "white", border: "1px solid rgba(0,0,0,0.08)", borderRadius: 14, padding: 4,
+          }}>
             <button
               onClick={() => setCurrentDate(new Date(year, month - 1))}
-              className="p-2 hover:bg-neutral-100 rounded-lg transition-colors text-neutral-500 hover:text-neutral-900"
+              style={{ padding: 8, borderRadius: 8, border: "none", background: "transparent", cursor: "pointer", color: INK_SOFT }}
             >
-              <ChevronLeft size={16} />
+              <ChevronLeft size={15} />
             </button>
-            <span className="px-4 text-sm font-semibold text-neutral-900 w-40 text-center">
+            <span style={{ padding: "0 16px", fontSize: 13, fontWeight: 700, color: INK, width: 160, textAlign: "center" }}>
               {MONTHS_FR[month]} {year}
             </span>
             <button
               onClick={() => setCurrentDate(new Date(year, month + 1))}
-              className="p-2 hover:bg-neutral-100 rounded-lg transition-colors text-neutral-500 hover:text-neutral-900"
+              style={{ padding: 8, borderRadius: 8, border: "none", background: "transparent", cursor: "pointer", color: INK_SOFT }}
             >
-              <ChevronRight size={16} />
+              <ChevronRight size={15} />
             </button>
           </div>
           <button
             onClick={goToday}
-            className="border border-neutral-200 text-neutral-900 font-semibold px-4 py-2.5 rounded-xl hover:bg-neutral-100 transition-all text-sm"
+            style={{
+              border: "1px solid rgba(0,0,0,0.1)", color: INK, fontWeight: 600,
+              padding: "9px 16px", borderRadius: 12, background: "white", cursor: "pointer", fontSize: 13,
+            }}
           >
             Aujourd'hui
           </button>
@@ -122,8 +135,8 @@ export default function CalendarPage() {
             {Object.entries(SOURCE_CONFIG)
               .filter(([k]) => ["airbnb", "booking", "block", "manual"].includes(k))
               .map(([k, cfg]) => (
-                <div key={k} className="flex items-center gap-1.5 text-xs text-neutral-500">
-                  <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: cfg.color }} />
+                <div key={k} className="flex items-center gap-1.5" style={{ fontSize: 11, color: INK_SOFT }}>
+                  <div style={{ width: 10, height: 10, borderRadius: "50%", background: cfg.color }} />
                   {cfg.label}
                 </div>
               ))}
@@ -131,28 +144,36 @@ export default function CalendarPage() {
 
           <button
             onClick={() => setShowBlock(true)}
-            className="flex items-center gap-2 bg-primary-500 hover:bg-primary-600 text-white font-semibold px-5 py-2.5 rounded-xl transition-all text-sm"
+            style={{
+              display: "flex", alignItems: "center", gap: 8,
+              background: INK, color: "#F4F2F0",
+              borderRadius: 12, padding: "10px 18px",
+              fontWeight: 700, fontSize: 13, border: "none", cursor: "pointer",
+            }}
           >
-            <Plus size={16} /> Bloquer des dates
+            <Plus size={15} /> Bloquer des dates
           </button>
         </div>
       </div>
 
       {/* Block form */}
       {showBlock && (
-        <div className="bg-white rounded-2xl border border-neutral-200 p-6 mb-6 shadow-sm">
+        <div style={{
+          background: "white", borderRadius: 18, border: "1px solid rgba(0,0,0,0.05)",
+          padding: 22, marginBottom: 24, boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+        }}>
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-neutral-900">Bloquer des dates</h3>
-            <button onClick={() => setShowBlock(false)} className="text-neutral-500 hover:text-neutral-900 transition-colors">
-              <X size={18} />
+            <h3 style={{ fontWeight: 700, color: INK }}>Bloquer des dates</h3>
+            <button onClick={() => setShowBlock(false)} style={{ color: INK_SOFT, background: "none", border: "none", cursor: "pointer" }}>
+              <X size={17} />
             </button>
           </div>
           <form onSubmit={handleBlock} className="grid grid-cols-5 gap-4 items-end">
             <div>
-              <label className="text-neutral-900 text-sm font-semibold mb-2 block">Propriété</label>
+              <label style={{ color: INK, fontSize: 13, fontWeight: 700, marginBottom: 6, display: "block" }}>Propriété</label>
               <select
                 required
-                className={inputClass + " w-full"}
+                style={{ ...inputStyle, width: "100%" }}
                 value={blockForm.property_id}
                 onChange={(e) => setBlockForm({ ...blockForm, property_id: e.target.value })}
               >
@@ -163,29 +184,27 @@ export default function CalendarPage() {
               </select>
             </div>
             <div>
-              <label className="text-neutral-900 text-sm font-semibold mb-2 block">Du</label>
+              <label style={{ color: INK, fontSize: 13, fontWeight: 700, marginBottom: 6, display: "block" }}>Du</label>
               <input
-                type="date"
-                required
-                className={inputClass + " w-full"}
+                type="date" required
+                style={{ ...inputStyle, width: "100%" }}
                 value={blockForm.start_date}
                 onChange={(e) => setBlockForm({ ...blockForm, start_date: e.target.value })}
               />
             </div>
             <div>
-              <label className="text-neutral-900 text-sm font-semibold mb-2 block">Au</label>
+              <label style={{ color: INK, fontSize: 13, fontWeight: 700, marginBottom: 6, display: "block" }}>Au</label>
               <input
-                type="date"
-                required
-                className={inputClass + " w-full"}
+                type="date" required
+                style={{ ...inputStyle, width: "100%" }}
                 value={blockForm.end_date}
                 onChange={(e) => setBlockForm({ ...blockForm, end_date: e.target.value })}
               />
             </div>
             <div>
-              <label className="text-neutral-900 text-sm font-semibold mb-2 block">Motif</label>
+              <label style={{ color: INK, fontSize: 13, fontWeight: 700, marginBottom: 6, display: "block" }}>Motif</label>
               <input
-                className={inputClass + " w-full"}
+                style={{ ...inputStyle, width: "100%" }}
                 value={blockForm.title}
                 onChange={(e) => setBlockForm({ ...blockForm, title: e.target.value })}
               />
@@ -194,13 +213,19 @@ export default function CalendarPage() {
               <button
                 type="button"
                 onClick={() => setShowBlock(false)}
-                className="flex-1 border border-neutral-200 text-neutral-900 font-semibold py-2.5 rounded-xl hover:bg-neutral-100 transition-all text-sm"
+                style={{
+                  flex: 1, border: "1px solid rgba(0,0,0,0.1)", color: INK, fontWeight: 600,
+                  padding: "10px 0", borderRadius: 12, background: "white", cursor: "pointer", fontSize: 13,
+                }}
               >
                 Annuler
               </button>
               <button
                 type="submit"
-                className="flex-1 bg-primary-500 hover:bg-primary-600 text-white font-semibold py-2.5 rounded-xl transition-all text-sm"
+                style={{
+                  flex: 1, background: ROSE, color: "white", fontWeight: 700,
+                  padding: "10px 0", borderRadius: 12, border: "none", cursor: "pointer", fontSize: 13,
+                }}
               >
                 Bloquer
               </button>
@@ -210,11 +235,15 @@ export default function CalendarPage() {
       )}
 
       {/* Calendar grid */}
-      <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm overflow-hidden">
+      <div style={{ background: "white", borderRadius: 18, border: "1px solid rgba(0,0,0,0.05)", overflow: "hidden", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
         {/* Day headers */}
-        <div className="grid grid-cols-7 border-b border-neutral-200 bg-neutral-100">
+        <div className="grid grid-cols-7" style={{ borderBottom: "1px solid rgba(0,0,0,0.06)", background: PAPER }}>
           {DAYS_FR.map((d) => (
-            <div key={d} className="text-center text-xs font-semibold text-neutral-500 uppercase tracking-wide py-3">
+            <div key={d} style={{
+              textAlign: "center", fontSize: 10, fontWeight: 700, color: INK_SOFT,
+              textTransform: "uppercase", letterSpacing: "0.12em", padding: "12px 0",
+              fontFamily: "'JetBrains Mono', monospace",
+            }}>
               {d}
             </div>
           ))}
@@ -224,7 +253,7 @@ export default function CalendarPage() {
         {loading ? (
           <div className="grid grid-cols-7">
             {Array(35).fill(null).map((_, i) => (
-              <div key={i} className="min-h-[110px] border-b border-r border-neutral-200 p-2 animate-pulse bg-neutral-100/40" />
+              <div key={i} style={{ minHeight: 110, borderBottom: "1px solid rgba(0,0,0,0.04)", borderRight: "1px solid rgba(0,0,0,0.04)", padding: 8 }} className="animate-pulse" />
             ))}
           </div>
         ) : (
@@ -241,19 +270,21 @@ export default function CalendarPage() {
               return (
                 <div
                   key={i}
-                  className={`min-h-[110px] border-b border-r border-neutral-200 p-2 ${
-                    !day ? "bg-neutral-100/40" : ""
-                  }`}
+                  style={{
+                    minHeight: 110, borderBottom: "1px solid rgba(0,0,0,0.04)",
+                    borderRight: "1px solid rgba(0,0,0,0.04)", padding: 8,
+                    background: !day ? "rgba(26,14,18,0.02)" : "transparent",
+                  }}
                 >
                   {day && (
                     <>
-                      <div
-                        className={`text-xs font-semibold w-7 h-7 flex items-center justify-center rounded-full mb-1.5 ${
-                          isToday
-                            ? "bg-primary-500 text-white"
-                            : "text-neutral-900 hover:bg-neutral-100"
-                        }`}
-                      >
+                      <div style={{
+                        fontSize: 12, fontWeight: 700, width: 28, height: 28,
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        borderRadius: "50%", marginBottom: 6,
+                        background: isToday ? ROSE : "transparent",
+                        color: isToday ? "white" : INK,
+                      }}>
                         {day}
                       </div>
                       <div className="space-y-1">
@@ -262,11 +293,11 @@ export default function CalendarPage() {
                           return (
                             <div
                               key={e.id}
-                              className={`text-xs px-1.5 py-0.5 rounded truncate font-medium border-l-2`}
                               style={{
-                                backgroundColor: `${cfg.color}20`,
-                                color: cfg.color,
-                                borderLeftColor: cfg.color,
+                                fontSize: 10, padding: "2px 6px", borderRadius: 4,
+                                overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                                fontWeight: 600, borderLeft: `2px solid ${cfg.color}`,
+                                background: `${cfg.color}18`, color: cfg.color,
                               }}
                             >
                               {e.title || propMap[e.property_id]?.substring(0, 12) || e.event_type}
@@ -274,7 +305,7 @@ export default function CalendarPage() {
                           );
                         })}
                         {dayEvents.length > 3 && (
-                          <div className="text-xs text-neutral-500 px-1 font-medium">+{dayEvents.length - 3}</div>
+                          <div style={{ fontSize: 10, color: INK_SOFT, paddingLeft: 4, fontWeight: 600 }}>+{dayEvents.length - 3}</div>
                         )}
                       </div>
                     </>

@@ -53,19 +53,38 @@ export default function AccountingPage() {
 
   const PERIOD_LABELS = { month: "Ce mois", quarter: "Trimestre", year: "Cette année" };
 
+  const INK = "#1A0E12";
+  const INK_SOFT = "#6B5A60";
+  const ROSE = "#E02060";
+  const PAPER = "#F4F2F0";
+
+  const monoLabel: React.CSSProperties = {
+    fontFamily: "'JetBrains Mono', ui-monospace, monospace",
+    fontSize: 10, color: INK_SOFT, letterSpacing: "0.15em", textTransform: "uppercase" as const,
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <p className="text-sm text-neutral-500">Comptabilité basée sur vos réservations réelles</p>
+        <p style={{ fontSize: 13, color: INK_SOFT }}>Comptabilité basée sur vos réservations réelles</p>
         <div className="flex items-center gap-3">
-          <button onClick={load} className="flex items-center gap-2 border border-neutral-200 text-neutral-500 px-4 py-2 rounded-xl text-sm font-medium hover:bg-neutral-100 transition-colors">
-            <RefreshCw size={14} /> Actualiser
+          <button onClick={load} style={{
+            display: "flex", alignItems: "center", gap: 8,
+            border: "1px solid rgba(0,0,0,0.1)", color: INK_SOFT,
+            padding: "8px 14px", borderRadius: 12, background: "white", cursor: "pointer", fontSize: 12, fontWeight: 600,
+          }}>
+            <RefreshCw size={13} /> Actualiser
           </button>
-          <div className="flex items-center gap-1 bg-white border border-neutral-200 rounded-xl p-1">
+          <div className="flex items-center gap-1" style={{ background: "white", border: "1px solid rgba(0,0,0,0.08)", borderRadius: 14, padding: 4 }}>
             {(["month", "quarter", "year"] as const).map(p => (
               <button key={p} onClick={() => setPeriod(p)}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${period === p ? "bg-neutral-900 text-white" : "text-neutral-500 hover:text-neutral-900"}`}>
+                style={{
+                  padding: "7px 12px", borderRadius: 10, fontSize: 12, fontWeight: 600,
+                  border: "none", cursor: "pointer",
+                  background: period === p ? INK : "transparent",
+                  color: period === p ? "#F4F2F0" : INK_SOFT,
+                }}>
                 {PERIOD_LABELS[p]}
               </button>
             ))}
@@ -75,8 +94,11 @@ export default function AccountingPage() {
 
       {/* Alert si pas de montants */}
       {!loading && !hasAmounts && income.length > 0 && (
-        <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3 text-sm text-amber-700">
-          <AlertCircle size={15} className="flex-shrink-0 mt-0.5" />
+        <div className="flex items-start gap-3" style={{
+          background: "rgba(192,160,96,0.1)", border: "1px solid rgba(192,160,96,0.3)",
+          borderRadius: 18, padding: "12px 16px", fontSize: 13, color: "#C0A060",
+        }}>
+          <AlertCircle size={14} style={{ flexShrink: 0, marginTop: 2 }} />
           <span>
             <strong>Montants non disponibles</strong> — Le format iCal Airbnb ne transmet pas les prix.
             Cliquez sur une réservation pour ajouter le montant manuellement.
@@ -87,57 +109,49 @@ export default function AccountingPage() {
       {/* KPI Cards */}
       {loading ? (
         <div className="grid grid-cols-3 gap-4">
-          {[...Array(3)].map((_, i) => <div key={i} className="h-28 bg-white rounded-2xl border border-neutral-200 animate-pulse" />)}
+          {[...Array(3)].map((_, i) => <div key={i} className="h-28 animate-pulse" style={{ background: "white", borderRadius: 18, border: "1px solid rgba(0,0,0,0.05)" }} />)}
         </div>
       ) : (
         <div className="grid grid-cols-3 gap-4">
-          <div className="bg-white rounded-2xl border border-neutral-200 p-5 shadow-sm">
-            <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center mb-3">
-              <Euro size={18} className="text-green-600" />
+          {[
+            { icon: Euro, bg: "rgba(27,122,74,0.1)", color: "#1B7A4A", value: hasAmounts ? formatCurrency(totalRevenue) : "—", label: "Revenus bruts", sub: !hasAmounts ? "Prix à renseigner manuellement" : undefined },
+            { icon: FileText, bg: "rgba(224,32,96,0.08)", color: ROSE, value: income.length, label: "Réservations" },
+            { icon: Calendar, bg: "rgba(59,130,246,0.1)", color: "#1d4ed8", value: totalNights, label: "Nuits louées" },
+          ].map((k, i) => (
+            <div key={i} style={{ background: "white", borderRadius: 18, border: "1px solid rgba(0,0,0,0.05)", padding: 20, boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
+              <div style={{ width: 40, height: 40, background: k.bg, borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 12 }}>
+                <k.icon size={17} style={{ color: k.color }} />
+              </div>
+              <div style={{ fontSize: 24, fontWeight: 800, color: INK, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>{k.value}</div>
+              <div style={{ fontSize: 13, color: INK_SOFT }}>{k.label}</div>
+              {k.sub && <div style={{ fontSize: 10, color: "rgba(0,0,0,0.25)", marginTop: 4 }}>{k.sub}</div>}
             </div>
-            <div className="text-2xl font-black text-neutral-900">{hasAmounts ? formatCurrency(totalRevenue) : "—"}</div>
-            <div className="text-sm text-neutral-500">Revenus bruts</div>
-            {!hasAmounts && <div className="text-xs text-neutral-300 mt-1">Prix à renseigner manuellement</div>}
-          </div>
-          <div className="bg-white rounded-2xl border border-neutral-200 p-5 shadow-sm">
-            <div className="w-10 h-10 bg-primary-500/10 rounded-xl flex items-center justify-center mb-3">
-              <FileText size={18} className="text-primary-600" />
-            </div>
-            <div className="text-2xl font-black text-neutral-900">{income.length}</div>
-            <div className="text-sm text-neutral-500">Réservations</div>
-          </div>
-          <div className="bg-white rounded-2xl border border-neutral-200 p-5 shadow-sm">
-            <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center mb-3">
-              <Calendar size={18} className="text-blue-600" />
-            </div>
-            <div className="text-2xl font-black text-neutral-900">{totalNights}</div>
-            <div className="text-sm text-neutral-500">Nuits louées</div>
-          </div>
+          ))}
         </div>
       )}
 
       {/* Tableau des revenus */}
-      <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm overflow-hidden">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-neutral-200">
-          <h2 className="font-semibold text-neutral-900">Réservations — {PERIOD_LABELS[period]}</h2>
+      <div style={{ background: "white", borderRadius: 18, border: "1px solid rgba(0,0,0,0.05)", overflow: "hidden", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
+        <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: "1px solid rgba(0,0,0,0.05)" }}>
+          <h2 style={{ fontWeight: 700, color: INK, fontSize: 14 }}>Réservations — {PERIOD_LABELS[period]}</h2>
         </div>
 
         {loading ? (
           <div className="p-6 space-y-3">
-            {[...Array(4)].map((_, i) => <div key={i} className="h-12 bg-neutral-100 rounded-xl animate-pulse" />)}
+            {[...Array(4)].map((_, i) => <div key={i} className="h-12 animate-pulse" style={{ background: PAPER, borderRadius: 10 }} />)}
           </div>
         ) : income.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 text-neutral-500">
-            <FileText size={32} className="text-[#DDDDDD] mb-3" />
-            <p className="font-medium">Aucune réservation sur cette période</p>
-            <p className="text-sm mt-1">Synchronisez votre calendrier Airbnb pour voir vos revenus</p>
+          <div className="flex flex-col items-center justify-center py-16" style={{ color: INK_SOFT }}>
+            <FileText size={32} style={{ color: "rgba(0,0,0,0.15)", marginBottom: 12 }} />
+            <p style={{ fontWeight: 600, fontSize: 14 }}>Aucune réservation sur cette période</p>
+            <p style={{ fontSize: 12, marginTop: 4 }}>Synchronisez votre calendrier Airbnb pour voir vos revenus</p>
           </div>
         ) : (
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-neutral-100 border-b border-neutral-200">
+              <tr style={{ background: PAPER, borderBottom: "1px solid rgba(0,0,0,0.06)" }}>
                 {["Voyageur", "Bien", "Check-in", "Check-out", "Nuits", "Source", "Montant"].map(h => (
-                  <th key={h} className="text-left px-5 py-3 text-xs font-semibold text-neutral-500 uppercase tracking-wide">
+                  <th key={h} className="text-left px-5 py-3" style={monoLabel}>
                     {h}
                   </th>
                 ))}
@@ -147,26 +161,26 @@ export default function AccountingPage() {
               {income.map(r => {
                 const amount = r.total_price ?? r.total_amount ?? null;
                 return (
-                  <tr key={r.id} className="border-b border-[#F7F7F7] hover:bg-[#FAFAFA] transition-colors">
+                  <tr key={r.id} style={{ borderBottom: "1px solid rgba(0,0,0,0.04)" }}>
                     <td className="px-5 py-3.5">
-                      <div className="font-semibold text-neutral-900">
+                      <div style={{ fontWeight: 700, color: INK, fontSize: 13 }}>
                         {r.guest_name === "Reserved" ? "Voyageur Airbnb" : r.guest_name}
                       </div>
-                      <div className="text-xs text-neutral-300">{r.reservation_code}</div>
+                      <div style={{ fontSize: 10, color: "rgba(0,0,0,0.2)", fontFamily: "'JetBrains Mono', monospace" }}>{r.reservation_code}</div>
                     </td>
-                    <td className="px-5 py-3.5 text-neutral-500">{r.property_name}</td>
-                    <td className="px-5 py-3.5 text-neutral-500 whitespace-nowrap">{formatDate(r.check_in)}</td>
-                    <td className="px-5 py-3.5 text-neutral-500 whitespace-nowrap">{formatDate(r.check_out)}</td>
-                    <td className="px-5 py-3.5 text-neutral-500">{r.nights}n</td>
+                    <td className="px-5 py-3.5" style={{ color: INK_SOFT, fontSize: 13 }}>{r.property_name}</td>
+                    <td className="px-5 py-3.5 whitespace-nowrap" style={{ color: INK_SOFT, fontSize: 13 }}>{formatDate(r.check_in)}</td>
+                    <td className="px-5 py-3.5 whitespace-nowrap" style={{ color: INK_SOFT, fontSize: 13 }}>{formatDate(r.check_out)}</td>
+                    <td className="px-5 py-3.5" style={{ color: INK_SOFT, fontSize: 13 }}>{r.nights}n</td>
                     <td className="px-5 py-3.5">
-                      <span className="text-xs px-2 py-1 rounded-full font-semibold bg-primary-500/10 text-primary-600">
+                      <span style={{ fontSize: 9, fontWeight: 800, padding: "4px 8px", borderRadius: 99, letterSpacing: "0.1em", background: "rgba(224,32,96,0.08)", color: "#C00040" }}>
                         {SOURCE_LABEL[r.source] ?? r.source}
                       </span>
                     </td>
-                    <td className="px-5 py-3.5 font-semibold">
+                    <td className="px-5 py-3.5" style={{ fontWeight: 700, fontSize: 13 }}>
                       {amount > 0
-                        ? <span className="text-green-600">{formatCurrency(amount)}</span>
-                        : <Link href={`/reservations/${r.id}`} className="text-xs text-primary-600 hover:underline font-medium">+ Ajouter</Link>
+                        ? <span style={{ color: "#1B7A4A" }}>{formatCurrency(amount)}</span>
+                        : <Link href={`/reservations/${r.id}`} style={{ fontSize: 11, color: ROSE, textDecoration: "underline", fontWeight: 600 }}>+ Ajouter</Link>
                       }
                     </td>
                   </tr>
@@ -175,9 +189,9 @@ export default function AccountingPage() {
             </tbody>
             {hasAmounts && (
               <tfoot>
-                <tr className="bg-neutral-100 border-t-2 border-neutral-200">
-                  <td colSpan={6} className="px-5 py-3 text-sm font-bold text-neutral-900">TOTAL</td>
-                  <td className="px-5 py-3 text-sm font-black text-green-700">{formatCurrency(totalRevenue)}</td>
+                <tr style={{ background: PAPER, borderTop: "2px solid rgba(0,0,0,0.08)" }}>
+                  <td colSpan={6} className="px-5 py-3" style={{ fontSize: 13, fontWeight: 800, color: INK }}>TOTAL</td>
+                  <td className="px-5 py-3" style={{ fontSize: 13, fontWeight: 800, color: "#1B7A4A" }}>{formatCurrency(totalRevenue)}</td>
                 </tr>
               </tfoot>
             )}

@@ -13,6 +13,11 @@ import { useMessagePolling } from '@/hooks/useMessagePolling';
 import { useWebPushSubscription } from '@/hooks/useWebPushSubscription';
 import { RefreshCw, AlertCircle } from 'lucide-react';
 
+const INK = "#1A0E12";
+const INK_SOFT = "#6B5A60";
+const ROSE = "#E02060";
+const PAPER = "#F4F2F0";
+
 export default function MessagesPage() {
   const {
     fetchThreads,
@@ -27,27 +32,21 @@ export default function MessagesPage() {
     markAsRead
   } = useMessagesStore();
 
-  // WebPush subscription for notifications
   const { isSubscribed, isSupported, subscribe } = useWebPushSubscription();
-
-  // Auto-poll for messages every 5 minutes
   useMessagePolling();
 
   const [showNotificationPrompt, setShowNotificationPrompt] = useState(false);
 
-  // Initialize: load threads on mount
   useEffect(() => {
     fetchThreads();
   }, []);
 
-  // Setup WebPush notifications on mount
   useEffect(() => {
     if (isSupported && !isSubscribed) {
       setShowNotificationPrompt(true);
     }
   }, [isSupported, isSubscribed]);
 
-  // Handle enable notifications
   const handleEnableNotifications = async () => {
     try {
       await subscribe();
@@ -57,7 +56,6 @@ export default function MessagesPage() {
     }
   };
 
-  // Handle sync
   const handleSync = async () => {
     try {
       await sync();
@@ -66,7 +64,6 @@ export default function MessagesPage() {
     }
   };
 
-  // Mark thread as read when selected
   useEffect(() => {
     if (selectedThreadId && currentThread) {
       markAsRead(selectedThreadId);
@@ -76,26 +73,29 @@ export default function MessagesPage() {
   const isEmpty = !loading && threads.length === 0;
 
   return (
-    <div className="flex h-screen bg-white overflow-hidden">
+    <div style={{ display: "flex", height: "100vh", background: "white", overflow: "hidden" }}>
       {/* Sidebar */}
       <MessageSidebar onSync={handleSync} />
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col relative">
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", position: "relative" }}>
         {loading && !currentThread ? (
           <MessageDetailSkeleton />
         ) : selectedThreadId && currentThread ? (
           <>
             {/* Header */}
-            <div className="border-b border-neutral-200 p-4 bg-white flex items-center justify-between">
-              <div className="flex-1">
+            <div style={{
+              borderBottom: "1px solid rgba(0,0,0,0.06)", padding: 16,
+              background: "white", display: "flex", alignItems: "center", justifyContent: "space-between",
+            }}>
+              <div style={{ flex: 1 }}>
                 <div className="flex items-center gap-3 mb-1">
-                  <h1 className="text-lg font-bold text-neutral-900">
+                  <h1 style={{ fontSize: 17, fontWeight: 800, color: INK, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
                     {currentThread.thread.guestName}
                   </h1>
                   <PlatformBadge platform={currentThread.thread.platform} />
                 </div>
-                <p className="text-sm text-neutral-500">
+                <p style={{ fontSize: 12, color: INK_SOFT }}>
                   {currentThread.thread.guestEmail}
                 </p>
               </div>
@@ -104,23 +104,23 @@ export default function MessagesPage() {
                   onClick={handleSync}
                   disabled={syncing}
                   title="Synchroniser"
-                  className="p-2 hover:bg-neutral-100 rounded-lg transition-colors disabled:opacity-50"
+                  style={{
+                    padding: 8, borderRadius: 10, border: "none", background: "transparent",
+                    cursor: "pointer", color: syncing ? ROSE : INK_SOFT,
+                  }}
                 >
-                  <RefreshCw
-                    size={20}
-                    className={syncing ? 'animate-spin text-primary-500' : 'text-neutral-600'}
-                  />
+                  <RefreshCw size={18} className={syncing ? 'animate-spin' : ''} />
                 </button>
                 <MessageActions threadId={selectedThreadId} />
               </div>
             </div>
 
             {/* Messages Container */}
-            <div className="flex-1 overflow-y-auto p-6 bg-neutral-50 scroll-smooth">
+            <div style={{ flex: 1, overflowY: "auto", padding: 24, background: PAPER }} className="scroll-smooth">
               {currentThread.thread.messages.length === 0 ? (
-                <div className="text-center text-neutral-500 py-8">
+                <div style={{ textAlign: "center", color: INK_SOFT, padding: "32px 0" }}>
                   <p>Aucun message pour le moment</p>
-                  <p className="text-sm mt-2">Commencez la conversation en répondant ci-dessous</p>
+                  <p style={{ fontSize: 12, marginTop: 8 }}>Commencez la conversation en répondant ci-dessous</p>
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -149,13 +149,15 @@ export default function MessagesPage() {
 
         {/* Error Toast */}
         {error && (
-          <div className="fixed bottom-4 right-4 bg-red-500 text-white px-4 py-3 rounded-lg shadow-lg flex gap-3 items-center animate-in fade-in slide-in-from-bottom-2">
-            <AlertCircle size={18} />
-            <span className="flex-1">{error}</span>
-            <button
-              onClick={clearError}
-              className="font-bold text-lg hover:opacity-80 ml-4"
-            >
+          <div style={{
+            position: "fixed", bottom: 16, right: 16,
+            background: "#C00040", color: "white", padding: "12px 16px",
+            borderRadius: 12, boxShadow: "0 4px 16px rgba(0,0,0,0.2)",
+            display: "flex", gap: 12, alignItems: "center",
+          }} className="animate-in fade-in slide-in-from-bottom-2">
+            <AlertCircle size={17} />
+            <span style={{ flex: 1 }}>{error}</span>
+            <button onClick={clearError} style={{ fontWeight: 800, fontSize: 16, background: "none", border: "none", color: "white", cursor: "pointer", marginLeft: 16 }}>
               ✕
             </button>
           </div>
@@ -163,19 +165,24 @@ export default function MessagesPage() {
 
         {/* Notification Prompt */}
         {showNotificationPrompt && isSupported && (
-          <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-white border border-neutral-200 rounded-lg shadow-lg p-4 max-w-sm animate-in slide-in-from-bottom-4">
+          <div style={{
+            position: "fixed", bottom: 16, left: "50%", transform: "translateX(-50%)",
+            background: "white", border: "1px solid rgba(0,0,0,0.08)",
+            borderRadius: 16, boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
+            padding: 16, maxWidth: 360, width: "100%",
+          }} className="animate-in slide-in-from-bottom-4">
             <div className="flex items-start gap-3">
-              <div className="flex-1">
-                <h4 className="font-semibold text-neutral-900 mb-1">
+              <div style={{ flex: 1 }}>
+                <h4 style={{ fontWeight: 700, color: INK, marginBottom: 4, fontSize: 14 }}>
                   Activer les notifications
                 </h4>
-                <p className="text-sm text-neutral-600">
+                <p style={{ fontSize: 12, color: INK_SOFT }}>
                   Recevez une alerte quand vous avez un nouveau message
                 </p>
               </div>
               <button
                 onClick={() => setShowNotificationPrompt(false)}
-                className="text-neutral-400 hover:text-neutral-600"
+                style={{ color: INK_SOFT, background: "none", border: "none", cursor: "pointer" }}
               >
                 ✕
               </button>
@@ -183,13 +190,20 @@ export default function MessagesPage() {
             <div className="flex gap-3 mt-4">
               <button
                 onClick={() => setShowNotificationPrompt(false)}
-                className="flex-1 px-4 py-2 text-sm font-medium text-neutral-600 hover:bg-neutral-100 rounded-lg transition-colors"
+                style={{
+                  flex: 1, padding: "8px 12px", fontSize: 12, fontWeight: 600,
+                  color: INK_SOFT, background: "transparent", border: "1px solid rgba(0,0,0,0.1)",
+                  borderRadius: 10, cursor: "pointer",
+                }}
               >
                 Plus tard
               </button>
               <button
                 onClick={handleEnableNotifications}
-                className="flex-1 px-4 py-2 text-sm font-medium bg-primary-500 text-white hover:bg-primary-600 rounded-lg transition-colors"
+                style={{
+                  flex: 1, padding: "8px 12px", fontSize: 12, fontWeight: 700,
+                  background: ROSE, color: "white", border: "none", borderRadius: 10, cursor: "pointer",
+                }}
               >
                 Activer
               </button>

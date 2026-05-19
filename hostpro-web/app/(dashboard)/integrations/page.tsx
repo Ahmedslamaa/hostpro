@@ -391,13 +391,17 @@ export default function IntegrationsPage() {
   // Which platforms already have at least one feed
   const connectedIds = new Set(feeds.map(f => f.platform));
 
+  const INK = "#1A0E12";
+  const INK_SOFT = "#6B5A60";
+  const ROSE = "#E02060";
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-black text-neutral-900">Intégrations & Connecteurs</h1>
-          <p className="text-sm text-neutral-500 mt-0.5">
+          <h1 style={{ fontSize: 22, fontWeight: 800, color: INK, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>Intégrations & Connecteurs</h1>
+          <p style={{ fontSize: 13, color: INK_SOFT, marginTop: 2 }}>
             iCal bidirectionnel · Airbnb · Booking · Abritel · Sync toutes les 15 min
           </p>
         </div>
@@ -406,15 +410,19 @@ export default function IntegrationsPage() {
             <button
               onClick={handleSyncAll}
               disabled={syncingAll}
-              className="flex items-center gap-2 border border-neutral-200 text-neutral-900 text-sm font-semibold px-4 py-2.5 rounded-xl hover:bg-neutral-100 transition-colors"
+              style={{
+                display: "flex", alignItems: "center", gap: 8,
+                border: "1px solid rgba(0,0,0,0.1)", color: INK, fontSize: 13, fontWeight: 600,
+                padding: "10px 16px", borderRadius: 12, background: "white", cursor: "pointer",
+              }}
             >
-              <RefreshCw size={15} className={syncingAll ? "animate-spin" : ""} />
+              <RefreshCw size={14} className={syncingAll ? "animate-spin" : ""} />
               {syncingAll ? "Synchronisation..." : "Tout synchroniser"}
             </button>
           )}
-          <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-xl px-4 py-2">
-            <Wifi size={15} className="text-green-600" />
-            <span className="text-sm font-semibold text-green-700">
+          <div className="flex items-center gap-2" style={{ background: "rgba(27,122,74,0.08)", border: "1px solid rgba(27,122,74,0.2)", borderRadius: 12, padding: "8px 14px" }}>
+            <Wifi size={14} style={{ color: "#1B7A4A" }} />
+            <span style={{ fontSize: 13, fontWeight: 700, color: "#1B7A4A" }}>
               {feeds.filter(f => f.sync_status === "success").length} flux actif{feeds.filter(f => f.sync_status === "success").length !== 1 ? "s" : ""}
             </span>
           </div>

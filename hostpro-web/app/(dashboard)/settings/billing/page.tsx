@@ -8,6 +8,12 @@ import { cn } from "@/lib/utils";
 
 type LucideIcon = ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>;
 
+const INK = "#1A0E12";
+const INK_SOFT = "#6B5A60";
+const ROSE = "#E02060";
+const ROSE_DEEP = "#C00040";
+const PAPER = "#F4F2F0";
+
 // Icônes par plan
 const PLAN_ICONS: Record<PlanId, LucideIcon> = {
   trial:      Zap,
@@ -16,11 +22,11 @@ const PLAN_ICONS: Record<PlanId, LucideIcon> = {
   enterprise: Building2,
 };
 
-const PLAN_COLORS: Record<PlanId, { bg: string; text: string; border: string; badge: string }> = {
-  trial:      { bg: "bg-[#F7F7F7]",      text: "text-[#717171]", border: "border-[#DDDDDD]",      badge: "bg-[#717171]" },
-  starter:    { bg: "bg-blue-50",         text: "text-blue-700",  border: "border-blue-200",        badge: "bg-blue-600" },
-  pro:        { bg: "bg-[#FF5A5F]/5",    text: "text-[#FF5A5F]", border: "border-[#FF5A5F]/30",   badge: "bg-[#FF5A5F]" },
-  enterprise: { bg: "bg-[#222222]/5",    text: "text-[#222222]", border: "border-[#222222]/20",   badge: "bg-[#222222]" },
+const PLAN_COLORS: Record<PlanId, { bg: string; iconBg: string; iconColor: string; border: string }> = {
+  trial:      { bg: PAPER,                      iconBg: "rgba(26,14,18,0.08)",   iconColor: INK_SOFT,  border: "rgba(0,0,0,0.08)" },
+  starter:    { bg: "rgba(59,130,246,0.05)",    iconBg: "rgba(59,130,246,0.12)", iconColor: "#1d4ed8", border: "rgba(59,130,246,0.2)" },
+  pro:        { bg: "rgba(224,32,96,0.04)",     iconBg: "rgba(224,32,96,0.12)", iconColor: ROSE,      border: "rgba(224,32,96,0.25)" },
+  enterprise: { bg: "rgba(26,14,18,0.04)",      iconBg: INK,                    iconColor: "#F4F2F0", border: "rgba(26,14,18,0.2)" },
 };
 
 const FEATURES_TABLE = [
@@ -49,42 +55,52 @@ export default function BillingPage() {
 
   const getPrice = (base: number) => annual ? Math.round(base * (1 - discount)) : base;
 
+  const monoLabel: React.CSSProperties = {
+    fontFamily: "'JetBrains Mono', ui-monospace, monospace",
+    fontSize: 10, color: INK_SOFT, letterSpacing: "0.15em", textTransform: "uppercase",
+  };
+
+  const currentColors = PLAN_COLORS[plan as PlanId] ?? PLAN_COLORS.trial;
+
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div style={{ maxWidth: 1152, margin: "0 auto", padding: 24 }}>
 
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-[#222222]">Abonnement</h1>
-        <p className="text-[#717171] mt-1">Gérez votre plan et vos fonctionnalités</p>
+      <div style={{ marginBottom: 32 }}>
+        <h1 style={{ fontSize: 22, fontWeight: 800, color: INK, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>Abonnement</h1>
+        <p style={{ color: INK_SOFT, fontSize: 13, marginTop: 4 }}>Gérez votre plan et vos fonctionnalités</p>
       </div>
 
       {/* Plan actuel */}
-      <div className={cn(
-        "rounded-2xl border p-5 mb-8",
-        PLAN_COLORS[plan as PlanId]?.bg ?? "bg-[#F7F7F7]",
-        PLAN_COLORS[plan as PlanId]?.border ?? "border-[#DDDDDD]",
-      )}>
+      <div style={{
+        borderRadius: 18, border: `1px solid ${currentColors.border}`,
+        background: currentColors.bg, padding: 20, marginBottom: 32,
+      }}>
         <div className="flex items-start justify-between flex-wrap gap-4">
           <div className="flex items-center gap-4">
-            <div className={cn(
-              "w-12 h-12 rounded-xl flex items-center justify-center text-white",
-              PLAN_COLORS[plan as PlanId]?.badge ?? "bg-[#717171]",
-            )}>
-              {(() => { const Icon: LucideIcon = PLAN_ICONS[plan as PlanId] ?? Zap; return <Icon size={22} />; })()}
+            <div style={{
+              width: 48, height: 48, borderRadius: 14,
+              background: currentColors.iconBg,
+              display: "flex", alignItems: "center", justifyContent: "center",
+            }}>
+              {(() => { const Icon: LucideIcon = PLAN_ICONS[plan as PlanId] ?? Zap; return <Icon size={22} style={{ color: currentColors.iconColor }} />; })()}
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-lg font-bold text-[#222222]">
+                <h2 style={{ fontSize: 17, fontWeight: 800, color: INK, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
                   Plan {PLANS[plan as PlanId]?.name ?? plan}
                 </h2>
-                <span className={cn(
-                  "text-[10px] font-black px-2 py-0.5 rounded-full text-white uppercase",
-                  status === "trialing" ? "bg-amber-500" : "bg-green-500",
-                )}>
+                <span style={{
+                  fontSize: 9, fontWeight: 800, padding: "4px 8px", borderRadius: 99,
+                  letterSpacing: "0.1em", textTransform: "uppercase",
+                  ...(status === "trialing"
+                    ? { background: "rgba(192,160,96,0.15)", color: "#C0A060" }
+                    : { background: "rgba(27,122,74,0.1)", color: "#1B7A4A" }),
+                }}>
                   {status === "trialing" ? "Essai" : status === "active" ? "Actif" : status ?? "Inconnu"}
                 </span>
               </div>
-              <p className="text-[#717171] text-sm mt-0.5">
+              <p style={{ color: INK_SOFT, fontSize: 13, marginTop: 2 }}>
                 {status === "trialing" && trial_end
                   ? `Essai jusqu'au ${new Date(trial_end).toLocaleDateString("fr-FR")}`
                   : current_period_end
@@ -111,32 +127,39 @@ export default function BillingPage() {
       </div>
 
       {/* Toggle annuel/mensuel */}
-      <div className="flex items-center justify-center gap-4 mb-8">
-        <span className={cn("text-sm font-medium", !annual ? "text-[#222222]" : "text-[#717171]")}>
+      <div className="flex items-center justify-center gap-4" style={{ marginBottom: 32 }}>
+        <span style={{ fontSize: 13, fontWeight: 600, color: !annual ? INK : INK_SOFT }}>
           Mensuel
         </span>
         <button
           onClick={() => setAnnual(!annual)}
-          className={cn(
-            "relative w-12 h-6 rounded-full transition-colors",
-            annual ? "bg-[#FF5A5F]" : "bg-[#DDDDDD]"
-          )}
+          style={{
+            position: "relative", width: 48, height: 24, borderRadius: 99,
+            border: "none", cursor: "pointer",
+            background: annual ? ROSE : "rgba(26,14,18,0.12)",
+            transition: "background 0.2s",
+          }}
         >
-          <div className={cn(
-            "absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform",
-            annual ? "translate-x-7" : "translate-x-1"
-          )} />
+          <div style={{
+            position: "absolute", top: 4, width: 16, height: 16, background: "white",
+            borderRadius: "50%", boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+            transition: "transform 0.2s",
+            transform: annual ? "translateX(28px)" : "translateX(4px)",
+          }} />
         </button>
-        <span className={cn("text-sm font-medium", annual ? "text-[#222222]" : "text-[#717171]")}>
+        <span style={{ fontSize: 13, fontWeight: 600, color: annual ? INK : INK_SOFT }}>
           Annuel
-          <span className="ml-1.5 text-[10px] font-black bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full">
+          <span style={{
+            marginLeft: 6, fontSize: 9, fontWeight: 800, padding: "3px 7px", borderRadius: 99,
+            background: "rgba(27,122,74,0.1)", color: "#1B7A4A",
+          }}>
             -17%
           </span>
         </span>
       </div>
 
       {/* Plans cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4" style={{ marginBottom: 40 }}>
         {planOrder.map((pid) => {
           const p = PLANS[pid];
           const isCurrent = pid === plan;
@@ -147,73 +170,94 @@ export default function BillingPage() {
           return (
             <div
               key={pid}
-              className={cn(
-                "rounded-2xl border p-5 flex flex-col relative transition-shadow",
-                p.highlight
-                  ? "border-[#FF5A5F] shadow-lg shadow-[#FF5A5F]/10"
-                  : "border-[#DDDDDD]",
-                isCurrent && "ring-2 ring-[#FF5A5F]/30",
-              )}
+              style={{
+                borderRadius: 18,
+                border: p.highlight
+                  ? `1px solid ${ROSE}`
+                  : isCurrent
+                  ? `2px solid rgba(224,32,96,0.3)`
+                  : "1px solid rgba(0,0,0,0.06)",
+                padding: 20,
+                display: "flex", flexDirection: "column",
+                position: "relative",
+                background: "white",
+                boxShadow: p.highlight
+                  ? `0 8px 24px rgba(224,32,96,0.1)`
+                  : "0 2px 8px rgba(0,0,0,0.04)",
+              }}
             >
               {p.highlight && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#FF5A5F] text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-wide">
+                <div style={{
+                  position: "absolute", top: -12, left: "50%", transform: "translateX(-50%)",
+                  background: ROSE, color: "white", fontSize: 9, fontWeight: 800,
+                  padding: "4px 12px", borderRadius: 99, letterSpacing: "0.12em", textTransform: "uppercase",
+                }}>
                   Populaire
                 </div>
               )}
               {isCurrent && (
-                <div className="absolute -top-3 right-4 bg-green-500 text-white text-[10px] font-black px-3 py-1 rounded-full uppercase">
+                <div style={{
+                  position: "absolute", top: -12, right: 16,
+                  background: "#1B7A4A", color: "white", fontSize: 9, fontWeight: 800,
+                  padding: "4px 10px", borderRadius: 99, textTransform: "uppercase",
+                }}>
                   Plan actuel
                 </div>
               )}
 
-              <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center text-white mb-4", colors.badge)}>
-                <Icon size={18} />
+              <div style={{
+                width: 40, height: 40, borderRadius: 12,
+                background: colors.iconBg,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                marginBottom: 16,
+              }}>
+                <Icon size={18} style={{ color: colors.iconColor }} />
               </div>
 
-              <h3 className="text-lg font-bold text-[#222222]">{p.name}</h3>
-              <p className="text-[#717171] text-sm mb-4">{p.description}</p>
+              <h3 style={{ fontSize: 16, fontWeight: 800, color: INK, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", marginBottom: 4 }}>{p.name}</h3>
+              <p style={{ color: INK_SOFT, fontSize: 13, marginBottom: 16 }}>{p.description}</p>
 
-              <div className="mb-5">
-                <span className="text-3xl font-black text-[#222222]">{price}€</span>
-                <span className="text-[#717171] text-sm">/mois</span>
+              <div style={{ marginBottom: 20 }}>
+                <span style={{ fontSize: 30, fontWeight: 800, color: INK, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>{price}€</span>
+                <span style={{ color: INK_SOFT, fontSize: 13 }}>/mois</span>
                 {annual && (
-                  <div className="text-xs text-green-600 font-medium mt-0.5">
+                  <div style={{ fontSize: 11, color: "#1B7A4A", fontWeight: 600, marginTop: 2 }}>
                     Soit {price * 12}€/an — économisez {Math.round(p.price * 12 * discount)}€
                   </div>
                 )}
               </div>
 
               {/* Highlights du plan */}
-              <ul className="space-y-2 flex-1 mb-5">
-                <li className="flex items-center gap-2 text-sm text-[#222222]">
-                  <Check size={14} className="text-green-500 flex-shrink-0" />
+              <ul className="space-y-2 flex-1" style={{ marginBottom: 20, paddingLeft: 0, listStyle: "none" }}>
+                <li className="flex items-center gap-2" style={{ fontSize: 13, color: INK }}>
+                  <Check size={14} style={{ color: "#1B7A4A", flexShrink: 0 }} />
                   {formatLimit(p.features.properties_limit)} propriétés
                 </li>
-                <li className="flex items-center gap-2 text-sm text-[#222222]">
-                  <Check size={14} className="text-green-500 flex-shrink-0" />
+                <li className="flex items-center gap-2" style={{ fontSize: 13, color: INK }}>
+                  <Check size={14} style={{ color: "#1B7A4A", flexShrink: 0 }} />
                   {formatLimit(p.features.team_members_limit)} membres d'équipe
                 </li>
                 {p.features.ai_pricing && (
-                  <li className="flex items-center gap-2 text-sm text-[#222222]">
-                    <Check size={14} className="text-green-500 flex-shrink-0" />
+                  <li className="flex items-center gap-2" style={{ fontSize: 13, color: INK }}>
+                    <Check size={14} style={{ color: "#1B7A4A", flexShrink: 0 }} />
                     Tarification IA
                   </li>
                 )}
                 {p.features.ai_assistant && (
-                  <li className="flex items-center gap-2 text-sm text-[#222222]">
-                    <Check size={14} className="text-green-500 flex-shrink-0" />
+                  <li className="flex items-center gap-2" style={{ fontSize: 13, color: INK }}>
+                    <Check size={14} style={{ color: "#1B7A4A", flexShrink: 0 }} />
                     Assistant IA
                   </li>
                 )}
                 {p.features.advanced_analytics && (
-                  <li className="flex items-center gap-2 text-sm text-[#222222]">
-                    <Check size={14} className="text-green-500 flex-shrink-0" />
+                  <li className="flex items-center gap-2" style={{ fontSize: 13, color: INK }}>
+                    <Check size={14} style={{ color: "#1B7A4A", flexShrink: 0 }} />
                     Analytics avancées
                   </li>
                 )}
                 {p.features.api_access && (
-                  <li className="flex items-center gap-2 text-sm text-[#222222]">
-                    <Check size={14} className="text-green-500 flex-shrink-0" />
+                  <li className="flex items-center gap-2" style={{ fontSize: 13, color: INK }}>
+                    <Check size={14} style={{ color: "#1B7A4A", flexShrink: 0 }} />
                     Accès API + White Label
                   </li>
                 )}
@@ -221,14 +265,15 @@ export default function BillingPage() {
 
               <button
                 disabled={isCurrent}
-                className={cn(
-                  "w-full py-2.5 rounded-xl text-sm font-semibold transition-all",
-                  isCurrent
-                    ? "bg-[#F7F7F7] text-[#BBBBBB] cursor-default"
+                style={{
+                  width: "100%", padding: "10px 0", borderRadius: 12, fontSize: 13, fontWeight: 700,
+                  cursor: isCurrent ? "default" : "pointer", transition: "opacity 0.15s",
+                  ...(isCurrent
+                    ? { background: PAPER, color: INK_SOFT, border: "1px solid rgba(0,0,0,0.06)" }
                     : p.highlight
-                    ? "bg-[#FF5A5F] hover:bg-[#e04a4f] text-white"
-                    : "border border-[#DDDDDD] hover:border-[#FF5A5F] hover:text-[#FF5A5F] text-[#222222]"
-                )}
+                    ? { background: ROSE, color: "white", border: "none" }
+                    : { background: "white", color: INK, border: `1px solid rgba(0,0,0,0.12)` }),
+                }}
               >
                 {isCurrent ? "Plan actuel" : "Choisir ce plan"}
               </button>
@@ -238,43 +283,48 @@ export default function BillingPage() {
       </div>
 
       {/* Tableau comparatif */}
-      <div className="rounded-2xl border border-[#DDDDDD] overflow-hidden">
-        <div className="bg-[#F7F7F7] px-6 py-4 border-b border-[#DDDDDD]">
-          <h2 className="font-bold text-[#222222]">Comparaison détaillée</h2>
+      <div style={{ borderRadius: 18, border: "1px solid rgba(0,0,0,0.07)", overflow: "hidden", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
+        <div style={{ background: PAPER, padding: "16px 24px", borderBottom: "1px solid rgba(0,0,0,0.06)" }}>
+          <h2 style={{ fontWeight: 700, color: INK, fontSize: 14 }}>Comparaison détaillée</h2>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+        <div style={{ overflowX: "auto" }}>
+          <table className="w-full" style={{ fontSize: 13 }}>
             <thead>
-              <tr className="border-b border-[#DDDDDD]">
-                <th className="text-left px-6 py-3 text-[#717171] font-medium w-48">Fonctionnalité</th>
+              <tr style={{ borderBottom: "1px solid rgba(0,0,0,0.06)" }}>
+                <th className="text-left" style={{ ...monoLabel, padding: "12px 24px", width: 192 }}>Fonctionnalité</th>
                 {planOrder.map((pid) => (
-                  <th key={pid} className={cn(
-                    "px-4 py-3 text-center font-bold",
-                    pid === plan ? "text-[#FF5A5F]" : "text-[#222222]"
-                  )}>
+                  <th key={pid} style={{
+                    padding: "12px 16px", textAlign: "center",
+                    fontWeight: 800, fontSize: 13,
+                    color: pid === plan ? ROSE : INK,
+                    fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+                  }}>
                     {PLANS[pid].name}
-                    {pid === plan && <span className="block text-[10px] text-[#717171] font-normal">actuel</span>}
+                    {pid === plan && <span style={{ display: "block", fontSize: 10, color: INK_SOFT, fontWeight: 500 }}>actuel</span>}
                   </th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {FEATURES_TABLE.map(({ key, label, isLimit }) => (
-                <tr key={key} className="border-b border-[#F7F7F7] hover:bg-[#FAFAFA]">
-                  <td className="px-6 py-3 text-[#222222] font-medium">{label}</td>
+                <tr key={key} style={{ borderBottom: "1px solid rgba(0,0,0,0.04)" }}>
+                  <td style={{ padding: "10px 24px", color: INK, fontWeight: 600, fontSize: 13 }}>{label}</td>
                   {planOrder.map((pid) => {
                     const val = PLANS[pid].features[key as keyof typeof PLANS["pro"]["features"]];
                     const isCur = pid === plan;
                     return (
-                      <td key={pid} className={cn("px-4 py-3 text-center", isCur && "bg-[#FF5A5F]/3")}>
+                      <td key={pid} style={{
+                        padding: "10px 16px", textAlign: "center",
+                        background: isCur ? "rgba(224,32,96,0.03)" : "transparent",
+                      }}>
                         {isLimit ? (
-                          <span className={cn("font-semibold", isCur ? "text-[#FF5A5F]" : "text-[#222222]")}>
+                          <span style={{ fontWeight: 700, color: isCur ? ROSE : INK }}>
                             {formatLimit(val as number)}
                           </span>
                         ) : val ? (
-                          <Check size={16} className={cn("mx-auto", isCur ? "text-[#FF5A5F]" : "text-green-500")} />
+                          <Check size={16} style={{ margin: "0 auto", color: isCur ? ROSE : "#1B7A4A" }} />
                         ) : (
-                          <Lock size={14} className="mx-auto text-[#DDDDDD]" />
+                          <Lock size={14} style={{ margin: "0 auto", color: "rgba(0,0,0,0.15)" }} />
                         )}
                       </td>
                     );
@@ -286,7 +336,7 @@ export default function BillingPage() {
         </div>
       </div>
 
-      <p className="text-center text-[#717171] text-xs mt-6">
+      <p style={{ textAlign: "center", color: INK_SOFT, fontSize: 11, marginTop: 24 }}>
         Pas d'engagement · Résiliation à tout moment · Données exportables
       </p>
     </div>
@@ -300,22 +350,25 @@ function UsageBar({ label, current, limit }: { label: string; current: number; l
   const isWarning = !isUnlimited && pct >= 80;
 
   return (
-    <div className="min-w-[100px]">
-      <div className="flex justify-between text-xs mb-1">
-        <span className="text-[#717171]">{label}</span>
-        <span className={cn("font-semibold", isWarning ? "text-amber-600" : "text-[#222222]")}>
+    <div style={{ minWidth: 100 }}>
+      <div className="flex justify-between" style={{ fontSize: 11, marginBottom: 4 }}>
+        <span style={{ color: INK_SOFT }}>{label}</span>
+        <span style={{ fontWeight: 700, color: isWarning ? "#C0A060" : INK }}>
           {current}/{isUnlimited ? "∞" : limit}
         </span>
       </div>
       {!isUnlimited && (
-        <div className="h-1.5 bg-[#DDDDDD] rounded-full overflow-hidden w-24">
+        <div style={{ height: 6, background: "rgba(26,14,18,0.08)", borderRadius: 99, overflow: "hidden", width: 96 }}>
           <div
-            className={cn("h-full rounded-full transition-all", isWarning ? "bg-amber-500" : "bg-[#FF5A5F]")}
-            style={{ width: `${pct}%` }}
+            style={{
+              height: "100%", borderRadius: 99, transition: "width 0.3s",
+              background: isWarning ? "#C0A060" : ROSE,
+              width: `${pct}%`,
+            }}
           />
         </div>
       )}
-      {isUnlimited && <div className="text-xs text-[#717171]">Illimité</div>}
+      {isUnlimited && <div style={{ fontSize: 11, color: INK_SOFT }}>Illimité</div>}
     </div>
   );
 }

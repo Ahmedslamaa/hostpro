@@ -322,53 +322,73 @@ export default function AutomationPage() {
   const enabledCount = workflows.filter(w => w.enabled).length;
   const totalRuns = workflows.reduce((s, w) => s + w.runs, 0);
 
+  const INK = "#1A0E12";
+  const INK_SOFT = "#6B5A60";
+  const ROSE = "#E02060";
+  const PAPER = "#F4F2F0";
+
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">
 
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-[#222222]">Automatisation</h1>
-          <p className="text-[#717171] text-sm mt-0.5">Workflows SI/ALORS · Tâches auto · Check-in/out intelligent</p>
+          <h1 style={{ fontSize: 22, fontWeight: 800, color: INK, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>Automatisation</h1>
+          <p style={{ color: INK_SOFT, fontSize: 13, marginTop: 2 }}>Workflows SI/ALORS · Tâches auto · Check-in/out intelligent</p>
         </div>
         <button onClick={() => setShowCreate(true)}
-          className="flex items-center gap-2 bg-[#FF5A5F] hover:bg-[#E00B41] text-white font-semibold px-5 py-2.5 rounded-xl transition-all text-sm">
-          <Plus size={16} /> Nouvelle automatisation
+          style={{
+            display: "flex", alignItems: "center", gap: 8,
+            background: INK, color: "#F4F2F0", border: "none",
+            fontWeight: 700, padding: "10px 18px", borderRadius: 12, cursor: "pointer", fontSize: 13,
+          }}>
+          <Plus size={15} /> Nouvelle automatisation
         </button>
       </div>
 
       {/* KPI row */}
       <div className="grid grid-cols-4 gap-4">
         {[
-          { label: "Automatisations actives", value: `${enabledCount}/${workflows.length}`, icon: <Zap size={18} />, color: "text-[#FF5A5F]", bg: "bg-[#FF5A5F]/10" },
-          { label: "Exécutions totales",       value: totalRuns,                            icon: <Play size={18} />, color: "text-green-600", bg: "bg-green-50" },
-          { label: "Tâches du jour",           value: tasks.length,                         icon: <CheckCircle size={18} />, color: "text-blue-600", bg: "bg-blue-50" },
-          { label: "Urgences en cours",        value: taskStats.urgent,                     icon: <AlertTriangle size={18} />, color: "text-red-600", bg: "bg-red-50" },
+          { label: "Automatisations actives", value: `${enabledCount}/${workflows.length}`, icon: <Zap size={17} />, color: ROSE, bg: "rgba(224,32,96,0.08)" },
+          { label: "Exécutions totales",       value: totalRuns,                            icon: <Play size={17} />, color: "#1B7A4A", bg: "rgba(27,122,74,0.1)" },
+          { label: "Tâches du jour",           value: tasks.length,                         icon: <CheckCircle size={17} />, color: "#1d4ed8", bg: "rgba(59,130,246,0.1)" },
+          { label: "Urgences en cours",        value: taskStats.urgent,                     icon: <AlertTriangle size={17} />, color: "#C00040", bg: "rgba(192,0,64,0.1)" },
         ].map((k, i) => (
-          <div key={i} className="bg-white rounded-2xl border border-[#DDDDDD] p-4 flex items-center gap-4">
-            <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0", k.bg, k.color)}>{k.icon}</div>
+          <div key={i} style={{
+            background: "white", borderRadius: 18, border: "1px solid rgba(0,0,0,0.05)",
+            padding: 16, display: "flex", alignItems: "center", gap: 14, boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+          }}>
+            <div style={{ width: 40, height: 40, borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, background: k.bg, color: k.color }}>{k.icon}</div>
             <div>
-              <div className="text-2xl font-black text-[#222222]">{k.value}</div>
-              <div className="text-xs text-[#717171]">{k.label}</div>
+              <div style={{ fontSize: 22, fontWeight: 800, color: INK, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>{k.value}</div>
+              <div style={{ fontSize: 11, color: INK_SOFT }}>{k.label}</div>
             </div>
           </div>
         ))}
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 bg-[#F7F7F7] p-1 rounded-xl w-fit">
+      <div className="flex gap-1 w-fit" style={{ background: PAPER, padding: 4, borderRadius: 14 }}>
         <button onClick={() => setTab("workflows")}
-          className={cn("flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all",
-            tab === "workflows" ? "bg-white shadow-sm text-[#222222]" : "text-[#717171] hover:text-[#222222]"
-          )}>
-          <Zap size={14} /> Workflows ({workflows.length})
+          style={{
+            display: "flex", alignItems: "center", gap: 8, padding: "8px 16px", borderRadius: 10,
+            fontSize: 13, fontWeight: 700, border: "none", cursor: "pointer",
+            background: tab === "workflows" ? "white" : "transparent",
+            color: tab === "workflows" ? INK : INK_SOFT,
+            boxShadow: tab === "workflows" ? "0 1px 4px rgba(0,0,0,0.08)" : "none",
+          }}>
+          <Zap size={13} /> Workflows ({workflows.length})
         </button>
         <button onClick={() => setTab("tasks")}
-          className={cn("flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all",
-            tab === "tasks" ? "bg-white shadow-sm text-[#222222]" : "text-[#717171] hover:text-[#222222]"
-          )}>
-          <CheckCircle size={14} /> Tâches du jour ({tasks.length})
-          {taskStats.urgent > 0 && <span className="bg-red-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded-full">{taskStats.urgent}</span>}
+          style={{
+            display: "flex", alignItems: "center", gap: 8, padding: "8px 16px", borderRadius: 10,
+            fontSize: 13, fontWeight: 700, border: "none", cursor: "pointer",
+            background: tab === "tasks" ? "white" : "transparent",
+            color: tab === "tasks" ? INK : INK_SOFT,
+            boxShadow: tab === "tasks" ? "0 1px 4px rgba(0,0,0,0.08)" : "none",
+          }}>
+          <CheckCircle size={13} /> Tâches du jour ({tasks.length})
+          {taskStats.urgent > 0 && <span style={{ background: "#C00040", color: "white", fontSize: 9, fontWeight: 800, padding: "2px 5px", borderRadius: 99 }}>{taskStats.urgent}</span>}
         </button>
       </div>
 

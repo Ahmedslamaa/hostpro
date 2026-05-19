@@ -2,6 +2,11 @@
 import { useState, useRef, useEffect } from "react";
 import { Send, Bot, User, Sparkles, RefreshCw } from "lucide-react";
 
+const INK = "#1A0E12";
+const INK_SOFT = "#6B5A60";
+const ROSE = "#E02060";
+const PAPER = "#F4F2F0";
+
 interface Message {
   role: "user" | "assistant";
   content: string;
@@ -111,48 +116,68 @@ export default function AssistantPage() {
   };
 
   return (
-    <div className="h-[calc(100vh-8rem)] flex flex-col gap-0 max-w-4xl mx-auto">
+    <div style={{ height: "calc(100vh - 8rem)", display: "flex", flexDirection: "column", gap: 0, maxWidth: 768, margin: "0 auto" }}>
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-[#FF5A5F]/10 border border-[#FF5A5F]/20 rounded-xl flex items-center justify-center">
-            <Sparkles size={18} className="text-[#FF5A5F]" />
+          <div style={{
+            width: 40, height: 40, background: "rgba(224,32,96,0.08)",
+            border: "1px solid rgba(224,32,96,0.15)", borderRadius: 12,
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}>
+            <Sparkles size={17} style={{ color: ROSE }} />
           </div>
           <div>
-            <h2 className="font-bold text-[#222222] text-sm">Assistant IA HOST PRO</h2>
-            <p className="text-xs text-[#717171]">Propulsé par Claude (Anthropic)</p>
+            <h2 style={{ fontWeight: 800, color: INK, fontSize: 13, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>Assistant IA HOST PRO</h2>
+            <p style={{ fontSize: 11, color: INK_SOFT }}>Propulsé par Claude (Anthropic)</p>
           </div>
         </div>
         <button
           onClick={() => setMessages([{ role: "assistant", content: "Bonjour ! Comment puis-je vous aider ?" }])}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium text-[#717171] border border-[#DDDDDD] hover:bg-[#F7F7F7] transition-colors"
+          style={{
+            display: "flex", alignItems: "center", gap: 6,
+            padding: "6px 12px", borderRadius: 10, fontSize: 11, fontWeight: 600,
+            color: INK_SOFT, border: "1px solid rgba(0,0,0,0.1)",
+            background: "white", cursor: "pointer",
+          }}
         >
-          <RefreshCw size={12} />
+          <RefreshCw size={11} />
           Nouvelle conversation
         </button>
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto bg-white rounded-2xl border border-[#DDDDDD] p-4 space-y-4">
+      <div style={{
+        flex: 1, overflowY: "auto", background: "white",
+        borderRadius: 18, border: "1px solid rgba(0,0,0,0.05)", padding: 16,
+        boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+      }} className="space-y-4">
         {messages.map((msg, i) => (
           <div key={i} className={`flex gap-3 ${msg.role === "user" ? "flex-row-reverse" : ""}`}>
-            <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${
-              msg.role === "assistant"
-                ? "bg-[#FF5A5F]/10 border border-[#FF5A5F]/20"
-                : "bg-[#222222] text-white"
-            }`}>
-              {msg.role === "assistant" ? <Bot size={14} className="text-[#FF5A5F]" /> : <User size={14} />}
+            <div style={{
+              width: 32, height: 32, borderRadius: 10,
+              display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+              background: msg.role === "assistant" ? "rgba(224,32,96,0.08)" : INK,
+              border: msg.role === "assistant" ? "1px solid rgba(224,32,96,0.15)" : "none",
+            }}>
+              {msg.role === "assistant"
+                ? <Bot size={13} style={{ color: ROSE }} />
+                : <User size={13} style={{ color: "white" }} />
+              }
             </div>
-            <div className={`max-w-[75%] rounded-2xl px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap ${
-              msg.role === "user"
-                ? "bg-[#222222] text-white rounded-tr-md"
-                : "bg-[#F7F7F7] text-[#222222] rounded-tl-md"
-            }`}>
+            <div style={{
+              maxWidth: "75%", borderRadius: 18, padding: "12px 16px",
+              fontSize: 13, lineHeight: 1.6, whiteSpace: "pre-wrap",
+              background: msg.role === "user" ? INK : PAPER,
+              color: msg.role === "user" ? "white" : INK,
+              borderTopRightRadius: msg.role === "user" ? 4 : 18,
+              borderTopLeftRadius: msg.role === "assistant" ? 4 : 18,
+            }}>
               {msg.content || (msg.streaming && (
                 <span className="flex gap-1 items-center h-4">
-                  <span className="w-1.5 h-1.5 bg-[#717171] rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-                  <span className="w-1.5 h-1.5 bg-[#717171] rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-                  <span className="w-1.5 h-1.5 bg-[#717171] rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                  <span style={{ width: 6, height: 6, background: INK_SOFT, borderRadius: "50%" }} className="animate-bounce" />
+                  <span style={{ width: 6, height: 6, background: INK_SOFT, borderRadius: "50%", animationDelay: "150ms" }} className="animate-bounce" />
+                  <span style={{ width: 6, height: 6, background: INK_SOFT, borderRadius: "50%", animationDelay: "300ms" }} className="animate-bounce" />
                 </span>
               ))}
             </div>
@@ -161,14 +186,18 @@ export default function AssistantPage() {
         <div ref={bottomRef} />
       </div>
 
-      {/* Suggestions (seulement au début) */}
+      {/* Suggestions */}
       {messages.length <= 1 && (
         <div className="flex gap-2 flex-wrap py-3">
           {SUGGESTIONS.map((s) => (
             <button
               key={s}
               onClick={() => sendMessage(s)}
-              className="text-xs px-3 py-1.5 rounded-xl border border-[#DDDDDD] bg-white text-[#717171] hover:border-[#FF5A5F] hover:text-[#FF5A5F] transition-colors"
+              style={{
+                fontSize: 11, padding: "6px 12px", borderRadius: 10,
+                border: "1px solid rgba(0,0,0,0.08)", background: "white",
+                color: INK_SOFT, cursor: "pointer",
+              }}
             >
               {s}
             </button>
@@ -184,14 +213,23 @@ export default function AssistantPage() {
           onKeyDown={handleKeyDown}
           placeholder="Posez votre question… (Entrée pour envoyer)"
           rows={2}
-          className="flex-1 px-4 py-3 bg-white border border-[#DDDDDD] rounded-2xl text-sm text-[#222222] resize-none focus:outline-none focus:border-[#FF5A5F] placeholder:text-[#717171]"
+          style={{
+            flex: 1, padding: "12px 16px", background: "white",
+            border: "1px solid rgba(0,0,0,0.1)", borderRadius: 18,
+            fontSize: 13, color: INK, resize: "none", outline: "none",
+            fontFamily: "inherit",
+          }}
         />
         <button
           onClick={() => sendMessage(input)}
           disabled={!input.trim() || loading}
-          className="w-11 h-11 bg-[#FF5A5F] text-white rounded-2xl flex items-center justify-center hover:bg-[#e04e53] transition-colors disabled:opacity-40 flex-shrink-0"
+          style={{
+            width: 44, height: 44, background: ROSE, color: "white",
+            borderRadius: 18, display: "flex", alignItems: "center", justifyContent: "center",
+            border: "none", cursor: "pointer", opacity: (!input.trim() || loading) ? 0.4 : 1, flexShrink: 0,
+          }}
         >
-          <Send size={16} />
+          <Send size={15} />
         </button>
       </div>
     </div>

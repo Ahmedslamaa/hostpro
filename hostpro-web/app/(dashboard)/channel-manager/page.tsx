@@ -639,23 +639,33 @@ export default function ChannelManagerPage() {
     </div>
   );
 
+  const INK = "#1A0E12";
+  const INK_SOFT = "#6B5A60";
+  const ROSE = "#E02060";
+  const PAPER = "#F4F2F0";
+
   return (
     <div className="space-y-5">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-black text-[#222222]">Channel Manager</h1>
-          <p className="text-sm text-[#717171] mt-0.5">Matrice dispo · Tarifs multi-plateformes · Import CSV · Sync iCal</p>
+          <h1 style={{ fontSize: 22, fontWeight: 800, color: INK, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>Channel Manager</h1>
+          <p style={{ fontSize: 13, color: INK_SOFT, marginTop: 2 }}>Matrice dispo · Tarifs multi-plateformes · Import CSV · Sync iCal</p>
         </div>
         <div className="flex items-center gap-3">
           {lastSync !== "—" && (
-            <span className="text-xs text-[#717171] bg-[#F7F7F7] border border-[#DDDDDD] rounded-xl px-3 py-2">
+            <span style={{ fontSize: 11, color: INK_SOFT, background: PAPER, border: "1px solid rgba(0,0,0,0.08)", borderRadius: 10, padding: "8px 12px" }}>
                Synchronisé à {lastSync}
             </span>
           )}
           <button onClick={handleSyncAll} disabled={syncing || feeds.length === 0}
-            className="flex items-center gap-2 bg-[#FF5A5F] hover:bg-[#E00B41] text-white text-sm font-bold px-4 py-2.5 rounded-xl transition-colors disabled:opacity-50">
-            <RefreshCw size={15} className={syncing ? "animate-spin" : ""} />
+            style={{
+              display: "flex", alignItems: "center", gap: 8,
+              background: ROSE, color: "white", fontSize: 13, fontWeight: 700,
+              padding: "10px 18px", borderRadius: 12, border: "none", cursor: "pointer",
+              opacity: (syncing || feeds.length === 0) ? 0.5 : 1,
+            }}>
+            <RefreshCw size={14} className={syncing ? "animate-spin" : ""} />
             {syncing ? "Synchronisation..." : "Tout synchroniser"}
           </button>
         </div>
@@ -664,24 +674,30 @@ export default function ChannelManagerPage() {
       {/* Stats */}
       <div className="grid grid-cols-4 gap-4">
         {[
-          { label: "Plateformes connectées", value: `${connectedPlatforms}`,  color: "text-green-600",  bg: "bg-green-50"       },
-          { label: "Réservations actives",   value: `${activeRes}`,           color: "text-[#FF5A5F]",  bg: "bg-[#FF5A5F]/10"  },
-          { label: "Propriétés gérées",      value: `${properties.length}`,   color: "text-blue-600",   bg: "bg-blue-50"        },
-          { label: "Flux iCal actifs",       value: `${feeds.length}`,        color: "text-purple-600", bg: "bg-purple-50"      },
+          { label: "Plateformes connectées", value: `${connectedPlatforms}`, color: "#1B7A4A", bg: "rgba(27,122,74,0.1)" },
+          { label: "Réservations actives",   value: `${activeRes}`,          color: ROSE,      bg: "rgba(224,32,96,0.08)" },
+          { label: "Propriétés gérées",      value: `${properties.length}`,  color: "#1d4ed8", bg: "rgba(59,130,246,0.1)" },
+          { label: "Flux iCal actifs",       value: `${feeds.length}`,       color: "#7c3aed", bg: "rgba(124,58,237,0.08)" },
         ].map((s, i) => (
-          <div key={i} className={`${s.bg} rounded-2xl p-4`}>
-            <div className={`text-2xl font-black ${s.color}`}>{s.value}</div>
-            <div className="text-xs text-[#717171] mt-0.5">{s.label}</div>
+          <div key={i} style={{ background: s.bg, borderRadius: 18, padding: 16 }}>
+            <div style={{ fontSize: 22, fontWeight: 800, color: s.color, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>{s.value}</div>
+            <div style={{ fontSize: 11, color: INK_SOFT, marginTop: 2 }}>{s.label}</div>
           </div>
         ))}
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 bg-[#F7F7F7] p-1 rounded-xl w-fit">
+      <div className="flex gap-1 w-fit" style={{ background: PAPER, padding: 4, borderRadius: 14 }}>
         {TABS.map(t => (
           <button key={t.id} onClick={() => setTab(t.id)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${tab === t.id ? "bg-white shadow-sm text-[#222222]" : "text-[#717171] hover:text-[#222222]"}`}>
-            <t.icon size={14} /> {t.label}
+            style={{
+              display: "flex", alignItems: "center", gap: 8, padding: "8px 16px", borderRadius: 10,
+              fontSize: 13, fontWeight: 700, border: "none", cursor: "pointer",
+              background: tab === t.id ? "white" : "transparent",
+              color: tab === t.id ? INK : INK_SOFT,
+              boxShadow: tab === t.id ? "0 1px 4px rgba(0,0,0,0.08)" : "none",
+            }}>
+            <t.icon size={13} /> {t.label}
           </button>
         ))}
       </div>

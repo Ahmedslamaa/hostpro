@@ -4,20 +4,25 @@ import Link from "next/link";
 import { formatDate, formatCurrency, sourceLabel } from "@/lib/utils";
 import { Plus, Search, Eye, ChevronLeft, ChevronRight, RefreshCw, AlertCircle } from "lucide-react";
 
-const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
-  confirmed:  { label: "Confirmée",  className: "bg-green-100 text-green-700" },
-  pending:    { label: "En attente", className: "bg-amber-100 text-amber-700" },
-  cancelled:  { label: "Annulée",    className: "bg-red-100 text-red-700" },
-  completed:  { label: "Terminée",   className: "bg-neutral-100 text-neutral-500" },
-  no_show:    { label: "No-show",    className: "bg-neutral-100 text-neutral-500" },
+const INK = "#1A0E12";
+const INK_SOFT = "#6B5A60";
+const ROSE = "#E02060";
+const PAPER = "#F4F2F0";
+
+const STATUS_CONFIG: Record<string, { label: string; style: React.CSSProperties }> = {
+  confirmed: { label: "Confirmée",  style: { background: "rgba(27,122,74,0.1)",    color: "#1B7A4A" } },
+  pending:   { label: "En attente", style: { background: "rgba(192,160,96,0.15)",   color: "#C0A060" } },
+  cancelled: { label: "Annulée",    style: { background: "rgba(192,0,64,0.1)",      color: "#C00040" } },
+  completed: { label: "Terminée",   style: { background: "rgba(26,14,18,0.06)",     color: INK_SOFT  } },
+  no_show:   { label: "No-show",    style: { background: "rgba(26,14,18,0.06)",     color: INK_SOFT  } },
 };
 
-const SOURCE_CONFIG: Record<string, { label: string; className: string }> = {
-  airbnb:  { label: "Airbnb",   className: "bg-primary-50 text-primary-600" },
-  booking: { label: "Booking",  className: "bg-blue-100 text-blue-700" },
-  manual:  { label: "Direct",   className: "bg-green-100 text-green-700" },
-  direct:  { label: "Direct",   className: "bg-green-100 text-green-700" },
-  abritel: { label: "Abritel",  className: "bg-cyan-100 text-cyan-700" },
+const SOURCE_CONFIG: Record<string, { label: string; style: React.CSSProperties }> = {
+  airbnb:  { label: "Airbnb",   style: { background: "rgba(224,32,96,0.08)",  color: "#C00040" } },
+  booking: { label: "Booking",  style: { background: "rgba(59,130,246,0.1)",  color: "#1d4ed8" } },
+  manual:  { label: "Direct",   style: { background: "rgba(27,122,74,0.1)",   color: "#1B7A4A" } },
+  direct:  { label: "Direct",   style: { background: "rgba(27,122,74,0.1)",   color: "#1B7A4A" } },
+  abritel: { label: "Abritel",  style: { background: "rgba(6,182,212,0.1)",   color: "#0891b2" } },
 };
 
 const STATUS_TABS = [
@@ -28,7 +33,6 @@ const STATUS_TABS = [
   { value: "cancelled", label: "Annulées" },
 ];
 
-/** "Airbnb (Not available)" = période bloquée, pas une vraie réservation invité */
 function normalizeGuestName(name: string | null): { display: string; isBlocked: boolean } {
   if (!name) return { display: "—", isBlocked: false };
   const lower = name.toLowerCase();
@@ -97,33 +101,46 @@ export default function ReservationsPage() {
   const totalPages = Math.ceil(filtered.length / PER_PAGE);
   const paginated  = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
 
-  // counts for tabs
   const counts: Record<string, number> = { "": reservations.length };
   STATUS_TABS.slice(1).forEach(t => {
     counts[t.value] = reservations.filter(r => r.status === t.value).length;
   });
 
+  const monoLabel: React.CSSProperties = {
+    fontFamily: "'JetBrains Mono', ui-monospace, monospace",
+    fontSize: 10, color: INK_SOFT, letterSpacing: "0.15em", textTransform: "uppercase" as const,
+  };
+
   return (
     <div>
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <p className="text-sm text-neutral-500">
+        <p style={{ fontSize: 13, color: INK_SOFT }}>
           {loading ? "Chargement…" : `${reservations.length} réservation${reservations.length !== 1 ? "s" : ""} au total`}
         </p>
         <div className="flex items-center gap-3">
           <button
             onClick={handleSyncIcal}
             disabled={syncing}
-            className="flex items-center gap-2 border border-neutral-200 text-neutral-500 hover:text-neutral-900 hover:border-neutral-900 font-medium px-4 py-2.5 rounded-xl transition-all text-sm disabled:opacity-50"
+            style={{
+              display: "flex", alignItems: "center", gap: 8,
+              border: "1px solid rgba(0,0,0,0.1)", color: INK_SOFT, fontWeight: 600,
+              padding: "10px 16px", borderRadius: 12, background: "white", cursor: "pointer", fontSize: 13,
+            }}
           >
-            <RefreshCw size={14} className={syncing ? "animate-spin" : ""} />
+            <RefreshCw size={13} className={syncing ? "animate-spin" : ""} />
             {syncing ? "Synchronisation…" : "Sync Airbnb"}
           </button>
           <Link
             href="/reservations/new"
-            className="flex items-center gap-2 bg-primary-500 hover:bg-primary-600 text-white font-semibold px-5 py-2.5 rounded-xl transition-all text-sm"
+            style={{
+              display: "flex", alignItems: "center", gap: 8,
+              background: INK, color: "#F4F2F0",
+              borderRadius: 12, padding: "10px 18px",
+              fontWeight: 700, fontSize: 13, textDecoration: "none",
+            }}
           >
-            <Plus size={16} />
+            <Plus size={15} />
             Nouvelle réservation
           </Link>
         </div>
@@ -131,17 +148,25 @@ export default function ReservationsPage() {
 
       {/* Error */}
       {error && (
-        <div className="flex items-center gap-3 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 mb-5 text-sm">
-          <AlertCircle size={15} className="flex-shrink-0" />
+        <div style={{
+          display: "flex", alignItems: "center", gap: 12,
+          background: "rgba(192,0,64,0.06)", border: "1px solid rgba(192,0,64,0.2)",
+          color: "#C00040", borderRadius: 12, padding: "12px 16px", marginBottom: 20, fontSize: 13,
+        }}>
+          <AlertCircle size={14} style={{ flexShrink: 0 }} />
           {error}
-          <button onClick={load} className="ml-auto text-red-600 underline text-xs">Réessayer</button>
+          <button onClick={load} style={{ marginLeft: "auto", color: "#C00040", textDecoration: "underline", fontSize: 11, background: "none", border: "none", cursor: "pointer" }}>Réessayer</button>
         </div>
       )}
 
-      {/* iCal info banner — montants non dispos via iCal */}
+      {/* iCal info banner */}
       {!loading && reservations.length > 0 && reservations.some(r => r.total_price === null) && (
-        <div className="flex items-start gap-2 bg-blue-50 border border-blue-200 text-blue-700 rounded-xl px-4 py-3 mb-5 text-xs">
-          <AlertCircle size={13} className="flex-shrink-0 mt-0.5" />
+        <div style={{
+          display: "flex", alignItems: "flex-start", gap: 8,
+          background: "rgba(59,130,246,0.06)", border: "1px solid rgba(59,130,246,0.2)",
+          color: "#1d4ed8", borderRadius: 12, padding: "12px 16px", marginBottom: 20, fontSize: 11,
+        }}>
+          <AlertCircle size={12} style={{ flexShrink: 0, marginTop: 2 }} />
           <span>
             <strong>Montants non disponibles</strong> — Le format iCal Airbnb ne transmet pas les prix.
             Ajoutez-les manuellement en cliquant sur une réservation, ou synchronisez depuis un channel manager officiel.
@@ -150,20 +175,28 @@ export default function ReservationsPage() {
       )}
 
       {/* Status tabs */}
-      <div className="flex items-center gap-1 mb-5 bg-white border border-neutral-200 rounded-xl p-1 w-fit">
+      <div className="flex items-center gap-1 mb-5 w-fit" style={{
+        background: "white", border: "1px solid rgba(0,0,0,0.08)", borderRadius: 14, padding: 4,
+      }}>
         {STATUS_TABS.map(({ value, label }) => (
           <button
             key={value}
             onClick={() => { setStatusFilter(value); setPage(1); }}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-1.5 ${
-              statusFilter === value ? "bg-neutral-900 text-white" : "text-neutral-500 hover:text-neutral-900"
-            }`}
+            style={{
+              padding: "8px 14px", borderRadius: 10, fontSize: 13, fontWeight: 600,
+              border: "none", cursor: "pointer",
+              background: statusFilter === value ? INK : "transparent",
+              color: statusFilter === value ? "#F4F2F0" : INK_SOFT,
+              display: "flex", alignItems: "center", gap: 6,
+            }}
           >
             {label}
             {counts[value] > 0 && (
-              <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-full ${
-                statusFilter === value ? "bg-white/20 text-white" : "bg-neutral-100 text-neutral-500"
-              }`}>
+              <span style={{
+                fontSize: 9, fontWeight: 800, padding: "2px 5px", borderRadius: 99,
+                background: statusFilter === value ? "rgba(255,255,255,0.2)" : "rgba(26,14,18,0.06)",
+                color: statusFilter === value ? "white" : INK_SOFT,
+              }}>
                 {counts[value]}
               </span>
             )}
@@ -173,9 +206,13 @@ export default function ReservationsPage() {
 
       {/* Search */}
       <div className="relative mb-5 max-w-sm">
-        <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-500" />
+        <Search size={15} style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: INK_SOFT }} />
         <input
-          className="border border-neutral-200 rounded-xl pl-10 pr-4 py-2.5 text-sm text-neutral-900 placeholder-[#717171] focus:outline-none focus:border-neutral-900 focus:ring-2 focus:ring-[#222222]/10 w-full transition-all"
+          style={{
+            border: "1px solid rgba(0,0,0,0.1)", borderRadius: 12, paddingLeft: 40, paddingRight: 14,
+            paddingTop: 10, paddingBottom: 10, fontSize: 13, color: INK,
+            background: "white", outline: "none", width: "100%",
+          }}
           placeholder="Rechercher un voyageur ou un bien…"
           value={search}
           onChange={(e) => { setSearch(e.target.value); setPage(1); }}
@@ -184,20 +221,20 @@ export default function ReservationsPage() {
 
       {/* Table */}
       {loading ? (
-        <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm overflow-hidden">
+        <div style={{ background: "white", borderRadius: 18, border: "1px solid rgba(0,0,0,0.05)", overflow: "hidden", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
           <div className="p-6 space-y-3">
             {[...Array(5)].map((_, i) => (
-              <div key={i} className="h-12 bg-neutral-100 rounded-xl animate-pulse" />
+              <div key={i} className="h-12 animate-pulse" style={{ background: PAPER, borderRadius: 10 }} />
             ))}
           </div>
         </div>
       ) : (
-        <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm overflow-hidden">
+        <div style={{ background: "white", borderRadius: 18, border: "1px solid rgba(0,0,0,0.05)", overflow: "hidden", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-neutral-100 border-b border-neutral-200">
+              <tr style={{ background: PAPER, borderBottom: "1px solid rgba(0,0,0,0.06)" }}>
                 {["Voyageur", "Propriété", "Dates", "Durée", "Montant", "Source", "Statut", ""].map((h) => (
-                  <th key={h} className="text-left px-5 py-3.5 text-xs font-semibold text-neutral-500 uppercase tracking-wide whitespace-nowrap">
+                  <th key={h} className="text-left px-5 py-3.5" style={monoLabel}>
                     {h}
                   </th>
                 ))}
@@ -206,78 +243,88 @@ export default function ReservationsPage() {
             <tbody>
               {paginated.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="text-center py-16 text-neutral-500">
+                  <td colSpan={8} className="text-center py-16" style={{ color: INK_SOFT }}>
                     {search || statusFilter ? "Aucune réservation correspondante" : "Aucune réservation pour l'instant"}
                   </td>
                 </tr>
               ) : (
                 paginated.map((r) => {
                   const { display: guestDisplay, isBlocked } = normalizeGuestName(r.guest_name);
-                  const statusCfg = STATUS_CONFIG[r.status] ?? { label: r.status, className: "bg-neutral-100 text-neutral-500" };
-                  const sourceCfg = SOURCE_CONFIG[r.source] ?? { label: sourceLabel(r.source), className: "bg-neutral-100 text-neutral-500" };
+                  const statusCfg = STATUS_CONFIG[r.status] ?? { label: r.status, style: { background: "rgba(26,14,18,0.06)", color: INK_SOFT } };
+                  const sourceCfg = SOURCE_CONFIG[r.source] ?? { label: sourceLabel(r.source), style: { background: "rgba(26,14,18,0.06)", color: INK_SOFT } };
                   const amount = r.total_price ?? r.total_amount ?? r.net_revenue;
 
                   return (
                     <tr
                       key={r.id}
-                      className={`border-b border-neutral-200 hover:bg-neutral-100 transition-colors ${isBlocked ? "opacity-60" : ""}`}
+                      style={{ borderBottom: "1px solid rgba(0,0,0,0.05)", opacity: isBlocked ? 0.6 : 1 }}
                     >
-                      {/* Voyageur */}
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-3">
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${isBlocked ? "bg-neutral-100" : "bg-primary-50"}`}>
-                            <span className={`text-xs font-bold ${isBlocked ? "text-neutral-300" : "text-primary-600"}`}>
+                          <div style={{
+                            width: 32, height: 32, borderRadius: "50%",
+                            display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+                            background: isBlocked ? "rgba(26,14,18,0.06)" : "rgba(224,32,96,0.08)",
+                          }}>
+                            <span style={{
+                              fontSize: 11, fontWeight: 800,
+                              color: isBlocked ? INK_SOFT : "#C00040",
+                            }}>
                               {isBlocked ? "🔒" : guestDisplay[0]?.toUpperCase() ?? "?"}
                             </span>
                           </div>
                           <div>
-                            <div className={`font-semibold ${isBlocked ? "text-neutral-500 italic" : "text-neutral-900"}`}>
+                            <div style={{
+                              fontWeight: 600, color: isBlocked ? INK_SOFT : INK,
+                              fontStyle: isBlocked ? "italic" : "normal", fontSize: 13,
+                            }}>
                               {guestDisplay}
                             </div>
-                            <div className="text-xs text-neutral-300">{r.reservation_code}</div>
+                            <div style={{ fontSize: 10, color: "rgba(0,0,0,0.2)", fontFamily: "'JetBrains Mono', monospace" }}>{r.reservation_code}</div>
                           </div>
                         </div>
                       </td>
 
-                      {/* Propriété */}
-                      <td className="px-5 py-4 text-neutral-500">{r.property_name || "—"}</td>
+                      <td className="px-5 py-4" style={{ color: INK_SOFT, fontSize: 13 }}>{r.property_name || "—"}</td>
 
-                      {/* Dates */}
-                      <td className="px-5 py-4 text-neutral-500 whitespace-nowrap">
+                      <td className="px-5 py-4 whitespace-nowrap" style={{ color: INK_SOFT, fontSize: 13 }}>
                         {formatDate(r.check_in)}  {formatDate(r.check_out)}
                       </td>
 
-                      {/* Durée */}
-                      <td className="px-5 py-4 text-neutral-500 whitespace-nowrap">
+                      <td className="px-5 py-4 whitespace-nowrap" style={{ color: INK_SOFT, fontSize: 13 }}>
                         {r.nights} nuit{r.nights > 1 ? "s" : ""}
                       </td>
 
-                      {/* Montant */}
-                      <td className="px-5 py-4 font-semibold text-neutral-900">
-                        {amount ? formatCurrency(amount) : <span className="text-neutral-300 font-normal text-xs">Non renseigné</span>}
+                      <td className="px-5 py-4" style={{ fontWeight: 700, color: INK, fontSize: 13 }}>
+                        {amount ? formatCurrency(amount) : <span style={{ color: "rgba(0,0,0,0.2)", fontWeight: 400, fontSize: 11 }}>Non renseigné</span>}
                       </td>
 
-                      {/* Source */}
                       <td className="px-5 py-4">
-                        <span className={`text-xs px-2.5 py-1 rounded-full font-semibold ${sourceCfg.className}`}>
+                        <span style={{
+                          fontSize: 9, fontWeight: 800, letterSpacing: "0.1em",
+                          padding: "4px 8px", borderRadius: 99,
+                          ...sourceCfg.style,
+                        }}>
                           {sourceCfg.label}
                         </span>
                       </td>
 
-                      {/* Statut */}
                       <td className="px-5 py-4">
-                        <span className={`text-xs px-2.5 py-1 rounded-full font-semibold ${statusCfg.className}`}>
+                        <span style={{
+                          fontSize: 9, fontWeight: 800, letterSpacing: "0.1em",
+                          padding: "4px 8px", borderRadius: 99,
+                          ...statusCfg.style,
+                        }}>
                           {isBlocked ? "Bloquée" : statusCfg.label}
                         </span>
                       </td>
 
-                      {/* Action */}
                       <td className="px-5 py-4">
                         <Link
                           href={`/reservations/${r.id}`}
-                          className="inline-flex items-center gap-1 text-neutral-500 hover:text-neutral-900 transition-colors text-xs font-medium"
+                          style={{ display: "inline-flex", alignItems: "center", gap: 4, color: INK_SOFT, fontSize: 11, fontWeight: 600, textDecoration: "none" }}
                         >
-                          <Eye size={14} /> Voir
+                          <Eye size={13} /> Voir
                         </Link>
                       </td>
                     </tr>
@@ -289,26 +336,38 @@ export default function ReservationsPage() {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-between px-5 py-4 border-t border-neutral-200">
-              <span className="text-sm text-neutral-500">
+            <div className="flex items-center justify-between px-5 py-4" style={{ borderTop: "1px solid rgba(0,0,0,0.06)" }}>
+              <span style={{ fontSize: 13, color: INK_SOFT }}>
                 {(page - 1) * PER_PAGE + 1}–{Math.min(page * PER_PAGE, filtered.length)} sur {filtered.length}
               </span>
               <div className="flex items-center gap-1">
                 <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
-                  className="w-8 h-8 flex items-center justify-center rounded-lg border border-neutral-200 text-neutral-500 hover:bg-neutral-100 disabled:opacity-40 transition-all">
-                  <ChevronLeft size={16} />
+                  style={{
+                    width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center",
+                    borderRadius: 8, border: "1px solid rgba(0,0,0,0.1)", color: INK_SOFT,
+                    background: "white", cursor: "pointer", opacity: page === 1 ? 0.4 : 1,
+                  }}>
+                  <ChevronLeft size={15} />
                 </button>
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
                   <button key={p} onClick={() => setPage(p)}
-                    className={`w-8 h-8 flex items-center justify-center rounded-lg text-sm font-medium transition-all ${
-                      page === p ? "bg-neutral-900 text-white" : "border border-neutral-200 text-neutral-500 hover:bg-neutral-100"
-                    }`}>
+                    style={{
+                      width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center",
+                      borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer",
+                      background: page === p ? INK : "white",
+                      color: page === p ? "#F4F2F0" : INK_SOFT,
+                      border: page === p ? "none" : "1px solid rgba(0,0,0,0.1)",
+                    }}>
                     {p}
                   </button>
                 ))}
                 <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
-                  className="w-8 h-8 flex items-center justify-center rounded-lg border border-neutral-200 text-neutral-500 hover:bg-neutral-100 disabled:opacity-40 transition-all">
-                  <ChevronRight size={16} />
+                  style={{
+                    width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center",
+                    borderRadius: 8, border: "1px solid rgba(0,0,0,0.1)", color: INK_SOFT,
+                    background: "white", cursor: "pointer", opacity: page === totalPages ? 0.4 : 1,
+                  }}>
+                  <ChevronRight size={15} />
                 </button>
               </div>
             </div>

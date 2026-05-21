@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 /**
  * GET /api/v1/notifications/vapid-key
  * Return VAPID public key for WebPush subscription

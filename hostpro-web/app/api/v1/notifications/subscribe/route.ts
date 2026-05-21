@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 /**
  * POST /api/v1/notifications/subscribe
  * Register device for push notifications

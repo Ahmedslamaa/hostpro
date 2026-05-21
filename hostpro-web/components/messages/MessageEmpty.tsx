@@ -1,6 +1,13 @@
 'use client';
 
-import { MessageSquare, Inbox } from 'lucide-react';
+import { MessageSquare, RefreshCw, Inbox } from 'lucide-react';
+
+const INK   = "#1A0E12";
+const SOFT  = "#6B5A60";
+const ROSE  = "#E02060";
+const GOLD  = "#C0A060";
+const SANS  = "'Plus Jakarta Sans', system-ui, sans-serif";
+const MONO  = "'JetBrains Mono', ui-monospace, monospace";
 
 interface MessageEmptyProps {
   type?: 'no-threads' | 'no-selection';
@@ -10,51 +17,92 @@ interface MessageEmptyProps {
 export function MessageEmpty({ type = 'no-selection', onSync }: MessageEmptyProps) {
   if (type === 'no-threads') {
     return (
-      <div className="flex flex-col items-center justify-center h-full bg-gradient-to-b from-gray-50 to-gray-100 p-6">
-        <div className="text-center max-w-md">
-          <div className="mb-4 inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full">
-            <Inbox className="w-8 h-8 text-blue-600" />
-          </div>
-
-          <h3 className="text-xl font-semibold text-gray-900 mb-2">
-            Pas de messages
-          </h3>
-
-          <p className="text-gray-600 mb-6">
-            Vos conversations de Airbnb, Booking et Abritel s'afficheront ici.
-            Synchronisez vos plateformes pour commencer.
-          </p>
-
-          {onSync && (
-            <button
-              onClick={onSync}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
-            >
-              <Inbox size={18} />
-              Synchroniser maintenant
-            </button>
-          )}
+      <div style={{
+        flex: 1, display: 'flex', flexDirection: 'column',
+        alignItems: 'center', justifyContent: 'center',
+        background: 'linear-gradient(160deg, #F4F2F0 0%, white 100%)',
+        padding: 48, textAlign: 'center',
+      }}>
+        {/* Icon container */}
+        <div style={{
+          width: 72, height: 72, borderRadius: 20,
+          background: 'rgba(192,0,64,0.06)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          marginBottom: 20,
+          border: '1px solid rgba(192,0,64,0.12)',
+        }}>
+          <Inbox size={32} style={{ color: ROSE, opacity: 0.8 }} />
         </div>
+
+        {/* Badge */}
+        <div style={{
+          fontFamily: MONO, fontSize: 9, color: GOLD,
+          letterSpacing: '0.2em', fontWeight: 700, marginBottom: 12,
+        }}>
+          INBOX UNIFIÉE
+        </div>
+
+        <h3 style={{
+          fontFamily: SANS, fontWeight: 800, fontSize: 22,
+          color: INK, margin: '0 0 10px', letterSpacing: '-0.02em',
+        }}>
+          Aucune conversation
+        </h3>
+
+        <p style={{
+          fontFamily: SANS, fontSize: 14, color: SOFT,
+          maxWidth: 340, lineHeight: 1.6, margin: '0 0 28px',
+        }}>
+          Vos conversations Airbnb, Booking et Abritel s'afficheront ici.
+          Synchronisez vos intégrations pour commencer.
+        </p>
+
+        {onSync && (
+          <button
+            onClick={onSync}
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 8,
+              padding: '12px 24px',
+              background: INK, color: '#F4F2F0',
+              border: 'none', borderRadius: 12,
+              fontFamily: SANS, fontSize: 14, fontWeight: 700,
+              cursor: 'pointer', letterSpacing: '-0.01em',
+            }}
+          >
+            <RefreshCw size={16} />
+            Synchroniser maintenant
+          </button>
+        )}
       </div>
     );
   }
 
   // no-selection state
   return (
-    <div className="flex flex-col items-center justify-center h-full bg-white p-6">
-      <div className="text-center max-w-md">
-        <div className="mb-4 inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full">
-          <MessageSquare className="w-8 h-8 text-gray-400" />
-        </div>
-
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">
-          Selectionnez une conversation
-        </h3>
-
-        <p className="text-gray-600">
-          Choisissez une conversation dans la liste pour commencer a discuter.
-        </p>
+    <div style={{
+      flex: 1, display: 'flex', flexDirection: 'column',
+      alignItems: 'center', justifyContent: 'center',
+      background: 'white', padding: 48, textAlign: 'center',
+    }}>
+      <div style={{
+        width: 64, height: 64, borderRadius: 18,
+        background: '#F4F2F0',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        marginBottom: 16,
+      }}>
+        <MessageSquare size={28} style={{ color: SOFT, opacity: 0.5 }} />
       </div>
+
+      <h3 style={{
+        fontFamily: SANS, fontWeight: 700, fontSize: 16,
+        color: INK, margin: '0 0 8px',
+      }}>
+        Choisissez une conversation
+      </h3>
+
+      <p style={{ fontFamily: SANS, fontSize: 13, color: SOFT, maxWidth: 260, lineHeight: 1.6 }}>
+        Sélectionnez un thread à gauche pour lire et répondre aux messages.
+      </p>
     </div>
   );
 }

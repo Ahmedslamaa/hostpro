@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 /**
  * POST /api/v1/messages/threads/[id]/reply
  * Envoyer une réponse unifiée sur toutes les plateformes

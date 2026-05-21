@@ -1,10 +1,8 @@
-import React from 'react';
-
-const PLATFORM_COLORS: Record<string, { bg: string; text: string; icon: string }> = {
-  airbnb: { bg: 'bg-red-100', text: 'text-red-700', icon: '??' },
-  booking: { bg: 'bg-blue-100', text: 'text-blue-700', icon: '??' },
-  abritel: { bg: 'bg-purple-100', text: 'text-purple-700', icon: '??' },
-  direct: { bg: 'bg-gray-100', text: 'text-gray-700', icon: '??' }
+const PLATFORMS: Record<string, { bg: string; color: string; label: string }> = {
+  airbnb:  { bg: 'rgba(255,90,95,0.12)',  color: '#FF5A5F', label: 'Airbnb'   },
+  booking: { bg: 'rgba(0,53,128,0.1)',    color: '#003580', label: 'Booking'  },
+  abritel: { bg: 'rgba(255,107,53,0.12)', color: '#FF6B35', label: 'Abritel'  },
+  direct:  { bg: 'rgba(107,90,96,0.1)',   color: '#6B5A60', label: 'Direct'   },
 };
 
 interface PlatformBadgeProps {
@@ -13,13 +11,24 @@ interface PlatformBadgeProps {
 }
 
 export function PlatformBadge({ platform, size = 'sm' }: PlatformBadgeProps) {
-  const config = PLATFORM_COLORS[platform] || PLATFORM_COLORS.direct;
-  const sizeClass = size === 'sm' ? 'px-2 py-1 text-xs' : 'px-3 py-1.5 text-sm';
+  const cfg = PLATFORMS[platform] || PLATFORMS.direct;
+  const fs  = size === 'sm' ? 9 : 11;
+  const px  = size === 'sm' ? '6px 9px' : '6px 12px';
 
   return (
-    <span className={`${config.bg} ${config.text} ${sizeClass} rounded-full font-medium inline-flex items-center gap-1`}>
-      <span>{config.icon}</span>
-      <span className="capitalize">{platform}</span>
+    <span style={{
+      background: cfg.bg,
+      color: cfg.color,
+      fontSize: fs,
+      fontFamily: "'JetBrains Mono', ui-monospace, monospace",
+      fontWeight: 700,
+      letterSpacing: '0.06em',
+      padding: px,
+      borderRadius: 20,
+      display: 'inline-block',
+      whiteSpace: 'nowrap',
+    }}>
+      {cfg.label.toUpperCase()}
     </span>
   );
 }

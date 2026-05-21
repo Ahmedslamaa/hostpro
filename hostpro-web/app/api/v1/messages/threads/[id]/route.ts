@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 /**
  * GET /api/v1/messages/threads/[id]
  * Récupérer une conversation spécifique avec tous ses messages

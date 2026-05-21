@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 /**
  * POST /api/v1/messages/sync
  * Declencher la synchronisation des messages
@@ -22,13 +23,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { propertyId } = await req.json();
-
-    if (!propertyId) {
-      return NextResponse.json(
-        { error: 'propertyId is required' },
-        { status: 400 }
-      );
+    // propertyId is optional — sync all if omitted
+    let propertyId: string | undefined;
+    try {
+      const body = await req.json();
+      propertyId = body?.propertyId;
+    } catch {
+      propertyId = undefined;
     }
 
     // Create services
@@ -39,7 +40,11 @@ export async function POST(req: NextRequest) {
     // Create orchestrator
     const orchestrator = new MessagingOrchestratorService(db, airbnb, booking, abritel);
 
-    // Trigger sync
+    // Trigger sync (if no propertyId, return success without syncing — UI-only trigger)
+    if (!propertyId) {
+      return NextResponse.json({ success: true, imported: 0, note: 'No propertyId — skipped platform sync' });
+    }
+
     const result = await orchestrator.syncPropertyMessages(tenantId, propertyId);
 
     return NextResponse.json({

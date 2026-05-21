@@ -1,107 +1,107 @@
 'use client';
 
 import { useState } from 'react';
-import { MoreVertical, Archive, Trash2, Bell } from 'lucide-react';
+import { MoreVertical, Archive, CheckCircle, Inbox, Trash2 } from 'lucide-react';
+import { useMessagesStore } from '@/stores/messagesStore';
+import { api } from '@/lib/api';
+
+const INK  = "#1A0E12";
+const SOFT = "#6B5A60";
+const ROSE = "#E02060";
 
 interface MessageActionsProps {
   threadId: string;
-  isArchived?: boolean;
+  currentStatus?: string;
 }
 
-export function MessageActions({ threadId, isArchived = false }: MessageActionsProps) {
-  const [isOpen, setIsOpen] = useState(false);
+export function MessageActions({ threadId, currentStatus = 'open' }: MessageActionsProps) {
+  const [isOpen, setIsOpen]     = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const { fetchThreads, reset }  = useMessagesStore();
 
-  const handleArchive = async () => {
+  const updateStatus = async (status: string) => {
     setIsLoading(true);
+    setIsOpen(false);
     try {
-      // TODO: Implement archive action
-      console.log('Archive thread:', threadId);
-      setIsOpen(false);
-    } catch (error) {
-      console.error('Archive failed:', error);
+      await api.patch(`/messages/threads/${threadId}/status`, { status });
+      // Refresh the list
+      await fetchThreads();
+      // If archiving or closing, deselect current thread
+      if (status !== 'open') {
+        reset();
+        // Re-fetch with current filter
+        await fetchThreads();
+      }
+    } catch (err) {
+      console.error('Status update failed:', err);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleDelete = async () => {
-    if (!confirm('Etes-vous sur de vouloir supprimer cette conversation ?')) {
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      // TODO: Implement delete action
-      console.log('Delete thread:', threadId);
-      setIsOpen(false);
-    } catch (error) {
-      console.error('Delete failed:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleMute = async () => {
-    setIsLoading(true);
-    try {
-      // TODO: Implement mute action
-      console.log('Mute thread:', threadId);
-      setIsOpen(false);
-    } catch (error) {
-      console.error('Mute failed:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const actions = [
+    currentStatus !== 'open'    && { icon: Inbox,       label: 'Rouvrir',        status: 'open',     danger: false },
+    currentStatus !== 'closed'  && { icon: CheckCircle, label: 'Marquer fermé',   status: 'closed',   danger: false },
+    currentStatus !== 'archived'&& { icon: Archive,     label: 'Archiver',        status: 'archived', danger: false },
+  ].filter(Boolean) as { icon: any; label: string; status: string; danger: boolean }[];
 
   return (
-    <div className="relative">
+    <div style={{ position: 'relative' }}>
       <button
         onClick={() => setIsOpen(!isOpen)}
         disabled={isLoading}
-        className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50"
-        title="Plus d'actions"
+        title="Actions"
+        style={{
+          padding: 8, borderRadius: 10, border: 'none',
+          background: 'transparent', cursor: isLoading ? 'not-allowed' : 'pointer',
+          color: SOFT, opacity: isLoading ? 0.5 : 1,
+          transition: 'background 0.1s',
+        }}
       >
-        <MoreVertical size={20} />
+        <MoreVertical size={18} />
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
-          <button
-            onClick={handleMute}
-            disabled={isLoading}
-            className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2 disabled:opacity-50 border-b border-gray-100"
-          >
-            <Bell size={16} />
-            <span>Activer notifications</span>
-          </button>
+        <>
+          {/* Backdrop */}
+          <div
+            style={{ position: 'fixed', inset: 0, zIndex: 40 }}
+            onClick={() => setIsOpen(false)}
+          />
 
-          <button
-            onClick={handleArchive}
-            disabled={isLoading}
-            className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2 disabled:opacity-50 border-b border-gray-100"
-          >
-            <Archive size={16} />
-            <span>{isArchived ? 'Desarchiver' : 'Archiver'}</span>
-          </button>
-
-          <button
-            onClick={handleDelete}
-            disabled={isLoading}
-            className="w-full text-left px-4 py-2 hover:bg-red-50 flex items-center gap-2 text-red-600 disabled:opacity-50"
-          >
-            <Trash2 size={16} />
-            <span>Supprimer</span>
-          </button>
-        </div>
-      )}
-
-      {isOpen && (
-        <div
-          className="fixed inset-0 z-40"
-          onClick={() => setIsOpen(false)}
-        />
+          {/* Dropdown */}
+          <div style={{
+            position: 'absolute', right: 0, top: 40,
+            background: 'white', borderRadius: 12,
+            border: '1px solid rgba(0,0,0,0.08)',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
+            minWidth: 180, zIndex: 50,
+            overflow: 'hidden',
+          }}>
+            {actions.map(({ icon: Icon, label, status, danger }) => (
+              <button
+                key={status}
+                onClick={() => updateStatus(status)}
+                style={{
+                  width: '100%', textAlign: 'left',
+                  padding: '10px 14px',
+                  display: 'flex', alignItems: 'center', gap: 10,
+                  background: 'none', border: 'none', cursor: 'pointer',
+                  fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+                  fontSize: 13, fontWeight: 500,
+                  color: danger ? ROSE : INK,
+                  transition: 'background 0.1s',
+                  borderBottom: '1px solid rgba(0,0,0,0.04)',
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(0,0,0,0.03)')}
+                onMouseLeave={(e) => (e.currentTarget.style.background = 'none')}
+              >
+                <Icon size={15} style={{ color: danger ? ROSE : SOFT, flexShrink: 0 }} />
+                {label}
+              </button>
+            ))}
+          </div>
+        </>
       )}
     </div>
   );

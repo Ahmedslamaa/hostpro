@@ -1,81 +1,97 @@
 /**
- * Service Worker pour HostPro
- * Gère les push notifications et le caching
+ * HostPro Service Worker
+ * Gere les push notifications et le cache offline
  */
 
-// Installation du Service Worker
+const CACHE_NAME = 'hostpro-v1';
+const STATIC_ASSETS = ['/manifest.json'];
+
+// Installation
 self.addEventListener('install', (event) => {
   console.log('[SW] Installing...');
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS))
+  );
   self.skipWaiting();
 });
 
 // Activation
 self.addEventListener('activate', (event) => {
   console.log('[SW] Activated');
+  event.waitUntil(
+    caches.keys().then((keys) =>
+      Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
+    )
+  );
   self.clients.claim();
 });
 
-// Écouter les push notifications
+// Push notifications
 self.addEventListener('push', (event) => {
-  console.log('[SW] Push received:', event);
-
-  if (!event.data) {
-    console.log('[SW] No data in push event');
-    return;
-  }
+  if (!event.data) return;
 
   try {
     const data = event.data.json();
 
     const options = {
-      body: data.body || 'Nouveau message',
-      icon: data.icon || '/icon-192.png',
-      badge: data.badge || '/badge-72.png',
-      tag: data.tag || 'message-notification',
+      body: data.body || 'Nouveau message recu',
+      icon: data.icon || '/hostpro-logo.svg',
+      badge: data.badge || '/hostpro-logo.svg',
+      tag: data.tag || 'hostpro-message',
       requireInteraction: data.requireInteraction !== false,
+      data: { url: data.url || '/messages' },
       actions: data.actions || [
-        { action: 'open', title: 'Ouvrir' }
-      ]
+        { action: 'open', title: 'Ouvrir' },
+        { action: 'dismiss', title: 'Ignorer' }
+      ],
+      vibrate: [200, 100, 200]
     };
 
     event.waitUntil(
-      self.registration.showNotification(data.title || 'Nouveau message', options)
+      self.registration.showNotification(data.title || 'HostPro â€” Nouveau message', options)
     );
   } catch (error) {
     console.error('[SW] Error parsing push data:', error);
   }
 });
 
-// Cliquer sur la notification
+// Clic sur notification
 self.addEventListener('notificationclick', (event) => {
-  console.log('[SW] Notification clicked:', event.action);
-
   event.notification.close();
 
-  if (event.action === 'open' || !event.action) {
-    // Ouvrir la page des messages
-    event.waitUntil(
-      clients.matchAll({ type: 'window' }).then((clientList) => {
-        // Si la page est déjà ouverte, la focus
-        for (let i = 0; i < clientList.length; i++) {
-          if (clientList[i].url === '/' || clientList[i].url.includes('/messages')) {
-            return clientList[i].focus();
-          }
+  if (event.action === 'dismiss') return;
+
+  const url = event.notification.data?.url || '/messages';
+
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      // Focus existing tab if open
+      for (const client of clientList) {
+        if (client.url.includes('/messages') || client.url.endsWith('/')) {
+          client.focus();
+          return client.navigate(url);
         }
-        // Sinon, ouvrir une nouvelle window
-        return clients.openWindow('/messages');
-      })
-    );
-  }
+      }
+      // Open new tab
+      return clients.openWindow(url);
+    })
+  );
 });
 
-// Détacher la notification
-self.addEventListener('notificationclose', (event) => {
-  console.log('[SW] Notification closed');
+// Fermeture de notification
+self.addEventListener('notificationclose', () => {
+  console.log('[SW] Notification dismissed');
 });
 
-// Fetch para le caching offline (optionnel)
+// Fetch â€” reseau d'abord, cache en fallback pour les assets statiques
 self.addEventListener('fetch', (event) => {
-  // Pour l'instant, laisser naviguer normalement
-  // À implémenter: cache-first / network-first strategies
+  const { request } = event;
+
+  // Skip non-GET and API routes
+  if (request.method !== 'GET') return;
+  if (request.url.includes('/api/')) return;
+
+  event.respondWith(
+    fetch(request).catch(() => caches.match(request))
+  );
 });

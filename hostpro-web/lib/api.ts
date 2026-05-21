@@ -113,6 +113,10 @@ export const messagesApi = {
   sendMessage: (threadId: string, data: any) =>
     api.post(`/messages/threads/${threadId}/messages`, data),
 
+  // Status management
+  updateStatus: (threadId: string, status: 'open' | 'closed' | 'archived') =>
+    api.patch(`/messages/threads/${threadId}/status`, { status }),
+
   // Message templates (stored locally for now)
   listTemplates: () => Promise.resolve({ data: [] as any[] }),
   createTemplate: (_data: any) => Promise.resolve({ data: {} }),

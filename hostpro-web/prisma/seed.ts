@@ -13,7 +13,7 @@ async function main() {
     create: {
       name: "HostPro Demo",
       slug: "demo-hostpro",
-      plan: "pro",
+      plan: "enterprise",
       is_active: true,
     },
   });

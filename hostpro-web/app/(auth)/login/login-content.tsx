@@ -1,17 +1,29 @@
 "use client";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { authApi } from "@/lib/api";
 import { useAuthStore } from "@/stores/authStore";
 import { LogoMark } from "@/components/ui/LogoMark";
 
+const DEMO_EMAIL = "demo@hostpro.fr";
+const DEMO_PASS  = "Demo1234!";
+
 export function LoginContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { setAuth } = useAuthStore();
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showDemo, setShowDemo] = useState(false);
+
+  useEffect(() => {
+    if (searchParams.get("demo") === "true") {
+      setShowDemo(true);
+      setForm({ email: DEMO_EMAIL, password: DEMO_PASS });
+    }
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,6 +78,23 @@ export function LoginContent() {
           <p style={{ color: "#6B5A60", fontSize: 15, marginBottom: 28 }}>
             Connectez-vous pour orchestrer vos logements, réservations et messages.
           </p>
+
+          {/* Demo banner */}
+          {showDemo && (
+            <div style={{
+              background: "rgba(224,192,128,0.15)", border: "1px solid rgba(192,160,96,0.4)",
+              borderRadius: 12, padding: "12px 16px", marginBottom: 4,
+              display: "flex", flexDirection: "column", gap: 4,
+            }}>
+              <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 10, color: "#C0A060", letterSpacing: "0.1em", fontWeight: 700 }}>
+                MODE DÉMO — CREDENTIALS PRÉ-REMPLIS
+              </div>
+              <div style={{ fontSize: 12, color: "#6B5A60" }}>
+                <span style={{ color: "#1A0E12", fontWeight: 600 }}>Email:</span> {DEMO_EMAIL} &nbsp;|&nbsp;
+                <span style={{ color: "#1A0E12", fontWeight: 600 }}>Mot de passe:</span> {DEMO_PASS}
+              </div>
+            </div>
+          )}
 
           {error && (
             <div style={{

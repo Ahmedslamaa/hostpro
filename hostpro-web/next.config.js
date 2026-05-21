@@ -40,7 +40,6 @@ const securityHeaders = [
 ];
 
 const nextConfig = {
-  output: "standalone",
   poweredByHeader: false,
 
   images: {

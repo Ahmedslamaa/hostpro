@@ -23,3 +23,5 @@ Thumbs.db
 *.env.local
 azure-deploy-info.txt
 .env.production
+
+.vercel

@@ -1,4 +1,5 @@
-﻿/**
+﻿export const dynamic = "force-dynamic";
+/**
  * GET /api/v1/messages/threads
  * Lister les conversations avec filtrage et pagination
  */

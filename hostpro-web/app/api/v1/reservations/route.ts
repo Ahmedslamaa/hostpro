@@ -1,10 +1,33 @@
+export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { getAuthFromRequest, getTenantId } from "@/lib/auth-server";
+import { getTenantId } from "@/lib/auth-server";
+import { requireAuth, parseBody } from "@/lib/api-guard";
+import { z } from "zod";
+
+const ReservationSchema = z.object({
+  property_id: z.string().min(1),
+  guest_name: z.string().min(1).max(200),
+  guest_email: z.string().email().optional(),
+  guest_phone: z.string().max(50).optional(),
+  guest_nationality: z.string().max(10).optional(),
+  check_in: z.string().min(1),
+  check_out: z.string().min(1),
+  adults: z.number().int().min(1).default(1),
+  children: z.number().int().min(0).default(0),
+  total_amount: z.number().positive().optional(),
+  cleaning_fee: z.number().min(0).optional(),
+  net_revenue: z.number().min(0).optional(),
+  source: z.string().default("manual"),
+  status: z.string().default("confirmed"),
+  notes_internal: z.string().max(2000).optional(),
+  reference: z.string().optional(),
+});
 
 export async function GET(req: NextRequest) {
-  const auth = getAuthFromRequest(req);
-  if (!auth) return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
+  const guard = await requireAuth(req);
+  if (guard instanceof NextResponse) return guard;
+  const { auth } = guard;
   const tenantId = getTenantId(req, auth);
 
   const { searchParams } = req.nextUrl;
@@ -37,13 +60,16 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const auth = getAuthFromRequest(req);
-  if (!auth) return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
+  const guard = await requireAuth(req);
+  if (guard instanceof NextResponse) return guard;
+  const { auth } = guard;
   const tenantId = getTenantId(req, auth);
 
-  const data = await req.json();
+  const body = await parseBody(req, ReservationSchema);
+  if (body instanceof NextResponse) return body;
+
   const nights = Math.round(
-    (new Date(data.check_out).getTime() - new Date(data.check_in).getTime()) / 86400000
+    (new Date(body.check_out).getTime() - new Date(body.check_in).getTime()) / 86400000
   );
 
   const ref = "HP-" + new Date().getFullYear() + "-" + String(Date.now()).slice(-4).padStart(4, "0");
@@ -51,30 +77,30 @@ export async function POST(req: NextRequest) {
   const reservation = await db.reservation.create({
     data: {
       tenant_id: tenantId,
-      property_id: data.property_id,
-      guest_name: data.guest_name,
-      guest_email: data.guest_email,
-      guest_phone: data.guest_phone,
-      guest_nationality: data.guest_nationality,
-      check_in: data.check_in,
-      check_out: data.check_out,
+      property_id: body.property_id,
+      guest_name: body.guest_name,
+      guest_email: body.guest_email,
+      guest_phone: body.guest_phone,
+      guest_nationality: body.guest_nationality,
+      check_in: body.check_in,
+      check_out: body.check_out,
       nights,
-      adults: data.adults ?? 1,
-      children: data.children ?? 0,
-      total_amount: data.total_amount ? parseFloat(data.total_amount) : undefined,
-      cleaning_fee: data.cleaning_fee ? parseFloat(data.cleaning_fee) : undefined,
-      net_revenue: data.net_revenue ? parseFloat(data.net_revenue) : undefined,
-      source: data.source ?? "manual",
-      status: data.status ?? "confirmed",
-      notes_internal: data.notes_internal,
-      reference: data.reference ?? ref,
+      adults: body.adults,
+      children: body.children,
+      total_amount: body.total_amount,
+      cleaning_fee: body.cleaning_fee,
+      net_revenue: body.net_revenue,
+      source: body.source,
+      status: body.status,
+      notes_internal: body.notes_internal,
+      reference: body.reference ?? ref,
     },
     include: { property: { select: { id: true, name: true } } },
   });
 
   // Mettre à jour le compteur de nuitées conformité
   await db.complianceRecord.updateMany({
-    where: { property_id: data.property_id },
+    where: { property_id: body.property_id },
     data: { nuitees_year: { increment: nights } },
   }).catch(() => null);
 

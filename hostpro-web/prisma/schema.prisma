@@ -1,13 +1,12 @@
-// HOST PRO — Schéma Prisma (SQLite dev / PostgreSQL prod)
-// Pour la production Azure : DATABASE_PROVIDER=postgresql + changer les types @db.*
+// HOST PRO — Schéma Prisma (PostgreSQL)
 
 generator client {
   provider      = "prisma-client-js"
-  binaryTargets = ["native", "linux-musl", "linux-musl-openssl-3.0.x", "debian-openssl-3.0.x"]
+  binaryTargets = ["native", "rhel-openssl-1.0.x", "rhel-openssl-3.0.x", "linux-musl", "linux-musl-openssl-3.0.x", "debian-openssl-3.0.x"]
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -114,7 +113,7 @@ model Property {
   max_stay_nights  Int?
   check_in_time    String @default("16:00")
   check_out_time   String @default("11:00")
-  amenities        String @default("[]") // JSON string for SQLite
+  amenities        String @default("[]")
   cover_photo_url  String?
 
   reservations Reservation[]
@@ -219,7 +218,7 @@ model ComplianceRecord {
   fiscal_regime       String?
   siret               String?
   is_compliant        Boolean  @default(true)
-  alerts              String   @default("[]") // JSON string
+  alerts              String   @default("[]")
 
   updated_at DateTime @updatedAt
 

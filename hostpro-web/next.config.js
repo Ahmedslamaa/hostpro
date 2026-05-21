@@ -13,7 +13,7 @@ const CSP = [
   "img-src 'self' data: blob: https://*.blob.core.windows.net https://*.azurewebsites.net https://images.unsplash.com",
   isDev
     ? "connect-src 'self' ws://localhost:3000 wss://localhost:3000 https://*.azure.com"
-    : "connect-src 'self' https://*.azure.com https://*.applicationinsights.azure.com https://api.resend.com",
+    : "connect-src 'self' https://*.azure.com https://*.applicationinsights.azure.com https://api.resend.com https://*.vercel.app wss://*.vercel.app",
   // Service Worker support
   "worker-src 'self'",
   "frame-ancestors 'none'",
@@ -49,6 +49,7 @@ const nextConfig = {
       { protocol: "https", hostname: "*.amazonaws.com" },
       { protocol: "https", hostname: "images.unsplash.com" },
       { protocol: "http",  hostname: "localhost" },
+      { protocol: "https", hostname: "*.vercel.app" },
     ],
     formats: ["image/avif", "image/webp"],
   },

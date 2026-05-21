@@ -4,8 +4,14 @@ import crypto from "crypto";
 import { NextRequest } from "next/server";
 import { db } from "./db";
 
-const ACCESS_SECRET = process.env.JWT_SECRET ?? "dev-secret";
-const REFRESH_SECRET = process.env.JWT_REFRESH_SECRET ?? "dev-refresh-secret";
+if (!process.env.JWT_SECRET && process.env.NODE_ENV === "production") {
+  console.error("[SECURITY] JWT_SECRET n'est pas défini en production !");
+}
+if (!process.env.JWT_REFRESH_SECRET && process.env.NODE_ENV === "production") {
+  console.error("[SECURITY] JWT_REFRESH_SECRET n'est pas défini en production !");
+}
+const ACCESS_SECRET = process.env.JWT_SECRET ?? "dev-secret-CHANGE-ME";
+const REFRESH_SECRET = process.env.JWT_REFRESH_SECRET ?? process.env.JWT_SECRET ?? "dev-refresh-CHANGE-ME";
 
 export interface JwtPayload {
   sub: string;       // user_id

@@ -1,10 +1,20 @@
+export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { getAuthFromRequest, getTenantId, hashPassword } from "@/lib/auth-server";
+import { getTenantId, hashPassword } from "@/lib/auth-server";
+import { requireAuth, parseBody } from "@/lib/api-guard";
+import { z } from "zod";
+
+const InviteMemberSchema = z.object({
+  email: z.string().email("Email invalide"),
+  role: z.enum(["admin", "manager", "viewer"]).default("viewer"),
+  full_name: z.string().max(200).optional(),
+});
 
 export async function GET(req: NextRequest) {
-  const auth = getAuthFromRequest(req);
-  if (!auth) return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
+  const guard = await requireAuth(req);
+  if (guard instanceof NextResponse) return guard;
+  const { auth } = guard;
   const tenantId = getTenantId(req, auth);
 
   const members = await db.userTenant.findMany({
@@ -29,13 +39,15 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const auth = getAuthFromRequest(req);
-  if (!auth) return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
-  if (auth.role !== "admin") return NextResponse.json({ error: "Accès refusé" }, { status: 403 });
+  const guard = await requireAuth(req, { minRole: "admin" });
+  if (guard instanceof NextResponse) return guard;
+  const { auth } = guard;
   const tenantId = getTenantId(req, auth);
 
-  const { email, role, full_name } = await req.json();
-  if (!email) return NextResponse.json({ error: "Email requis" }, { status: 400 });
+  const body = await parseBody(req, InviteMemberSchema);
+  if (body instanceof NextResponse) return body;
+
+  const { email, role, full_name } = body;
 
   // Trouver ou créer l'utilisateur
   let user = await db.user.findUnique({ where: { email } });
@@ -50,7 +62,7 @@ export async function POST(req: NextRequest) {
   if (existing) return NextResponse.json({ error: "Cet utilisateur est déjà membre" }, { status: 409 });
 
   const member = await db.userTenant.create({
-    data: { user_id: user.id, tenant_id: tenantId, role: role ?? "viewer", invited_by: auth.sub },
+    data: { user_id: user.id, tenant_id: tenantId, role, invited_by: auth.sub },
     include: { user: { select: { email: true, full_name: true } } },
   });
 

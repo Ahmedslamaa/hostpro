@@ -1,10 +1,35 @@
+export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { getAuthFromRequest, getTenantId } from "@/lib/auth-server";
+import { getTenantId } from "@/lib/auth-server";
+import { requireAuth, parseBody } from "@/lib/api-guard";
+import { z } from "zod";
+
+const PropertySchema = z.object({
+  name: z.string().min(1).max(200),
+  description: z.string().max(2000).optional(),
+  property_type: z.string().default("apartment"),
+  status: z.string().default("active"),
+  address: z.string().max(500).optional(),
+  city: z.string().max(200).optional(),
+  postal_code: z.string().max(20).optional(),
+  country: z.string().default("FR"),
+  max_guests: z.number().int().positive().optional(),
+  bedrooms: z.number().int().min(0).optional(),
+  bathrooms: z.number().int().min(0).optional(),
+  surface_m2: z.number().positive().optional(),
+  base_price_night: z.number().positive().optional(),
+  cleaning_fee: z.number().min(0).default(0),
+  security_deposit: z.number().min(0).default(0),
+  check_in_time: z.string().optional(),
+  check_out_time: z.string().optional(),
+  amenities: z.array(z.string()).optional(),
+});
 
 export async function GET(req: NextRequest) {
-  const auth = getAuthFromRequest(req);
-  if (!auth) return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
+  const guard = await requireAuth(req);
+  if (guard instanceof NextResponse) return guard;
+  const { auth } = guard;
   const tenantId = getTenantId(req, auth);
 
   const { searchParams } = req.nextUrl;
@@ -34,31 +59,34 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const auth = getAuthFromRequest(req);
-  if (!auth) return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
+  const guard = await requireAuth(req);
+  if (guard instanceof NextResponse) return guard;
+  const { auth } = guard;
   const tenantId = getTenantId(req, auth);
 
-  const data = await req.json();
+  const body = await parseBody(req, PropertySchema);
+  if (body instanceof NextResponse) return body;
+
   const property = await db.property.create({
     data: {
       tenant_id: tenantId,
-      name: data.name,
-      description: data.description,
-      property_type: data.property_type ?? "apartment",
-      status: data.status ?? "active",
-      address: data.address,
-      city: data.city,
-      postal_code: data.postal_code,
-      country: data.country ?? "FR",
-      max_guests: data.max_guests ? parseInt(data.max_guests) : undefined,
-      bedrooms: data.bedrooms ? parseInt(data.bedrooms) : undefined,
-      bathrooms: data.bathrooms ? parseInt(data.bathrooms) : undefined,
-      surface_m2: data.surface_m2 ? parseFloat(data.surface_m2) : undefined,
-      base_price_night: data.base_price_night ? parseFloat(data.base_price_night) : undefined,
-      cleaning_fee: data.cleaning_fee ? parseFloat(data.cleaning_fee) : 0,
-      check_in_time: data.check_in_time ?? "16:00",
-      check_out_time: data.check_out_time ?? "11:00",
-      amenities: JSON.stringify(data.amenities ?? []),
+      name: body.name,
+      description: body.description,
+      property_type: body.property_type,
+      status: body.status,
+      address: body.address,
+      city: body.city,
+      postal_code: body.postal_code,
+      country: body.country,
+      max_guests: body.max_guests,
+      bedrooms: body.bedrooms,
+      bathrooms: body.bathrooms,
+      surface_m2: body.surface_m2,
+      base_price_night: body.base_price_night,
+      cleaning_fee: body.cleaning_fee,
+      check_in_time: body.check_in_time ?? "16:00",
+      check_out_time: body.check_out_time ?? "11:00",
+      amenities: JSON.stringify(body.amenities ?? []),
     },
   });
 

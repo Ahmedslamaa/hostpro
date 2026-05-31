@@ -43,3 +43,4 @@ electron/
 *.exe
 *.asar
 hostpro-installer.bat
+.env.neon

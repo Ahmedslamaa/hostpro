@@ -119,6 +119,24 @@ export function sendTeamInviteEmail(
   return sendEmail(to, `Invitation à rejoindre ${tenantName} sur HostPro`, html);
 }
 
+export function sendPasswordChangedEmail(to: string): Promise<SendResult> {
+  const html = `
+    <div style="${baseStyle}">
+      <div style="background:#1A0E12;padding:32px;text-align:center;">
+        <h1 style="color:#fff;margin:0;font-size:22px;">Mot de passe modifié</h1>
+      </div>
+      <div style="padding:32px;">
+        <p>Votre mot de passe HostPro a été modifié avec succès.</p>
+        <p style="color:#dc2626;"><strong>Si vous n'êtes pas à l'origine de ce changement, contactez immédiatement le support.</strong></p>
+        <p style="text-align:center;margin:24px 0;">
+          <a href="mailto:support@hostpro.fr" style="${btnStyle}">Contacter le support</a>
+        </p>
+        <p style="color:#6b7280;font-size:12px;">Heure : ${new Date().toLocaleString("fr-FR")} UTC</p>
+      </div>
+    </div>`;
+  return sendEmail(to, "Votre mot de passe HostPro a été modifié", html);
+}
+
 export function sendBookingConfirmationEmail(
   to: string,
   guestName: string,

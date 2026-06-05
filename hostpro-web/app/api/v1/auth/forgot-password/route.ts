@@ -1,12 +1,30 @@
+export const dynamic = "force-dynamic";
+
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { db } from "@/lib/db";
 import { hashToken } from "@/lib/auth-server";
 import { sendPasswordResetEmail } from "@/lib/email";
+import { resetRateLimit } from "@/lib/ip-rate-limit";
 
 export async function POST(req: NextRequest) {
+  const ip =
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+    req.headers.get("x-real-ip") ??
+    "unknown";
+
+  // Rate limit: 5 requests / hour per IP
+  const rl = await resetRateLimit(ip);
+  if (!rl.allowed) {
+    // Still return 200 to avoid oracle, but don't process
+    return NextResponse.json({
+      message: "Si ce compte existe, un email de réinitialisation a été envoyé.",
+    });
+  }
+
   try {
-    const { email } = await req.json();
+    const body = await req.json().catch(() => null);
+    const email = typeof body?.email === "string" ? body.email.toLowerCase().trim() : null;
     if (!email || typeof email !== "string") {
       return NextResponse.json({ error: "Email requis" }, { status: 400 });
     }

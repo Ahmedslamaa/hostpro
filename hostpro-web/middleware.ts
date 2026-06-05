@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { validateCsrf, setCsrfCookie } from "@/lib/csrf";
 
-// ── Routes publiques (sans auth) ─────────────────────────────────────────────
+// ── Public paths — no auth required ──────────────────────────────────────────
 const PUBLIC_PATHS = [
   "/",
   "/login",
@@ -21,51 +22,7 @@ const PUBLIC_PATHS = [
   "/sw.js",
 ];
 
-// ── Rate limit buckets ────────────────────────────────────────────────────────
-// Two tiers: strict for auth endpoints, standard for the rest
-const standardMap = new Map<string, { count: number; reset: number }>();
-const authMap = new Map<string, { count: number; reset: number }>();
-
-function rateLimit(
-  map: Map<string, { count: number; reset: number }>,
-  key: string,
-  limit: number,
-  windowMs: number
-): { allowed: boolean; remaining: number; resetAt: number } {
-  const now = Date.now();
-  const entry = map.get(key);
-
-  if (!entry || now > entry.reset) {
-    const reset = now + windowMs;
-    map.set(key, { count: 1, reset });
-    return { allowed: true, remaining: limit - 1, resetAt: reset };
-  }
-
-  if (entry.count >= limit) {
-    return { allowed: false, remaining: 0, resetAt: entry.reset };
-  }
-
-  entry.count++;
-  return { allowed: true, remaining: limit - entry.count, resetAt: entry.reset };
-}
-
-// Cleanup stale entries every 5 min
-let lastCleanup = Date.now();
-function cleanup() {
-  const now = Date.now();
-  if (now - lastCleanup < 300_000) return;
-  lastCleanup = now;
-  [standardMap, authMap].forEach((map) => {
-    map.forEach((val, key) => {
-      if (now > val.reset) map.delete(key);
-    });
-  });
-}
-
-// ── Blocked user-agents (scanners / fuzzers) ──────────────────────────────────
-const BLOCKED_UA = /sqlmap|nikto|nessus|masscan|ZmEu|dirbuster|acunetix|nuclei|wfuzz|burpsuite/i;
-
-// ── Auth-sensitive paths (strict rate limit) ──────────────────────────────────
+// ── Auth-sensitive paths (for scanner-block only — actual RL done in DB) ─────
 const AUTH_PATHS = [
   "/api/v1/auth/login",
   "/api/v1/auth/register",
@@ -73,131 +30,189 @@ const AUTH_PATHS = [
   "/api/v1/auth/reset-password",
 ];
 
+// ── Lightweight in-memory rate limit (first-line, per serverless isolate) ────
+// NOTE: True persistent rate limiting happens in DB (lib/ip-rate-limit.ts).
+// This acts as a fast early-exit guard within a single isolate's lifetime.
+const authMap = new Map<string, { count: number; reset: number }>();
+
+function memRateLimit(key: string, limit: number, windowMs: number): boolean {
+  const now = Date.now();
+  const entry = authMap.get(key);
+  if (!entry || now > entry.reset) {
+    authMap.set(key, { count: 1, reset: now + windowMs });
+    return true;
+  }
+  if (entry.count >= limit) return false;
+  entry.count++;
+  return true;
+}
+
+// Cleanup stale entries every 5 min
+let lastCleanup = Date.now();
+function maybeCleanup() {
+  const now = Date.now();
+  if (now - lastCleanup < 300_000) return;
+  lastCleanup = now;
+  authMap.forEach((val, key) => { if (now > val.reset) authMap.delete(key); });
+}
+
+// ── Known scanner / fuzzer user-agents ───────────────────────────────────────
+const BLOCKED_UA = /sqlmap|nikto|nessus|masscan|ZmEu|dirbuster|acunetix|nuclei|wfuzz|burpsuite|havij|w3af|commix/i;
+
+// ── Security headers (applied to ALL responses) ───────────────────────────────
+const isProd = process.env.NODE_ENV === "production";
+
+const SECURITY_HEADERS: Record<string, string> = {
+  "X-Frame-Options":               "DENY",
+  "X-Content-Type-Options":        "nosniff",
+  "Referrer-Policy":               "strict-origin-when-cross-origin",
+  "Permissions-Policy":            "camera=(), microphone=(), geolocation=(self), payment=()",
+  "Cross-Origin-Opener-Policy":    "same-origin",
+  "Cross-Origin-Resource-Policy":  "same-origin",
+  "X-Request-ID":                  "", // placeholder — set dynamically below
+};
+
+if (isProd) {
+  SECURITY_HEADERS["Strict-Transport-Security"] = "max-age=63072000; includeSubDomains; preload";
+  SECURITY_HEADERS["Cross-Origin-Embedder-Policy"] = "require-corp";
+}
+
+// ── Main middleware ───────────────────────────────────────────────────────────
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  cleanup();
+  maybeCleanup();
 
-  // ── 1. Block path traversal attempts ────────────────────────────────────────
-  if (pathname.includes("..") || pathname.includes("%2e%2e") || pathname.includes("%00")) {
+  // ── 1. Path traversal / null-byte attacks ────────────────────────────────
+  if (
+    pathname.includes("..") ||
+    pathname.includes("%2e%2e") ||
+    pathname.includes("%2F%2F") ||
+    pathname.includes("%00") ||
+    pathname.includes("\x00")
+  ) {
     return new NextResponse("Forbidden", { status: 403 });
   }
 
-  // ── 2. Block scanner user-agents ────────────────────────────────────────────
+  // ── 2. Block scanner user-agents ─────────────────────────────────────────
   const ua = request.headers.get("user-agent") ?? "";
   if (BLOCKED_UA.test(ua)) {
     return new NextResponse("Forbidden", { status: 403 });
   }
 
-  // ── 3. Extract IP (supports proxies / Azure Load Balancer) ───────────────────
+  // ── 3. IP extraction ──────────────────────────────────────────────────────
   const ip =
     request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
     request.headers.get("x-real-ip") ??
     "unknown";
 
-  // ── 4. Strict rate limiting for auth endpoints (10 req / 5 min per IP) ───────
+  // ── 4. In-memory gate for auth paths (per-isolate first line) ────────────
   if (AUTH_PATHS.some((p) => pathname === p)) {
-    const { allowed, remaining, resetAt } = rateLimit(authMap, ip, 10, 5 * 60_000);
-    if (!allowed) {
+    if (!memRateLimit(ip, 20, 5 * 60_000)) {
       return new NextResponse(
         JSON.stringify({ error: "Trop de tentatives. Réessayez dans quelques minutes." }),
         {
           status: 429,
           headers: {
             "Content-Type": "application/json",
-            "Retry-After": String(Math.ceil((resetAt - Date.now()) / 1000)),
-            "X-RateLimit-Limit": "10",
+            "Retry-After":  "300",
+            "X-RateLimit-Limit": "20",
             "X-RateLimit-Remaining": "0",
-            "X-RateLimit-Reset": String(Math.ceil(resetAt / 1000)),
           },
         }
       );
     }
-    // Still add headers so client knows the limit
-    const response = NextResponse.next();
-    response.headers.set("X-RateLimit-Limit", "10");
-    response.headers.set("X-RateLimit-Remaining", String(remaining));
   }
 
-  // ── 5. Standard rate limiting for all API routes (120 req / min per IP) ──────
-  if (pathname.startsWith("/api/")) {
-    const { allowed, remaining, resetAt } = rateLimit(standardMap, ip, 120, 60_000);
-    if (!allowed) {
-      return new NextResponse(JSON.stringify({ error: "Too many requests" }), {
-        status: 429,
-        headers: {
-          "Content-Type": "application/json",
-          "Retry-After": String(Math.ceil((resetAt - Date.now()) / 1000)),
-          "X-RateLimit-Limit": "120",
-          "X-RateLimit-Remaining": "0",
-          "X-RateLimit-Reset": String(Math.ceil(resetAt / 1000)),
-        },
-      });
+  // ── 5. CSRF validation for mutating API requests ─────────────────────────
+  if (pathname.startsWith("/api/") && !pathname.startsWith("/api/webhooks/")) {
+    if (!validateCsrf(request)) {
+      return new NextResponse(
+        JSON.stringify({ error: "Invalid or missing CSRF token" }),
+        { status: 403, headers: { "Content-Type": "application/json" } }
+      );
     }
-    void remaining;
   }
 
-  // ── 6. Public paths — pass through ──────────────────────────────────────────
+  // ── 6. Static / Next.js internals — allow without auth ───────────────────
+  if (
+    pathname.startsWith("/_next/") ||
+    pathname.startsWith("/favicon") ||
+    pathname.startsWith("/icon-") ||
+    pathname.startsWith("/apple-splash") ||
+    pathname.startsWith("/robots") ||
+    pathname.startsWith("/sitemap") ||
+    pathname === "/sw.js" ||
+    pathname === "/manifest.json" ||
+    pathname === "/browserconfig.xml" ||
+    pathname === "/og-image.png"
+  ) {
+    return applySecurityHeaders(NextResponse.next(), ip);
+  }
+
+  // ── 7. Public paths ───────────────────────────────────────────────────────
   const isPublic = PUBLIC_PATHS.some(
     (p) => pathname === p || pathname.startsWith(p + "/") || pathname.startsWith(p + "?")
   );
   if (isPublic) {
-    const response = NextResponse.next();
-    response.headers.set("X-Request-ID", crypto.randomUUID());
-    return response;
+    const res = applySecurityHeaders(NextResponse.next(), ip);
+    // Ensure CSRF cookie exists on page loads
+    if (!pathname.startsWith("/api/") && !request.cookies.get("csrf_token")) {
+      setCsrfCookie(res, isProd);
+    }
+    return res;
   }
 
-  // ── 7. Static / Next.js internals — always allow ─────────────────────────────
-  if (
-    pathname.startsWith("/_next/") ||
-    pathname.startsWith("/favicon") ||
-    pathname.startsWith("/robots") ||
-    pathname.startsWith("/sitemap") ||
-    pathname.startsWith("/uploads/") ||
-    pathname === "/sw.js" ||
-    pathname === "/manifest.json"
-  ) {
-    return NextResponse.next();
-  }
-
-  // ── 8. Auth check via httpOnly cookie ────────────────────────────────────────
+  // ── 8. Auth check ─────────────────────────────────────────────────────────
   const cookieToken = request.cookies.get("access_token")?.value;
 
   if (pathname.startsWith("/api/")) {
     if (!cookieToken) {
-      // Allow Bearer token — API routes verify themselves
       const authHeader = request.headers.get("authorization");
       if (!authHeader?.startsWith("Bearer ")) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       }
-      // Bearer token present — let API route validate it, don't redirect
-      return NextResponse.next();
+      // Bearer present — let the route handler validate it
+      return applySecurityHeaders(NextResponse.next(), ip);
     }
 
-    // Forward cookie token as header so API routes can pick it up
-    if (cookieToken) {
-      const headers = new Headers(request.headers);
-      headers.set("x-auth-token", cookieToken);
-      const response = NextResponse.next({ request: { headers } });
-      response.headers.set("X-Request-ID", crypto.randomUUID());
-      return response;
-    }
+    // Forward cookie token as x-auth-token so route handlers can pick it up
+    const headers = new Headers(request.headers);
+    headers.set("x-auth-token", cookieToken);
+    const res = NextResponse.next({ request: { headers } });
+    return applySecurityHeaders(res, ip);
   }
 
-  // ── 9. Page protection — redirect to login if no cookie ──────────────────────
+  // ── 9. Page protection ────────────────────────────────────────────────────
   if (!cookieToken) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("redirect", pathname);
     return NextResponse.redirect(loginUrl);
   }
 
-  const response = NextResponse.next();
-  response.headers.set("X-Request-ID", crypto.randomUUID());
+  const res = applySecurityHeaders(NextResponse.next(), ip);
+  // Ensure CSRF cookie exists on authenticated page loads
+  if (!request.cookies.get("csrf_token")) {
+    setCsrfCookie(res, isProd);
+  }
+  return res;
+}
+
+// ── Helper — inject security headers + request ID ────────────────────────────
+function applySecurityHeaders(response: NextResponse, _ip: string): NextResponse {
+  const reqId = crypto.randomUUID();
+  response.headers.set("X-Request-ID", reqId);
+
+  for (const [key, value] of Object.entries(SECURITY_HEADERS)) {
+    if (key !== "X-Request-ID" && value) {
+      response.headers.set(key, value);
+    }
+  }
   return response;
 }
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon\\.ico|robots\\.txt|sitemap\\.xml|uploads/).*)",
+    "/((?!_next/static|_next/image|favicon\\.ico|robots\\.txt|sitemap\\.xml).*)",
   ],
 };

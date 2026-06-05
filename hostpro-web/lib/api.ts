@@ -8,12 +8,28 @@ export const api = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
+// Read CSRF token from cookie (set by middleware, readable by JS)
+function getCsrfToken(): string | null {
+  if (typeof document === "undefined") return null;
+  const match = document.cookie.match(/(?:^|;\s*)csrf_token=([^;]+)/);
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
 api.interceptors.request.use((config) => {
   if (typeof window !== "undefined") {
     const token = localStorage.getItem("access_token");
     const tenantId = localStorage.getItem("tenant_id");
     if (token) config.headers.Authorization = `Bearer ${token}`;
+    // SECURITY: tenant_id should come from the JWT on the server.
+    // We still send it as a hint for logging only — server ignores it for auth decisions.
     if (tenantId) config.headers["X-Tenant-Id"] = tenantId;
+
+    // Attach CSRF token on all mutating requests
+    const method = (config.method ?? "GET").toUpperCase();
+    if (!["GET", "HEAD", "OPTIONS"].includes(method)) {
+      const csrf = getCsrfToken();
+      if (csrf) config.headers["X-CSRF-Token"] = csrf;
+    }
   }
   return config;
 });

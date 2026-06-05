@@ -45,7 +45,9 @@ export async function requireAuth(
     return NextResponse.json({ error: "Forbidden — insufficient role" }, { status: 403 });
   }
 
-  const tenantId = req.headers.get("x-tenant-id") ?? auth.tenant_id;
+  // SECURITY: tenant_id MUST come from the verified JWT, never from a client header.
+  // Accepting x-tenant-id from the client would allow IDOR attacks between tenants.
+  const tenantId = auth.tenant_id;
 
   // Optional tenant activity check
   if (checkTenant) {
@@ -107,10 +109,12 @@ export async function guardAndParse<T>(
 export const zEmail = z.string().email("Email invalide").toLowerCase().trim();
 export const zPassword = z
   .string()
-  .min(8, "Minimum 8 caractères")
+  .min(12, "Minimum 12 caractères")
+  .max(128, "Maximum 128 caractères")
   .regex(/[A-Z]/, "Au moins une majuscule")
   .regex(/[a-z]/, "Au moins une minuscule")
-  .regex(/[0-9]/, "Au moins un chiffre");
+  .regex(/[0-9]/, "Au moins un chiffre")
+  .regex(/[^A-Za-z0-9]/, "Au moins un caractère spécial (!@#$%^&*…)");
 
 export const zCuid = z.string().cuid("ID invalide");
 export const zPositiveInt = z.number().int().positive();

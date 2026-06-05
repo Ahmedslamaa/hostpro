@@ -12,27 +12,36 @@ export function isValidEmail(email: string): boolean {
 }
 
 /**
- * Validate and sanitize text input
+ * Sanitize plain text — strips null bytes and trims length.
+ * Does NOT remove quotes or angle brackets (that's the ORM/template engine's job).
+ * This function is for storing text safely in the DB, not for HTML rendering.
+ * For HTML output, use a proper escaping library (e.g. DOMPurify on client).
  */
 export function sanitizeText(text: string, maxLength: number = 5000): string {
-  if (typeof text !== 'string') {
-    return '';
-  }
+  if (typeof text !== 'string') return '';
 
   return text
     .trim()
     .slice(0, maxLength)
-    .replace(/[<>]/g, '') // Remove potential HTML tags
-    .replace(/['"]/g, ''); // Remove quotes that could break strings
+    .replace(/\x00/g, '')    // Remove null bytes (could confuse some parsers)
+    .replace(/[\r\n]{3,}/g, '\n\n'); // Collapse excessive newlines
 }
 
 /**
- * Sanitize message content
+ * Sanitize message content — slightly stricter than sanitizeText.
+ * Still does NOT remove quotes; Prisma handles SQL escaping.
  */
 export function sanitizeMessage(message: string): string {
-  return sanitizeText(message, 10000)
-    .replace(/javascript:/gi, '') // Remove javascript: protocol
-    .replace(/on\w+\s*=/gi, ''); // Remove event handlers
+  if (typeof message !== 'string') return '';
+
+  return message
+    .trim()
+    .slice(0, 10000)
+    .replace(/\x00/g, '')
+    // Remove javascript: / vbscript: URIs (XSS via href/src)
+    .replace(/\b(javascript|vbscript|data):/gi, '')
+    // Remove inline event handlers (onclick=, onerror=, etc.)
+    .replace(/\bon\w+\s*=/gi, '');
 }
 
 /**

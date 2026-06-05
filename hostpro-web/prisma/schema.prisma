@@ -45,6 +45,8 @@ model User {
   // RGPD
   gdpr_consent_at DateTime?
   gdpr_consent_ip String?
+  // Email verification
+  email_verified_at     DateTime?
   // Sécurité
   failed_login_attempts Int      @default(0)
   locked_until          DateTime?
@@ -354,6 +356,33 @@ model AuditLog {
   @@index([tenant_id])
   @@index([user_id])
   @@map("audit_logs")
+}
+
+/// IP-based rate limit buckets — persisted in DB so serverless resets don't bypass limits
+model IpRateLimit {
+  id         String   @id @default(cuid())
+  key        String   @unique  // "auth:{ip}" | "register:{ip}" | "api:{ip}"
+  count      Int      @default(1)
+  window_end DateTime             // Expires at end of window
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@index([key])
+  @@index([window_end])
+  @@map("ip_rate_limits")
+}
+
+/// Email verification tokens
+model EmailVerification {
+  id         String   @id @default(cuid())
+  user_id    String   @unique
+  token_hash String   @unique
+  expires_at DateTime
+  verified_at DateTime?
+  created_at DateTime @default(now())
+
+  @@index([token_hash])
+  @@map("email_verifications")
 }
 
 model PushSubscription {

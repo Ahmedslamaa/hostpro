@@ -12,8 +12,12 @@
  *  - Attacker on another origin cannot read the cookie value → cannot forge the header.
  */
 
-import crypto from "crypto";
 import { NextRequest, NextResponse } from "next/server";
+
+// NOTE: Next.js middleware runs on the Edge Runtime — Node's `crypto` module
+// (crypto.randomBytes, crypto.timingSafeEqual, Buffer) is NOT available there
+// and causes MIDDLEWARE_INVOCATION_FAILED in production. We use the Web Crypto
+// API (`globalThis.crypto`) instead, which works on both Edge and Node.
 
 const CSRF_COOKIE = "csrf_token";
 const CSRF_HEADER = "x-csrf-token";
@@ -36,17 +40,26 @@ const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
  * Generate a cryptographically random CSRF token.
  */
 export function generateCsrfToken(): string {
-  return crypto.randomBytes(TOKEN_BYTES).toString("hex");
+  const bytes = new Uint8Array(TOKEN_BYTES);
+  globalThis.crypto.getRandomValues(bytes);
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
 }
 
 /**
- * Constant-time comparison to prevent timing attacks.
+ * Constant-time string comparison to prevent timing attacks.
+ * Pure JS implementation — works on Edge Runtime (no Node Buffer/crypto).
+ * Always scans the full length of the longer string so the comparison time
+ * doesn't leak how many leading characters matched.
  */
 function safeEqual(a: string, b: string): boolean {
-  if (a.length !== b.length) return false;
-  const bufA = Buffer.from(a, "utf8");
-  const bufB = Buffer.from(b, "utf8");
-  return crypto.timingSafeEqual(bufA, bufB);
+  const len = Math.max(a.length, b.length);
+  let mismatch = a.length === b.length ? 0 : 1;
+  for (let i = 0; i < len; i++) {
+    const ca = i < a.length ? a.charCodeAt(i) : 0;
+    const cb = i < b.length ? b.charCodeAt(i) : 0;
+    mismatch |= ca ^ cb;
+  }
+  return mismatch === 0;
 }
 
 /**

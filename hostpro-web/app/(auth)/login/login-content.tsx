@@ -6,6 +6,43 @@ import { authApi } from "@/lib/api";
 import { useAuthStore } from "@/stores/authStore";
 import { LogoMark } from "@/components/ui/LogoMark";
 
+const DEMO_PLANS = [
+  {
+    id:       "starter",
+    label:    "Starter",
+    tagline:  "1–3 logements",
+    color:    "#6B5A60",
+    bg:       "rgba(107,90,96,0.07)",
+    border:   "rgba(107,90,96,0.2)",
+    features: ["Calendrier & réservations", "Messages unifiés", "1 utilisateur"],
+    email:    "demo.starter@hostpro.fr",
+    password: "Demo1234!",
+  },
+  {
+    id:       "pro",
+    label:    "Pro",
+    tagline:  "4–20 logements",
+    color:    "#C00040",
+    bg:       "rgba(192,0,64,0.06)",
+    border:   "rgba(192,0,64,0.25)",
+    features: ["Tout Starter +", "AI Assistant", "5 utilisateurs", "Analytics"],
+    email:    "demo.pro@hostpro.fr",
+    password: "Demo1234!",
+  },
+  {
+    id:       "enterprise",
+    label:    "Enterprise",
+    tagline:  "20+ logements",
+    color:    "#C0A060",
+    bg:       "rgba(192,160,96,0.08)",
+    border:   "rgba(192,160,96,0.35)",
+    features: ["Tout Pro +", "API access", "Utilisateurs illimités", "Support dédié"],
+    email:    "demo.enterprise@hostpro.fr",
+    password: "Demo1234!",
+  },
+] as const;
+
+// Fallback : compte démo générique
 const DEMO_EMAIL = "demo@hostpro.fr";
 const DEMO_PASS  = "Demo1234!";
 
@@ -17,13 +54,32 @@ export function LoginContent() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showDemo, setShowDemo] = useState(false);
+  const [activePlan, setActivePlan] = useState<string | null>(null);
 
   useEffect(() => {
-    if (searchParams.get("demo") === "true") {
+    const demo = searchParams.get("demo");
+    if (demo === "true") {
       setShowDemo(true);
       setForm({ email: DEMO_EMAIL, password: DEMO_PASS });
     }
+    // ?plan=pro préselectionne directement un plan
+    const planParam = searchParams.get("plan");
+    if (planParam) {
+      const found = DEMO_PLANS.find((p) => p.id === planParam);
+      if (found) {
+        setShowDemo(true);
+        setActivePlan(found.id);
+        setForm({ email: found.email, password: found.password });
+      }
+    }
   }, [searchParams]);
+
+  const selectPlan = (plan: typeof DEMO_PLANS[number]) => {
+    setActivePlan(plan.id);
+    setShowDemo(true);
+    setForm({ email: plan.email, password: plan.password });
+    setError("");
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -172,26 +228,115 @@ export function LoginContent() {
             </button>
           </form>
 
-          {/* Divider */}
-          <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "22px 0" }}>
+          {/* ── Accès démo par abonnement ── */}
+          <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "22px 0 16px" }}>
             <div style={{ flex: 1, height: 1, background: "rgba(0,0,0,0.1)" }} />
-            <span style={{ fontFamily: "'JetBrains Mono', ui-monospace, monospace", fontSize: 10, color: "#6B5A60" }}>OU</span>
+            <span style={{ fontFamily: "'JetBrains Mono', ui-monospace, monospace", fontSize: 10, color: "#6B5A60", whiteSpace: "nowrap" }}>
+              ACCÈS DÉMO
+            </span>
             <div style={{ flex: 1, height: 1, background: "rgba(0,0,0,0.1)" }} />
           </div>
 
-          {/* SSO buttons */}
-          <div style={{ display: "flex", gap: 10 }}>
-            {["Google", "Apple", "SSO"].map((label) => (
-              <button key={label} style={{
-                flex: 1, padding: "11px 14px",
-                background: "white", border: "1px solid rgba(0,0,0,0.1)",
-                borderRadius: 10, fontFamily: "inherit", fontSize: 13, fontWeight: 600,
-                cursor: "pointer", color: "#1A0E12",
-              }}>{label}</button>
-            ))}
+          <div style={{ display: "flex", gap: 8 }}>
+            {DEMO_PLANS.map((plan) => {
+              const isActive = activePlan === plan.id;
+              return (
+                <button
+                  key={plan.id}
+                  onClick={() => selectPlan(plan)}
+                  style={{
+                    flex: 1,
+                    padding: "10px 8px",
+                    background: isActive ? plan.bg : "white",
+                    border: `1.5px solid ${isActive ? plan.border : "rgba(0,0,0,0.1)"}`,
+                    borderRadius: 12,
+                    cursor: "pointer",
+                    textAlign: "left",
+                    transition: "border-color 0.15s, background 0.15s",
+                    outline: "none",
+                    position: "relative",
+                  }}
+                >
+                  {isActive && (
+                    <div style={{
+                      position: "absolute", top: 6, right: 6,
+                      width: 6, height: 6, borderRadius: "50%",
+                      background: plan.color,
+                    }} />
+                  )}
+                  <div style={{
+                    fontFamily: "'JetBrains Mono', ui-monospace, monospace",
+                    fontSize: 9, fontWeight: 700, letterSpacing: "0.1em",
+                    color: isActive ? plan.color : "#6B5A60",
+                    textTransform: "uppercase",
+                    marginBottom: 2,
+                  }}>
+                    {plan.label}
+                  </div>
+                  <div style={{ fontSize: 11, color: "#1A0E12", fontWeight: 600 }}>
+                    {plan.tagline}
+                  </div>
+                  <ul style={{ listStyle: "none", margin: "6px 0 0", padding: 0 }}>
+                    {plan.features.map((f) => (
+                      <li key={f} style={{
+                        fontSize: 10, color: "#6B5A60", lineHeight: 1.6,
+                        display: "flex", alignItems: "baseline", gap: 4,
+                      }}>
+                        <span style={{ color: plan.color, fontSize: 8 }}>▸</span>{f}
+                      </li>
+                    ))}
+                  </ul>
+                  <div style={{
+                    marginTop: 8,
+                    padding: "5px 0",
+                    background: isActive ? plan.color : "transparent",
+                    border: `1px solid ${isActive ? plan.color : "rgba(0,0,0,0.1)"}`,
+                    borderRadius: 6,
+                    fontFamily: "'JetBrains Mono', ui-monospace, monospace",
+                    fontSize: 9, fontWeight: 700,
+                    color: isActive ? "white" : "#6B5A60",
+                    textAlign: "center",
+                    letterSpacing: "0.06em",
+                    transition: "all 0.15s",
+                  }}>
+                    {isActive ? "✓ SÉLECTIONNÉ" : "TESTER"}
+                  </div>
+                </button>
+              );
+            })}
           </div>
 
-          <div style={{ marginTop: 28, fontSize: 13, color: "#6B5A60" }}>
+          {showDemo && activePlan && (() => {
+            const plan = DEMO_PLANS.find((p) => p.id === activePlan);
+            if (!plan) return null;
+            return (
+              <div style={{
+                marginTop: 10,
+                background: plan.bg,
+                border: `1px solid ${plan.border}`,
+                borderRadius: 8, padding: "8px 12px",
+                display: "flex", justifyContent: "space-between", alignItems: "center",
+              }}>
+                <div>
+                  <span style={{ fontFamily: "'JetBrains Mono', ui-monospace, monospace", fontSize: 9, color: plan.color, fontWeight: 700, letterSpacing: "0.1em" }}>
+                    COMPTE DÉMO {plan.label.toUpperCase()} PRÉ-REMPLI
+                  </span>
+                  <div style={{ fontSize: 11, color: "#6B5A60", marginTop: 2 }}>
+                    <span style={{ color: "#1A0E12", fontWeight: 600 }}>{plan.email}</span>
+                    {" · "}
+                    <span style={{ color: "#1A0E12", fontWeight: 600 }}>{plan.password}</span>
+                  </div>
+                </div>
+                <button
+                  onClick={() => { setActivePlan(null); setShowDemo(false); setForm({ email: "", password: "" }); }}
+                  style={{ background: "none", border: "none", cursor: "pointer", color: "#6B5A60", fontSize: 16, lineHeight: 1, padding: 4 }}
+                  aria-label="Fermer"
+                >×</button>
+              </div>
+            );
+          })()}
+
+          <div style={{ marginTop: 20, fontSize: 13, color: "#6B5A60" }}>
             Nouveau ici ?{" "}
             <Link href="/register" style={{ color: "#C00040", fontWeight: 600, textDecoration: "underline" }}>
               Créer un compte

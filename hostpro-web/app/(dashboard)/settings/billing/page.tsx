@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { Check, Zap, Lock, Star, Building2, Crown, type LucideProps } from "lucide-react";
+import { Check, Zap, Lock, Star, Building2, Crown, Loader2, type LucideProps } from "lucide-react";
 import type { ForwardRefExoticComponent, RefAttributes } from "react";
 import { useSubscriptionStore } from "@/stores/subscriptionStore";
 import { PLANS, PlanId, formatLimit } from "@/lib/plans";
@@ -49,6 +49,32 @@ const FEATURES_TABLE = [
 export default function BillingPage() {
   const { plan, status, trial_end, current_period_end, features, properties_limit, team_members_limit } = useSubscriptionStore();
   const [annual, setAnnual] = useState(false);
+  const [loadingPlan, setLoadingPlan] = useState<PlanId | null>(null);
+  const [planError, setPlanError] = useState<string | null>(null);
+
+  async function handleChoosePlan(pid: PlanId) {
+    setLoadingPlan(pid);
+    setPlanError(null);
+    try {
+      const res = await fetch("/api/v1/billing/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan: pid }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setPlanError(data.error ?? "Une erreur est survenue. Veuillez réessayer.");
+        return;
+      }
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    } catch {
+      setPlanError("Impossible de contacter le serveur. Vérifiez votre connexion.");
+    } finally {
+      setLoadingPlan(null);
+    }
+  }
 
   const planOrder: PlanId[] = ["starter", "pro", "enterprise"];
   const discount = 0.17; // 17% de réduction annuelle
@@ -264,10 +290,14 @@ export default function BillingPage() {
               </ul>
 
               <button
-                disabled={isCurrent}
+                disabled={isCurrent || loadingPlan !== null}
+                onClick={() => !isCurrent && handleChoosePlan(pid)}
                 style={{
                   width: "100%", padding: "10px 0", borderRadius: 12, fontSize: 13, fontWeight: 700,
-                  cursor: isCurrent ? "default" : "pointer", transition: "opacity 0.15s",
+                  cursor: isCurrent || loadingPlan !== null ? "default" : "pointer",
+                  transition: "opacity 0.15s",
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                  opacity: loadingPlan !== null && loadingPlan !== pid ? 0.5 : 1,
                   ...(isCurrent
                     ? { background: PAPER, color: INK_SOFT, border: "1px solid rgba(0,0,0,0.06)" }
                     : p.highlight
@@ -275,12 +305,30 @@ export default function BillingPage() {
                     : { background: "white", color: INK, border: `1px solid rgba(0,0,0,0.12)` }),
                 }}
               >
-                {isCurrent ? "Plan actuel" : "Choisir ce plan"}
+                {loadingPlan === pid ? (
+                  <><Loader2 size={14} className="animate-spin" />Chargement…</>
+                ) : isCurrent ? "Plan actuel" : "Choisir ce plan"}
               </button>
             </div>
           );
         })}
       </div>
+
+      {/* Erreur abonnement */}
+      {planError && (
+        <div style={{
+          marginBottom: 24, padding: "12px 16px", borderRadius: 12,
+          background: "rgba(224,32,96,0.06)", border: "1px solid rgba(224,32,96,0.2)",
+          color: ROSE_DEEP, fontSize: 13, fontWeight: 500,
+          display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12,
+        }}>
+          <span>{planError}</span>
+          <button
+            onClick={() => setPlanError(null)}
+            style={{ background: "none", border: "none", cursor: "pointer", color: ROSE_DEEP, fontSize: 16, lineHeight: 1 }}
+          >×</button>
+        </div>
+      )}
 
       {/* Tableau comparatif */}
       <div style={{ borderRadius: 18, border: "1px solid rgba(0,0,0,0.07)", overflow: "hidden", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>

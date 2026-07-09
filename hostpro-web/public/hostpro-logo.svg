@@ -1,16 +1,23 @@
-<svg viewBox="0 0 1050 400" xmlns="http://www.w3.org/2000/svg">
-  <!-- Main rounded rectangle -->
-  <rect x="50" y="50" width="950" height="300" rx="40" fill="none" stroke="#FF6B6B" stroke-width="8"/>
+<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background: deep violet #1E0835 -->
+  <rect width="512" height="512" rx="96" fill="#1E0835"/>
 
-  <!-- Left section (HOST) - Coral/Red background -->
-  <path d="M 90 90 Q 90 50 130 50 L 550 50 L 550 350 L 130 350 Q 90 350 90 310 Z" fill="#FF6B6B"/>
+  <!-- Subtle purple highlight top-left -->
+  <defs>
+    <radialGradient id="hl" cx="25%" cy="20%" r="60%">
+      <stop offset="0%" stop-color="#6B21A8" stop-opacity="0.45"/>
+      <stop offset="100%" stop-color="#1E0835" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="512" height="512" rx="96" fill="url(#hl)"/>
 
-  <!-- Right section (PRO) - White background -->
-  <path d="M 550 50 L 910 50 Q 950 50 950 90 L 950 310 Q 950 350 910 350 L 550 350 Z" fill="white"/>
+  <!-- H — left vertical bar -->
+  <rect x="118" y="118" width="78" height="270" rx="14" fill="white"/>
+  <!-- H — right vertical bar -->
+  <rect x="316" y="118" width="78" height="270" rx="14" fill="white"/>
+  <!-- H — crossbar -->
+  <rect x="118" y="213" width="276" height="78" rx="14" fill="white"/>
 
-  <!-- HOST text - White -->
-  <text x="280" y="260" font-size="180" font-weight="900" font-family="Arial, sans-serif" fill="white" text-anchor="middle">HOST</text>
-
-  <!-- PRO text - Coral -->
-  <text x="730" y="260" font-size="180" font-weight="900" font-family="Arial, sans-serif" fill="#FF6B6B" text-anchor="middle">PRO</text>
+  <!-- Coral accent pill — anchored bottom-left of the H -->
+  <rect x="118" y="352" width="108" height="36" rx="10" fill="#E02060"/>
 </svg>
